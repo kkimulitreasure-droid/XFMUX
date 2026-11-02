@@ -494,7 +494,7 @@
     const activeBlobUrls = new Map();
 
     async function getPlayableStreamUrl(item) {
-      if (item.streamUrl) {
+      if (item.streamUrl && item.streamUrl.trim() !== "") {
         return item.streamUrl;
       }
       if (activeBlobUrls.has(item.id)) {
@@ -584,24 +584,24 @@
       },
       {
         id: 4,
-        title: "Chronicles of Aethelgard",
+        title: "Big Buck Bunny Chronicles",
         category: "TV Shows",
         genre: "Fantasy",
         rating: 9.0,
         year: 2024,
         duration: "Season 1",
-        age: "16+",
-        director: "Guillermo del Toro",
-        uploader: "FantasyStreams",
+        age: "13+",
+        director: "Blender Foundation",
+        uploader: "AnimationHub",
         views: 18900,
         downloads: 4100,
         comments: [
-          { user: "ElvenKnight", text: "Best fantasy show since Game of Thrones!", rating: 5, date: "5 days ago" }
+          { user: "AnimationFan", text: "Classic 3D animated short, plays super smooth!", rating: 5, date: "5 days ago" }
         ],
-        description: "Ancient realms collide when a young sorcerer discovers a forgotten artifact that controls dragons.",
+        description: "A giant rabbit with a heart of gold takes on three pesky forest bullies in this open-source animation classic.",
         poster: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=600&q=80",
         banner: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1920&q=80",
-        streamUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnTheLoose.mp4",
+        streamUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
         featured: false
       }
     ];
@@ -1224,18 +1224,28 @@
             <div class="w-full h-full flex flex-col items-center justify-center p-6 bg-gradient-to-br from-dark-900 via-dark-800 to-brand-900/40">
               <img src="${item.poster}" class="w-36 h-36 rounded-2xl shadow-2xl object-cover mb-4 border-2 border-brand-500/30" />
               <p class="text-white font-bold text-lg mb-4">${item.title}</p>
-              <audio controls autoplay class="w-full max-w-md">
-                <source src="${streamUrl}" />
+              <audio id="activeAudioPlayer" controls class="w-full max-w-md">
+                <source src="${streamUrl}" type="audio/mp3" />
                 Your browser does not support audio playback.
               </audio>
             </div>
           `;
+          const audioElem = document.getElementById("activeAudioPlayer");
+          if (audioElem) {
+            audioElem.play().catch(e => console.log("Autoplay policy info:", e));
+          }
         } else {
           mediaContainer.innerHTML = `
-            <video id="playerVideoSource" controls controlsList="nodownload" autoplay class="w-full h-full object-contain">
-              <source src="${streamUrl}" />
+            <video id="playerVideoSource" controls playsinline controlsList="nodownload" class="w-full h-full object-contain bg-black">
+              <source src="${streamUrl}" type="video/mp4" />
+              Your browser does not support video playback.
             </video>
           `;
+          const videoElem = document.getElementById("playerVideoSource");
+          if (videoElem) {
+            videoElem.load();
+            videoElem.play().catch(e => console.log("Autoplay policy info:", e));
+          }
         }
       }
 
@@ -1249,7 +1259,11 @@
       const mediaContainer = document.getElementById("mediaContainer");
       if (mediaContainer) {
         const mediaElem = mediaContainer.querySelector("video, audio");
-        if (mediaElem) mediaElem.pause();
+        if (mediaElem) {
+          mediaElem.pause();
+          mediaElem.src = "";
+          mediaElem.load();
+        }
         mediaContainer.innerHTML = "";
       }
       if (modal) modal.classList.add("hidden");
