@@ -1,304 +1,429 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CineWave - Stream Movies & Series</title>
-  <!-- Tailwind CSS -->
+  <title>CineWave - Stream & Share</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <!-- Google Fonts: Inter & Outfit -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
-  
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            display: ['Outfit', 'sans-serif']
-          },
-          colors: {
-            brand: {
-              50: '#eef2ff',
-              100: '#e0e7ff',
-              500: '#6366f1',
-              600: '#4f46e5',
-              700: '#4338ca',
-              accent: '#f43f5e'
-            },
-            dark: {
-              900: '#0b0d14',
-              800: '#121624',
-              700: '#1a2035',
-              600: '#262f4a'
-            }
-          }
-        }
-      }
-    }
-  </script>
   <style>
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #0b0d14;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #262f4a;
-      border-radius: 4px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #4f46e5;
-    }
-    .glass-nav {
-      background: rgba(11, 13, 20, 0.75);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-    }
-    .glass-card {
-      background: rgba(26, 32, 53, 0.65);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-    .glass-card:hover {
-      border-color: rgba(99, 102, 241, 0.4);
-    }
-    .gradient-glow {
-      box-shadow: 0 0 30px -5px rgba(99, 102, 241, 0.3);
-    }
-    .text-gradient {
-      background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #f43f5e 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
+    body { background-color: #0b0f19; color: #f3f4f6; font-family: sans-serif; }
+    .glass { background: rgba(17, 24, 39, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
   </style>
 </head>
-<body class="bg-dark-900 text-slate-100 font-sans min-h-screen flex flex-col selection:bg-brand-500 selection:text-white pb-12">
+<body class="min-h-screen flex flex-col justify-between custom-scrollbar">
 
-  <!-- ================= TOP NAVIGATION BAR ================= -->
-  <header class="fixed top-0 left-0 right-0 z-40 glass-nav border-b border-slate-800/60 transition-all duration-300">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-20">
-        
-        <!-- Logo & Navigation Links -->
-        <div class="flex items-center gap-8">
-          <a href="#" onclick="switchCategory('All')" class="flex items-center gap-2.5 text-2xl font-display font-bold tracking-tight">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-brand-accent flex items-center justify-center shadow-lg shadow-brand-500/30">
-              <i class="fa-solid font-bold fa-play text-white text-lg ml-0.5"></i>
-            </div>
-            <span>Cine<span class="text-gradient">Wave</span></span>
-          </a>
+  <!-- NAVIGATION BAR -->
+  <nav class="sticky top-0 z-40 glass px-6 py-4 flex items-center justify-between shadow-xl">
+    <div class="flex items-center space-x-3 cursor-pointer" onclick="switchCategory('All')">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-500/30">
+        <i class="fa-solid font-bold fa-play"></i>
+      </div>
+      <span class="text-2xl font-black tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-200 to-indigo-400">CineWave</span>
+    </div>
 
-          <!-- Navigation Links (Desktop) -->
-          <nav class="hidden md:flex items-center gap-1 font-medium text-sm text-slate-300">
-            <button onclick="switchCategory('All')" id="nav-all" class="px-4 py-2 rounded-lg bg-brand-600/20 text-brand-500 font-semibold transition-all">Browse All</button>
-            <button onclick="switchCategory('Movies')" id="nav-movies" class="px-4 py-2 rounded-lg hover:text-white hover:bg-slate-800/60 transition-all">Movies</button>
-            <button onclick="switchCategory('TV Shows')" id="nav-tv" class="px-4 py-2 rounded-lg hover:text-white hover:bg-slate-800/60 transition-all">TV Series</button>
-            <button onclick="switchCategory('Music')" id="nav-music" class="px-4 py-2 rounded-lg hover:text-white hover:bg-slate-800/60 transition-all">Music</button>
-            <button onclick="switchCategory('Watchlist')" id="nav-watchlist" class="px-4 py-2 rounded-lg hover:text-white hover:bg-slate-800/60 transition-all flex items-center gap-2">
-              <span>My Watchlist</span>
-              <span id="watchlist-badge" class="bg-brand-600 text-white text-xs px-2 py-0.5 rounded-full font-bold">0</span>
-            </button>
-          </nav>
-        </div>
+    <!-- SEARCH BAR -->
+    <div class="hidden md:flex items-center bg-gray-900/80 border border-gray-700/60 rounded-full px-4 py-2 w-1/3 focus-within:border-indigo-500 transition">
+      <i class="fa-solid fa-magnifying-glass text-gray-400 mr-2"></i>
+      <input type="text" id="searchInput" placeholder="Search movies, series, music..." oninput="handleSearch()" class="bg-transparent border-none text-sm text-white focus:outline-none w-full" />
+    </div>
 
-        <!-- Search & Community Actions -->
-        <div class="flex items-center gap-3">
-          <!-- Search Bar -->
-          <div class="relative w-40 sm:w-60">
-            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-            <input type="text" id="searchInput" onkeyup="handleSearch()" placeholder="Search titles, cast..." class="w-full bg-dark-800 border border-slate-700/80 rounded-full pl-10 pr-4 py-2 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all" />
-          </div>
+    <!-- USER CONTROLS / AUTH -->
+    <div class="flex items-center space-x-4" id="userNavArea">
+      <!-- Dynamic User Navigation Rendered via JS -->
+    </div>
+  </nav>
 
-          <!-- Community Upload Button -->
-          <button onclick="openUserUploadModal()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-brand-accent hover:opacity-90 text-white text-xs font-semibold flex items-center gap-2 shadow-lg shadow-brand-500/20 transition-all">
-            <i class="fa-solid fa-plus"></i>
-            <span class="hidden sm:inline">Upload Media</span>
-          </button>
-
-          <!-- Admin Portal Quick Switch Button -->
-          <button onclick="openAdminPortalModal()" id="adminToggleBtn" class="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-2 transition-all">
-            <i class="fa-solid fa-user-shield text-brand-400"></i>
-            <span class="hidden md:inline" id="adminToggleText">Admin Portal</span>
-          </button>
-
-          <!-- User State Button -->
-          <div id="user-nav-container">
-            <!-- Rendered via JS -->
-          </div>
-        </div>
+  <!-- HERO SPOTLIGHT -->
+  <header class="relative w-full h-[420px] md:h-[500px] flex items-end p-8 md:p-12 overflow-hidden" id="heroBanner">
+    <div class="absolute inset-0 bg-cover bg-center transition-all duration-700 filter brightness-75 scale-105" id="heroBg"></div>
+    <div class="absolute inset-0 bg-gradient-to-t from-[#0b0f19] via-[#0b0f19]/60 to-transparent"></div>
+    <div class="relative z-10 max-w-2xl space-y-4">
+      <span class="px-3 py-1 bg-indigo-600/80 backdrop-blur-md text-xs font-semibold uppercase tracking-wider rounded-md text-indigo-100" id="heroBadge">Featured</span>
+      <h1 class="text-4xl md:text-6xl font-extrabold text-white tracking-tight leading-tight" id="heroTitle">Featured Title</h1>
+      <p class="text-sm md:text-base text-gray-300 line-clamp-3" id="heroDescription">Loading spotlight content...</p>
+      <div class="flex items-center space-x-4 pt-2">
+        <button id="heroPlayBtn" onclick="" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl flex items-center space-x-2 transition shadow-lg shadow-indigo-600/40">
+          <i class="fa-solid fa-play"></i> <span>Play Now</span>
+        </button>
       </div>
     </div>
   </header>
 
-  <!-- ================= USER / CATALOG VIEW ================= -->
-  <main id="userView" class="pt-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex-1">
-    
-    <!-- TOP ADVERTISEMENT BANNER SECTION -->
-    <div id="adBannerSection" class="mb-8 rounded-2xl overflow-hidden border border-brand-500/30 bg-gradient-to-r from-brand-900/40 via-dark-800 to-dark-800 p-4 sm:p-6 relative shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
-      <button onclick="dismissAdBanner()" class="absolute top-2 right-2 text-slate-500 hover:text-slate-300 text-xs">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-
-      <div class="flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center text-xl shrink-0">
-          <i class="fa-solid fa-bullhorn"></i>
-        </div>
-        <div>
-          <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-brand-500 text-white mb-1 uppercase tracking-wider">Sponsored</span>
-          <h3 id="adBannerTitle" class="text-sm sm:text-base font-bold text-white">Upgrade to CineWave Pro for Ultra HD Streaming & Ad-Free Downloads</h3>
-          <p id="adBannerDesc" class="text-xs text-slate-400 mt-0.5">Get unlimited high-speed downloads and exclusive early access to community movie premieres.</p>
-        </div>
-      </div>
-
-      <div class="shrink-0 flex items-center gap-3 w-full sm:w-auto">
-        <a id="adBannerLink" href="#" target="_blank" class="w-full sm:w-auto text-center px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-brand-accent hover:opacity-90 text-white font-bold text-xs shadow-lg shadow-brand-500/30 transition-all">
-          Learn More
-        </a>
+  <!-- CATEGORY & GENRE FILTERS -->
+  <main class="max-w-7xl mx-auto px-6 py-8 w-full flex-grow space-y-8">
+    <div class="flex flex-wrap items-center justify-between gap-4 border-b border-gray-800 pb-4">
+      <div class="flex space-x-2 overflow-x-auto pb-2 md:pb-0" id="categoryTabs">
+        <button onclick="switchCategory('All')" class="cat-btn active-cat px-5 py-2 rounded-xl text-sm font-semibold transition bg-indigo-600 text-white">All Content</button>
+        <button onclick="switchCategory('Movies')" class="cat-btn px-5 py-2 rounded-xl text-sm font-semibold transition bg-gray-800/80 text-gray-300 hover:bg-gray-700">Movies</button>
+        <button onclick="switchCategory('Series')" class="cat-btn px-5 py-2 rounded-xl text-sm font-semibold transition bg-gray-800/80 text-gray-300 hover:bg-gray-700">TV Series</button>
+        <button onclick="switchCategory('Music')" class="cat-btn px-5 py-2 rounded-xl text-sm font-semibold transition bg-gray-800/80 text-gray-300 hover:bg-gray-700">Music Tracks</button>
       </div>
     </div>
 
-    <!-- HERO FEATURED SPOTLIGHT -->
-    <div class="relative rounded-3xl overflow-hidden mb-10 border border-slate-800/80 shadow-2xl">
-      <div id="heroBackground" class="absolute inset-0 bg-cover bg-center transition-all duration-700" style="background-image: url('https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?auto=format&fit=crop&w=1920&q=80');">
-        <div class="absolute inset-0 bg-gradient-to-r from-dark-900 via-dark-900/80 to-transparent"></div>
-        <div class="absolute inset-0 bg-gradient-to-t from-dark-900 via-transparent to-transparent"></div>
-      </div>
-
-      <div class="relative z-10 p-8 sm:p-12 md:p-16 max-w-2xl">
-        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-brand-500/20 text-brand-400 border border-brand-500/30 mb-4">
-          <i class="fa-solid fa-fire text-brand-accent"></i> Featured Spotlight
-        </span>
-        <h1 id="heroTitle" class="text-3xl sm:text-5xl font-display font-extrabold text-white tracking-tight leading-tight">Interstellar Odyssey</h1>
-        <p id="heroMeta" class="text-xs sm:text-sm font-medium text-slate-400 mt-2">Movies • Sci-Fi • ⭐ 9.2</p>
-        <p id="heroDesc" class="text-slate-300 text-xs sm:text-sm mt-3 line-clamp-3 leading-relaxed">A team of explorers travel through a newly discovered wormhole in space to ensure humanity's survival across distant star systems.</p>
-        
-        <div class="mt-6 flex items-center gap-4">
-          <button onclick="openPlayerModal(1)" class="px-6 py-3 rounded-xl bg-gradient-to-r from-brand-600 to-brand-accent hover:opacity-90 text-white font-semibold text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-brand-500/30 transition-all">
-            <i class="fa-solid fa-play"></i> Watch Now
-          </button>
-          <button onclick="toggleWatchlist(1)" class="px-5 py-3 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 font-semibold text-xs sm:text-sm border border-slate-700/80 backdrop-blur-sm transition-all">
-            <i class="fa-solid fa-bookmark"></i> Save to List
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- GENRE PILLS FILTER -->
-    <div class="flex items-center gap-2 overflow-x-auto pb-4 mb-6 no-scrollbar" id="genrePillsContainer">
-      <!-- Injected by JS -->
-    </div>
-
-    <!-- Media Catalog Grid -->
-    <div id="mediaGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-12">
-      <!-- Media Cards injected by JS -->
+    <!-- CATALOG GRID -->
+    <div id="mediaGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+      <!-- Media cards rendered via JS -->
     </div>
   </main>
 
-  <!-- ================= VIDEO PLAYER & COMMENTS MODAL ================= -->
-  <div id="playerModal" class="fixed inset-0 z-50 hidden bg-black/90 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-    <div class="relative w-full max-w-4xl bg-dark-800 border border-slate-700/80 rounded-2xl overflow-hidden shadow-2xl my-8">
-      <button onclick="closePlayerModal()" class="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-black/60 text-white hover:bg-rose-600 transition-all flex items-center justify-center text-lg">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-
-      <div id="mediaContainer" class="relative aspect-video bg-black flex items-center justify-center">
-        <video id="playerVideoSource" controls controlsList="nodownload" class="w-full h-full object-contain"></video>
+  <!-- STREAMING PLAYER MODAL -->
+  <div id="playerModal" class="fixed inset-0 z-50 hidden bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="glass w-full max-w-4xl rounded-2xl overflow-hidden shadow-2xl relative border border-gray-800 flex flex-col max-h-[90vh]">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-800">
+        <h3 class="text-lg font-bold text-white truncate" id="playerModalTitle">Now Playing</h3>
+        <button onclick="closePlayerModal()" class="text-gray-400 hover:text-white text-xl">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
       </div>
-
-      <div class="p-6">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-700/80 pb-4">
+      <div class="bg-black flex-grow flex items-center justify-center min-h-[300px] relative" id="playerContainer">
+        <!-- Dynamic Video or Audio Tag Rendered via JS -->
+      </div>
+      <div class="p-6 space-y-4 overflow-y-auto custom-scrollbar">
+        <div class="flex items-center justify-between">
           <div>
-            <h2 id="playerTitle" class="text-2xl font-display font-extrabold text-white">Movie Title</h2>
-            <div class="flex items-center gap-3 text-xs text-slate-400 mt-1">
-              <span id="playerMeta">Category • Genre</span>
-              <span class="flex items-center gap-1 text-slate-300"><i class="fa-solid fa-eye text-brand-400"></i> <span id="playerViews">0</span> views</span>
-              <span class="flex items-center gap-1 text-slate-300"><i class="fa-solid fa-download text-emerald-400"></i> <span id="playerDownloads">0</span> downloads</span>
-            </div>
+            <span class="text-xs text-indigo-400 font-semibold uppercase tracking-wider" id="playerModalCategory">Category</span>
+            <p class="text-sm text-gray-400" id="playerModalMeta">2026 • Sci-Fi</p>
           </div>
-          
-          <div class="flex items-center gap-3">
-            <button id="downloadMediaBtn" onclick="triggerDownloadCurrentMedia()" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center gap-2 shadow-lg shadow-emerald-600/30 transition-all">
-              <i class="fa-solid fa-download"></i> Download File
-            </button>
-          </div>
+          <button id="downloadBtn" onclick="" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-xl flex items-center space-x-2 transition shadow-lg shadow-emerald-600/30">
+            <i class="fa-solid fa-download"></i> <span>Download File</span>
+          </button>
         </div>
-
-        <p id="playerDesc" class="text-sm text-slate-300 mt-4 leading-relaxed">Movie description...</p>
-        
-        <div class="mt-4 text-xs text-slate-400 flex items-center gap-2">
-          <span>Uploaded by:</span>
-          <span id="playerUploader" class="font-bold text-brand-400 bg-brand-500/10 px-2.5 py-0.5 rounded-full border border-brand-500/20">Community User</span>
-        </div>
-
-        <div class="mt-8 pt-6 border-t border-slate-700/80">
-          <h3 class="text-lg font-display font-bold text-white flex items-center gap-2 mb-4">
-            <i class="fa-solid fa-comments text-brand-500"></i> Community Comments & Reviews (<span id="commentsCount">0</span>)
-          </h3>
-
-          <form onsubmit="handlePostComment(event)" class="mb-6 bg-dark-900 p-4 rounded-xl border border-slate-700/60">
-            <div class="flex items-center gap-2 mb-3">
-              <span class="text-xs font-semibold text-slate-400">Rating:</span>
-              <select id="commentRating" class="bg-dark-800 text-amber-400 font-bold border border-slate-700 rounded-lg px-2.5 py-1 text-xs focus:outline-none">
-                <option value="5">⭐⭐⭐⭐⭐ 5 Stars</option>
-                <option value="4">⭐⭐⭐⭐ 4 Stars</option>
-                <option value="3">⭐⭐⭐ 3 Stars</option>
-                <option value="2">⭐⭐ 2 Stars</option>
-                <option value="1">⭐ 1 Star</option>
-              </select>
-            </div>
-            <textarea id="commentText" rows="2" required placeholder="Write your review or thoughts about this title..." class="w-full bg-dark-800 border border-slate-700/80 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 mb-3"></textarea>
-            <div class="flex justify-end">
-              <button type="submit" class="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs shadow-md transition-all flex items-center gap-1.5">
-                <i class="fa-solid fa-paper-plane"></i> Post Comment
-              </button>
-            </div>
-          </form>
-
-          <div id="commentsList" class="space-y-3 max-h-60 overflow-y-auto pr-1">
-            <!-- Rendered by JS -->
-          </div>
-        </div>
-
+        <p class="text-sm text-gray-300" id="playerModalDesc">Description text goes here.</p>
       </div>
     </div>
   </div>
 
-  <!-- USER COMMUNITY UPLOAD MODAL -->
-  <div id="userUploadModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="relative w-full max-w-lg bg-dark-800 border border-slate-700 rounded-2xl p-6 sm:p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
-      <button onclick="closeUserUploadModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-
-      <div class="mb-6">
-        <h3 class="text-2xl font-display font-extrabold text-white">Upload & Share Media</h3>
-        <p class="text-xs text-slate-400 mt-1">Publish movies or music directly from your device or web links!</p>
+  <!-- UPLOAD MEDIA MODAL -->
+  <div id="uploadModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass w-full max-w-lg rounded-2xl p-6 shadow-2xl border border-gray-800 relative">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-xl font-bold text-white"><i class="fa-solid fa-cloud-arrow-up text-indigo-400 mr-2"></i> Upload Media</h3>
+        <button onclick="closeUploadModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
       </div>
-
-      <form onsubmit="handleUserUploadSubmit(event)" class="space-y-4">
+      <form onsubmit="handleMediaUpload(event)" class="space-y-4">
         <div>
-          <label class="block text-xs font-semibold text-slate-400 mb-1">Title *</label>
-          <input type="text" id="userUploadTitle" required placeholder="e.g. Interstellar Odyssey" class="w-full bg-dark-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-brand-500" />
+          <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Title *</label>
+          <input type="text" id="uploadTitle" required class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" placeholder="e.g. Inception" />
         </div>
-
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-semibold text-slate-400 mb-1">Category</label>
-            <select id="userUploadCategory" class="w-full bg-dark-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500">
+            <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Category</label>
+            <select id="uploadCategory" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
               <option value="Movies">Movies</option>
+              <option value="Series">TV Series</option>
               <option value="Music">Music</option>
-              <option value="TV Shows">TV Shows</option>
             </select>
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-400 mb-1">Genre</label>
-            <input type="text" id="userUploadGenre" required placeholder="Sci-Fi / Action / Synthwave" class="w-full bg-dark-900 border border-slate-700 rounded-xl px-3 py-2 text-
+            <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Genre</label>
+            <input type="text" id="uploadGenre" placeholder="Action, Sci-Fi..." class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Select Local File (Video / Audio) *</label>
+          <input type="file" id="uploadFileInput" accept="video/*,audio/*" required class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-300 focus:outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Poster Image File (Optional)</label>
+          <input type="file" id="uploadPosterInput" accept="image/*" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-300 focus:outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Description</label>
+          <textarea id="uploadDesc" rows="2" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" placeholder="Brief story or info..."></textarea>
+        </div>
+        <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl shadow-lg shadow-indigo-600/30 transition">Publish Media</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- AUTHENTICATION MODAL -->
+  <div id="authModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass w-full max-w-md rounded-2xl p-6 shadow-2xl border border-gray-800 relative">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-xl font-bold text-white" id="authModalTitle">Sign In</h3>
+        <button onclick="closeAuthModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <form onsubmit="handleAuthSubmit(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Username</label>
+          <input type="text" id="authUsername" required class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Password</label>
+          <input type="password" id="authPassword" required class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500" />
+        </div>
+        <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl shadow-lg shadow-indigo-600/30 transition">Continue</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="glass mt-12 border-t border-gray-800 py-6 px-8 text-center text-xs text-gray-500">
+    <p>&copy; 2026 CineWave Platform. All local media preserved via IndexedDB engine.</p>
+  </footer>
+
+  <script>
+    // INDEXED DB REBUILD ENGINE
+    const DB_NAME = 'CineWaveDB';
+    const DB_VERSION = 1;
+    let db = null;
+
+    function initDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onupgradeneeded = (e) => {
+          const dbRef = e.target.result;
+          if (!dbRef.objectStoreNames.contains('mediaFiles')) {
+            dbRef.createObjectStore('mediaFiles');
+          }
+        };
+        request.onsuccess = (e) => {
+          db = e.target.result;
+          resolve(db);
+        };
+        request.onerror = (e) => reject(e.target.error);
+      });
+    }
+
+    function storeBlob(key, blob) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('mediaFiles', 'readwrite');
+        const store = tx.objectStore('mediaFiles');
+        const req = store.put(blob, key);
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    function getBlob(key) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('mediaFiles', 'readonly');
+        const store = tx.objectStore('mediaFiles');
+        const req = store.get(key);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    // STATE MANAGEMENT
+    let currentUser = JSON.parse(localStorage.getItem('cinewave_user')) || null;
+    let currentCategory = 'All';
+    let mediaDatabase = JSON.parse(localStorage.getItem('cinewave_media')) || [
+      {
+        id: 'default-1',
+        title: 'Sintel (Sample Video)',
+        category: 'Movies',
+        genre: 'Animation / Sci-Fi',
+        desc: 'A open-source animation movie example streaming directly.',
+        streamUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
+        posterUrl: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=800&q=80',
+        views: 1420
+      }
+    ];
+
+    window.onload = async () => {
+      await initDB();
+      renderUserNav();
+      renderMediaCatalog();
+      updateFeaturedSpotlight(mediaDatabase[0]);
+    };
+
+    // AUTH & LOGOUT HANDLERS
+    function renderUserNav() {
+      const area = document.getElementById('userNavArea');
+      if (currentUser) {
+        area.innerHTML = `
+          <button onclick="openUploadModal()" class="px-4 py-2 bg-indigo-600/80 hover:bg-indigo-600 text-white text-xs font-semibold rounded-xl flex items-center space-x-2 transition">
+            <i class="fa-solid fa-plus"></i> <span>Upload</span>
+          </button>
+          <span class="text-xs font-bold text-gray-300"><i class="fa-solid fa-user text-indigo-400 mr-1"></i> ${currentUser.username}</span>
+          <button onclick="handleLogout()" class="px-3 py-1.5 bg-gray-800 hover:bg-red-600/80 text-gray-300 hover:text-white text-xs font-semibold rounded-xl transition">
+            Log Out
+          </button>
+        `;
+      } else {
+        area.innerHTML = `
+          <button onclick="openAuthModal()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl shadow-md transition">
+            Sign In
+          </button>
+        `;
+      }
+    }
+
+    function handleLogout() {
+      currentUser = null;
+      localStorage.removeItem('cinewave_user');
+      renderUserNav();
+    }
+
+    function openAuthModal() { document.getElementById('authModal').classList.remove('hidden'); }
+    function closeAuthModal() { document.getElementById('authModal').classList.add('hidden'); }
+
+    function handleAuthSubmit(e) {
+      e.preventDefault();
+      const username = document.getElementById('authUsername').value.trim();
+      if (!username) return;
+      currentUser = { username };
+      localStorage.setItem('cinewave_user', JSON.stringify(currentUser));
+      closeAuthModal();
+      renderUserNav();
+    }
+
+    // MEDIA UPLOAD
+    function openUploadModal() { document.getElementById('uploadModal').classList.remove('hidden'); }
+    function closeUploadModal() { document.getElementById('uploadModal').classList.add('hidden'); }
+
+    async function handleMediaUpload(e) {
+      e.preventDefault();
+      const title = document.getElementById('uploadTitle').value.trim();
+      const category = document.getElementById('uploadCategory').value;
+      const genre = document.getElementById('uploadGenre').value.trim() || 'General';
+      const desc = document.getElementById('uploadDesc').value.trim() || 'No description provided.';
+      
+      const mediaFile = document.getElementById('uploadFileInput').files[0];
+      const posterFile = document.getElementById('uploadPosterInput').files[0];
+
+      if (!mediaFile) return;
+
+      const mediaId = 'media-' + Date.now();
+      await storeBlob(mediaId + '-file', mediaFile);
+
+      let posterUrl = 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80';
+      if (posterFile) {
+        await storeBlob(mediaId + '-poster', posterFile);
+        posterUrl = mediaId + '-poster';
+      }
+
+      const newMedia = {
+        id: mediaId,
+        title,
+        category,
+        genre,
+        desc,
+        isLocal: true,
+        fileKey: mediaId + '-file',
+        fileType: mediaFile.type,
+        fileName: mediaFile.name,
+        posterUrl,
+        views: 0
+      };
+
+      mediaDatabase.unshift(newMedia);
+      localStorage.setItem('cinewave_media', JSON.stringify(mediaDatabase));
+      
+      closeUploadModal();
+      renderMediaCatalog();
+      updateFeaturedSpotlight(newMedia);
+    }
+
+    // DISPLAY & PLAYBACK
+    function switchCategory(cat) {
+      currentCategory = cat;
+      renderMediaCatalog();
+    }
+
+    function renderMediaCatalog() {
+      const grid = document.getElementById('mediaGrid');
+      grid.innerHTML = '';
+      const items = currentCategory === 'All' ? mediaDatabase : mediaDatabase.filter(m => m.category === currentCategory);
+
+      items.forEach(async (item) => {
+        let posterSrc = item.posterUrl;
+        if (item.posterUrl && item.posterUrl.startsWith('media-')) {
+          const blob = await getBlob(item.posterUrl);
+          if (blob) posterSrc = URL.createObjectURL(blob);
+        }
+
+        const card = document.createElement('div');
+        card.className = "glass rounded-2xl overflow-hidden shadow-lg hover:scale-105 transition duration-300 group cursor-pointer border border-gray-800 flex flex-col";
+        card.onclick = () => openPlayerModal(item.id);
+        card.innerHTML = `
+          <div class="relative aspect-[2/3] w-full overflow-hidden bg-gray-900">
+            <img src="${posterSrc}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500" />
+            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+              <div class="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center text-white text-lg shadow-xl">
+                <i class="fa-solid fa-play"></i>
+              </div>
+            </div>
+          </div>
+          <div class="p-4 flex flex-col justify-between flex-grow space-y-2">
+            <div>
+              <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">${item.category}</span>
+              <h4 class="text-sm font-bold text-white truncate">${item.title}</h4>
+            </div>
+            <p class="text-xs text-gray-400">${item.genre}</p>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function updateFeaturedSpotlight(item) {
+      if (!item) return;
+      document.getElementById('heroTitle').innerText = item.title;
+      document.getElementById('heroDescription').innerText = item.desc;
+      document.getElementById('heroBadge').innerText = item.category;
+      document.getElementById('heroPlayBtn').onclick = () => openPlayerModal(item.id);
+    }
+
+    async function openPlayerModal(id) {
+      const item = mediaDatabase.find(m => m.id === id);
+      if (!item) return;
+
+      document.getElementById('playerModalTitle').innerText = item.title;
+      document.getElementById('playerModalCategory').innerText = item.category;
+      document.getElementById('playerModalMeta').innerText = item.genre;
+      document.getElementById('playerModalDesc').innerText = item.desc;
+
+      const container = document.getElementById('playerContainer');
+      container.innerHTML = '';
+
+      let srcUrl = item.streamUrl;
+      if (item.isLocal) {
+        const blob = await getBlob(item.fileKey);
+        if (blob) {
+          srcUrl = URL.createObjectURL(new Blob([blob], { type: item.fileType || 'video/mp4' }));
+        }
+      }
+
+      if (item.category === 'Music') {
+        container.innerHTML = `
+          <div class="p-8 text-center flex flex-col items-center space-y-4 w-full">
+            <i class="fa-solid fa-music text-6xl text-indigo-500 animate-pulse"></i>
+            <audio controls autoplay class="w-full max-w-md">
+              <source src="${srcUrl}" type="${item.fileType || 'audio/mpeg'}" />
+            </audio>
+          </div>
+        `;
+      } else {
+        container.innerHTML = `
+          <video controls autoplay class="w-full h-full max-h-[500px] object-contain">
+            <source src="${srcUrl}" type="${item.fileType || 'video/mp4'}" />
+          </video>
+        `;
+      }
+
+      // Download Button Action
+      document.getElementById('downloadBtn').onclick = () => {
+        const a = document.createElement('a');
+        a.href = srcUrl;
+        a.download = item.fileName || `${item.title}.${item.category === 'Music' ? 'mp3' : 'mp4'}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      };
+
+      document.getElementById('playerModal').classList.remove('hidden');
+    }
+
+    function closePlayerModal() {
+      const container = document.getElementById('playerContainer');
+      container.innerHTML = '';
+      document.getElementById('playerModal').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>
