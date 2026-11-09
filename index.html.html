@@ -15,6 +15,61 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
   
   <script>
+    // Replace with your actual Project URL and anon public key from Settings > API
+const SUPABASE_URL = 'https://lggdzryghrfpjxsypjtc.supabase.co'; //[cite: 4]
+const SUPABASE_ANON_KEY = 'YOUR_ANON_PUBLIC_KEY_HERE';
+
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// 1. Upload Video File to Supabase Storage & Database
+async function uploadMovieToCloud(file, title, category, genre, description) {
+  const fileExt = file.name.split('.').pop();
+  const filePath = `${Date.now()}.${fileExt}`;
+
+  // Upload file to the 'movies' bucket
+  const { data: storageData, error: storageError } = await supabaseClient
+    .storage
+    .from('movies')
+    .upload(filePath, file);
+
+  if (storageError) {
+    console.error('Storage Upload Error:', storageError);
+    return;
+  }
+
+  // Get the public URL for global streaming/downloading
+  const { data: urlData } = supabaseClient
+    .storage
+    .from('movies')
+    .getPublicUrl(filePath);
+
+  const publicStreamUrl = urlData.publicUrl;
+
+  // Save movie details to the Supabase Database table
+  const { error: dbError } = await supabaseClient
+    .from('movies')
+    .insert([
+      { title, category, genre, description, stream_url: publicStreamUrl }
+    ]);
+
+  if (!dbError) {
+    alert('Movie uploaded successfully! Everyone can now stream and download it.');
+    fetchGlobalMovies();
+  }
+}
+
+// 2. Fetch Movies from Supabase so ALL users see uploaded content
+async function fetchGlobalMovies() {
+  const { data: movies, error } = await supabaseClient
+    .from('movies')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (!error) {
+    // Render the fetched movies to your UI catalog
+    console.log('Global Movies:', movies);
+  }
+}
     tailwind.config = {
       darkMode: 'class',
       theme: {
