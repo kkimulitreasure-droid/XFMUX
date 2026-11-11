@@ -1,832 +1,251 @@
-<!DOCTYPE html>
-<html lang="en" class="dark">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InstaTune - Spotify x Instagram x TikTok Hybrid</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+# InstaTune: Login, Sign up and Upload patch
 
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            display: ['Outfit', 'sans-serif'],
-          },
-          colors: {
-            spotify: {
-              green: '#1DB954',
-              hover: '#1ed760',
-              dark: '#121212',
-              card: '#181818',
-              elevated: '#282828'
-            },
-            insta: {
-              purple: '#833AB4',
-              red: '#FD1D1D',
-              orange: '#F56040',
-              yellow: '#FCAF45'
-            },
-            tiktok: {
-              cyan: '#25F4EE',
-              pink: '#FE2C55'
-            }
-          },
-          keyframes: {
-            spinSlow: {
-              '0%': { transform: 'rotate(0deg)' },
-              '100%': { transform: 'rotate(360deg)' }
-            },
-            heartPop: {
-              '0%': { transform: 'scale(1)' },
-              '50%': { transform: 'scale(1.3)' },
-              '100%': { transform: 'scale(1)' }
-            }
-          },
-          animation: {
-            spinSlow: 'spinSlow 6s linear infinite',
-            heartPop: 'heartPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-          }
-        }
-      }
-    }
-  </script>
+Four small edits to your existing file. Nothing else changes.
 
-  <style>
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #09090b; }
-    ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 9999px; }
-    ::-webkit-scrollbar-thumb:hover { background: #1DB954; }
+## 1. Replace MODAL 3 (the whole `<div id="authModal"> ... </div>` block)
 
-    .story-ring {
-      background: linear-gradient(45deg, #FCAF45, #F56040, #FD1D1D, #833AB4);
-    }
-    
-    .glass-panel {
-      background: rgba(24, 24, 24, 0.75);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    /* Snap Scroll for TikTok Reels Feed */
-    .snap-y-mandatory {
-      scroll-snap-type: y mandatory;
-    }
-    .snap-start {
-      scroll-snap-align: start;
-    }
-  </style>
-</head>
-<body class="bg-black text-white font-sans selection:bg-spotify-green selection:text-black min-h-screen flex flex-col justify-between overflow-x-hidden">
-
-  <!-- TOP BAR (Mobile / Desktop Brand Header) -->
-  <header class="h-14 bg-zinc-950 border-b border-zinc-900 px-4 flex items-center justify-between z-30 sticky top-0">
-    <div class="flex items-center gap-3">
-      <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-spotify-green via-purple-600 to-tiktok-pink flex items-center justify-center text-white shadow-lg shadow-spotify-green/20">
-        <i class="fa-brands fa-spotify text-lg"></i>
-      </div>
-      <span class="font-display font-extrabold text-xl bg-gradient-to-r from-white via-zinc-200 to-spotify-green bg-clip-text text-transparent">
-        InstaTune
-      </span>
+```html
+<div id="authModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[60] hidden flex items-center justify-center p-4">
+  <div class="bg-zinc-950 border border-zinc-800 w-full max-w-sm rounded-3xl p-6 space-y-5 shadow-2xl">
+    <div class="text-center space-y-1">
+      <h3 class="font-display font-bold text-xl text-white">Welcome to InstaTune</h3>
+      <p class="text-xs text-zinc-400">Log in or create an account to upload songs and videos</p>
     </div>
-
-    <!-- Center Navigation Tabs -->
-    <div class="flex items-center bg-zinc-900 rounded-full p-1 border border-zinc-800">
-      <button id="tabFeedBtn" onclick="switchMainTab('feed')" class="px-4 py-1 rounded-full text-xs font-semibold text-black bg-spotify-green transition">
-        <i class="fa-solid fa-music mr-1.5"></i> Music Feed
-      </button>
-      <button id="tabReelsBtn" onclick="switchMainTab('reels')" class="px-4 py-1 rounded-full text-xs font-semibold text-zinc-400 hover:text-white transition">
-        <i class="fa-solid fa-video mr-1.5"></i> Reels Clips
-      </button>
+    <div class="grid grid-cols-2 bg-zinc-900 p-1 rounded-xl gap-1 border border-zinc-800">
+      <button type="button" id="authTabLogin" onclick="setAuthMode('login')" class="py-2 rounded-lg text-xs font-bold text-black bg-spotify-green">Log in</button>
+      <button type="button" id="authTabSignup" onclick="setAuthMode('signup')" class="py-2 rounded-lg text-xs font-bold text-zinc-400">Sign up</button>
     </div>
-
-    <!-- Action Bar -->
-    <div class="flex items-center gap-3">
-      <button onclick="openCreateModal()" class="bg-spotify-green hover:bg-spotify-hover text-black px-3 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-spotify-green/20">
-        <i class="fa-solid fa-plus text-sm"></i> <span class="hidden sm:inline">Post Content</span>
-      </button>
-      <button onclick="openChatDrawer()" class="relative p-2 text-zinc-300 hover:text-white transition">
-        <i class="fa-regular fa-paper-plane text-lg"></i>
-        <span class="absolute top-1 right-1 w-2 h-2 bg-tiktok-pink rounded-full"></span>
-      </button>
-      <button onclick="openProfileModal()" class="flex items-center gap-2 border border-zinc-800 p-1 rounded-full bg-zinc-900">
-        <img id="headerUserAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop" class="w-6 h-6 rounded-full object-cover" alt="User">
-      </button>
-    </div>
-  </header>
-
-  <!-- MAIN BODY CONTAINER -->
-  <div class="flex flex-1 h-[calc(100vh-146px)] overflow-hidden">
-    
-    <!-- LEFT SIDEBAR: Navigation & Discover -->
-    <aside class="hidden md:flex w-64 bg-zinc-950 border-r border-zinc-900 flex-col justify-between p-4 flex-shrink-0">
-      <div class="space-y-6">
-        <!-- Quick Stats Banner -->
-        <div class="glass-panel p-3.5 rounded-2xl space-y-2">
-          <div class="flex items-center justify-between">
-            <span class="text-xs text-zinc-400">Account Status</span>
-            <span id="badgeArtist" class="text-[10px] bg-spotify-green/20 text-spotify-green px-2 py-0.5 rounded-full font-bold uppercase">Artist</span>
-          </div>
-          <h4 id="sidebarUsername" class="font-bold text-sm text-white truncate">@alex_music</h4>
-          <div class="grid grid-cols-2 text-center text-xs border-t border-zinc-800 pt-2 text-zinc-400">
-            <div><strong id="sidebarFollowers" class="text-white">1,420</strong> followers</div>
-            <div><strong id="sidebarFollowing" class="text-white">340</strong> following</div>
-          </div>
-        </div>
-
-        <!-- Links -->
-        <nav class="space-y-1">
-          <a href="#" onclick="switchMainTab('feed')" class="flex items-center gap-4 px-3 py-3 text-spotify-green bg-zinc-900/80 rounded-xl font-medium transition">
-            <i class="fa-solid fa-house text-lg"></i> Home Feed
-          </a>
-          <a href="#" onclick="switchMainTab('reels')" class="flex items-center gap-4 px-3 py-3 text-zinc-400 hover:text-white hover:bg-zinc-900/50 rounded-xl font-medium transition">
-            <i class="fa-solid fa-film text-lg"></i> Short Reels
-          </a>
-          <a href="#" onclick="openChatDrawer()" class="flex items-center gap-4 px-3 py-3 text-zinc-400 hover:text-white hover:bg-zinc-900/50 rounded-xl font-medium transition">
-            <i class="fa-regular fa-comments text-lg"></i> Direct Messages
-          </a>
-          <a href="#" onclick="openProfileModal()" class="flex items-center gap-4 px-3 py-3 text-zinc-400 hover:text-white hover:bg-zinc-900/50 rounded-xl font-medium transition">
-            <i class="fa-regular fa-user text-lg"></i> My Artist Profile
-          </a>
-        </nav>
-      </div>
-
-      <button onclick="openAuthModal()" class="w-full py-2 border border-zinc-800 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-zinc-900 transition flex items-center justify-center gap-2">
-        <i class="fa-solid fa-right-to-bracket"></i> Switch / Login Account
-      </button>
-    </aside>
-
-    <!-- CONTENT VIEW AREA -->
-    <main class="flex-1 overflow-y-auto bg-black relative flex flex-col items-center">
-      
-      <!-- TAB 1: MUSIC FEED (SPOTIFY x INSTAGRAM) -->
-      <section id="musicFeedView" class="w-full max-w-xl py-4 px-2 sm:px-4 space-y-6">
-        
-        <!-- Instagram Stories Bar -->
-        <div class="bg-zinc-950/80 p-3 rounded-2xl border border-zinc-900 shadow-xl overflow-x-auto no-scrollbar">
-          <div class="flex items-center gap-4" id="storiesContainer"></div>
-        </div>
-
-        <!-- Feed Posts Container -->
-        <div class="space-y-8 pb-10" id="feedContainer"></div>
-      </section>
-
-      <!-- TAB 2: TIKTOK STYLE REELS VIDEO FEED -->
-      <section id="reelsView" class="hidden w-full h-full max-w-md snap-y-mandatory overflow-y-auto relative no-scrollbar">
-        <div id="reelsContainer" class="w-full h-full"></div>
-      </section>
-
-    </main>
-
-    <!-- RIGHT SIDEBAR: Artists to Follow & Trending Tracks -->
-    <aside class="hidden lg:flex flex-col w-80 bg-zinc-950 p-5 space-y-6 flex-shrink-0 overflow-y-auto border-l border-zinc-900">
-      
-      <!-- Top Artists to Follow -->
-      <div class="space-y-4">
-        <div class="flex justify-between items-center">
-          <h3 class="font-display font-bold text-sm text-white uppercase tracking-wider">Top Artists to Follow</h3>
-        </div>
-        <div class="space-y-3" id="artistsToFollowList"></div>
-      </div>
-
-      <!-- Trending Tracks -->
-      <div class="space-y-3 border-t border-zinc-900 pt-5">
-        <h3 class="font-display font-bold text-sm text-white uppercase tracking-wider">Hot Releases</h3>
-        <div class="space-y-2" id="hotReleasesList"></div>
-      </div>
-    </aside>
-
+    <form id="authForm" class="space-y-4">
+      <input type="text" id="authUsernameInput" required placeholder="Username" autocomplete="username" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-spotify-green">
+      <input type="text" id="authNameInput" placeholder="Display name" class="hidden w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-spotify-green">
+      <input type="password" id="authPasswordInput" required minlength="6" placeholder="Password (min 6 characters)" autocomplete="current-password" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-spotify-green">
+      <p id="authError" class="text-xs text-tiktok-pink hidden"></p>
+      <button type="submit" id="authSubmitBtn" class="w-full bg-spotify-green hover:bg-spotify-hover text-black py-3 rounded-xl font-bold text-sm transition">Log in</button>
+    </form>
   </div>
+</div>
+```
 
-  <!-- PERSISTENT SPOTIFY-STYLE BOTTOM PLAYER BAR -->
-  <footer class="h-[90px] bg-zinc-950 border-t border-zinc-900 px-4 flex items-center justify-between z-40 relative shadow-2xl">
-    
-    <!-- Track Details -->
-    <div class="flex items-center gap-3 w-1/4 min-w-[180px]">
-      <div class="relative group">
-        <img id="playerThumb" src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=120&auto=format&fit=crop" class="w-14 h-14 rounded-lg object-cover shadow-md" alt="Cover">
-        <!-- Canvas Mini Visualizer -->
-        <canvas id="miniAudioVisualizer" class="absolute inset-0 w-full h-full rounded-lg pointer-events-none opacity-60"></canvas>
-      </div>
-      <div class="overflow-hidden">
-        <h4 id="playerTitle" class="text-sm font-semibold text-white truncate hover:underline cursor-pointer">Neon Dreams</h4>
-        <p id="playerArtist" class="text-xs text-zinc-400 truncate hover:underline cursor-pointer">Synthwave Pro</p>
-      </div>
-      <button id="playerLikeBtn" class="text-zinc-400 hover:text-spotify-green transition ml-2">
-        <i class="fa-regular fa-heart text-base"></i>
-      </button>
-    </div>
+## 2. In the Create modal, replace the three URL inputs with file pickers
 
-    <!-- Central Controls -->
-    <div class="flex flex-col items-center gap-2 w-2/4 max-w-xl">
-      <div class="flex items-center gap-5 text-zinc-400 text-sm">
-        <button id="shuffleBtn" class="hover:text-white transition"><i class="fa-solid fa-shuffle"></i></button>
-        <button id="prevBtn" class="hover:text-white text-base transition"><i class="fa-solid fa-backward-step"></i></button>
-        <button id="masterPlayBtn" class="w-9 h-9 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 transition active:scale-95 shadow-lg shadow-white/10">
-          <i class="fa-solid fa-play text-sm ml-0.5" id="masterPlayIcon"></i>
-        </button>
-        <button id="nextBtn" class="hover:text-white text-base transition"><i class="fa-solid fa-forward-step"></i></button>
-        <button id="repeatBtn" class="hover:text-white transition"><i class="fa-solid fa-repeat"></i></button>
-      </div>
+Replace the `Cover Image URL` and `Audio MP3 Stream URL` inputs (inside `musicInputsGroup`) with:
 
-      <!-- Scrubber -->
-      <div class="w-full flex items-center gap-3 text-xs text-zinc-400 font-mono">
-        <span id="playerCurrentTime">0:00</span>
-        <div id="playerProgressContainer" class="flex-1 h-1.5 bg-zinc-800 rounded-full cursor-pointer relative group">
-          <div id="playerProgressBar" class="h-full bg-spotify-green rounded-full relative w-0 transition-all duration-75"></div>
-        </div>
-        <span id="playerDuration">0:00</span>
-      </div>
-    </div>
+```html
+<div>
+  <label class="text-xs text-zinc-400 block mb-1">Song file (MP3, WAV, M4A)</label>
+  <input type="file" id="postAudioFile" accept="audio/*" class="w-full text-xs text-zinc-400 file:mr-3 file:rounded-full file:border-0 file:bg-spotify-green file:px-3 file:py-1.5 file:font-bold file:text-black">
+</div>
+<div>
+  <label class="text-xs text-zinc-400 block mb-1">Cover image (optional)</label>
+  <input type="file" id="postCoverFile" accept="image/*" class="w-full text-xs text-zinc-400 file:mr-3 file:rounded-full file:border-0 file:bg-zinc-800 file:px-3 file:py-1.5 file:text-white">
+</div>
+```
 
-    <!-- Volume Bar -->
-    <div class="flex items-center justify-end gap-4 w-1/4 text-zinc-400 text-sm">
-      <div class="flex items-center gap-2">
-        <button id="muteBtn" class="hover:text-white transition"><i class="fa-solid fa-volume-high" id="volumeIcon"></i></button>
-        <div id="volumeContainer" class="w-20 h-1.5 bg-zinc-800 rounded-full cursor-pointer relative group">
-          <div id="volumeBar" class="h-full bg-white group-hover:bg-spotify-green rounded-full w-4/5"></div>
-        </div>
-      </div>
-    </div>
-  </footer>
+Replace the `MP4 Video URL` input (inside `videoInputsGroup`) with:
 
-  <!-- MODAL 1: CREATE CONTENT (MUSIC OR TIKTOK VIDEO) -->
-  <div id="createModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-zinc-950 border border-zinc-800 w-full max-w-lg rounded-3xl p-6 space-y-5 shadow-2xl relative">
-      <div class="flex justify-between items-center border-b border-zinc-900 pb-3">
-        <h3 class="font-display font-bold text-lg text-white flex items-center gap-2">
-          <i class="fa-solid fa-cloud-arrow-up text-spotify-green"></i> Creator Studio Post
-        </h3>
-        <button onclick="closeCreateModal()" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
-      </div>
+```html
+<div>
+  <label class="text-xs text-zinc-400 block mb-1">Video file (MP4, MOV, WebM)</label>
+  <input type="file" id="postVideoFile" accept="video/*" class="w-full text-xs text-zinc-400 file:mr-3 file:rounded-full file:border-0 file:bg-tiktok-pink file:px-3 file:py-1.5 file:font-bold file:text-white">
+</div>
+```
 
-      <!-- Type Switcher -->
-      <div class="grid grid-cols-2 bg-zinc-900 p-1 rounded-xl gap-1 border border-zinc-800">
-        <button id="typeMusicBtn" onclick="switchPostType('music')" class="py-2 rounded-lg text-xs font-bold text-black bg-spotify-green transition">
-          <i class="fa-solid fa-music mr-1"></i> Music Track
-        </button>
-        <button id="typeVideoBtn" onclick="switchPostType('video')" class="py-2 rounded-lg text-xs font-bold text-zinc-400 hover:text-white transition">
-          <i class="fa-solid fa-video mr-1"></i> Short Reel Video
-        </button>
-      </div>
+Also change the sidebar button `Switch / Login Account` to:
 
-      <form id="createContentForm" class="space-y-4">
-        <div>
-          <label class="text-xs text-zinc-400 block mb-1">Title / Caption</label>
-          <input type="text" id="postTitleInput" placeholder="Enter title or caption..." required class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-spotify-green">
-        </div>
+```html
+<button onclick="logout()" class="w-full py-2 border border-zinc-800 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-zinc-900 transition flex items-center justify-center gap-2">
+  <i class="fa-solid fa-right-from-bracket"></i> Log out
+</button>
+```
 
-        <div id="musicInputsGroup" class="space-y-4">
-          <div>
-            <label class="text-xs text-zinc-400 block mb-1">Artist Name</label>
-            <input type="text" id="postArtistInput" placeholder="Artist Name" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-spotify-green">
-          </div>
-          <div>
-            <label class="text-xs text-zinc-400 block mb-1">Cover Image URL</label>
-            <input type="url" id="postCoverInput" placeholder="https://..." class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-spotify-green">
-          </div>
-          <div>
-            <label class="text-xs text-zinc-400 block mb-1">Audio MP3 Stream URL</label>
-            <input type="url" id="postAudioInput" placeholder="https://..." class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-spotify-green">
-          </div>
-        </div>
+## 3. In the script: delete the old code, add the new code
 
-        <div id="videoInputsGroup" class="space-y-4 hidden">
-          <div>
-            <label class="text-xs text-zinc-400 block mb-1">MP4 Video URL</label>
-            <input type="url" id="postVideoInput" placeholder="https://..." class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-tiktok-pink">
-          </div>
-        </div>
+Delete these two old blocks:
+- `document.getElementById('createContentForm').addEventListener('submit', ...)`
+- the whole `// AUTH MODAL` section (`openAuthModal`, `closeAuthModal`, and the `authForm` submit listener)
 
-        <button type="submit" class="w-full bg-spotify-green hover:bg-spotify-hover text-black py-3 rounded-xl font-bold text-sm transition shadow-lg shadow-spotify-green/20">
-          Publish Content
-        </button>
-      </form>
-    </div>
-  </div>
+Keep a stub so the other buttons do not break: `function openAuthModal() {}` is not needed any more, since the sidebar button now calls `logout()`.
 
-  <!-- MODAL 2: USER PROFILE & ARTIST MANAGEMENT -->
-  <div id="profileModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-zinc-950 border border-zinc-800 w-full max-w-md rounded-3xl p-6 space-y-6 shadow-2xl relative">
-      <button onclick="closeProfileModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
-      
-      <div class="flex flex-col items-center text-center space-y-3">
-        <div class="p-1 story-ring rounded-full">
-          <img id="profileModalAvatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop" class="w-20 h-20 rounded-full object-cover border-2 border-black" alt="Avatar">
-        </div>
-        <div>
-          <h3 id="profileModalName" class="font-display font-bold text-xl text-white">Alex Rivera</h3>
-          <p id="profileModalHandle" class="text-xs text-spotify-green font-semibold">@alex_music</p>
-        </div>
-        <p id="profileModalBio" class="text-xs text-zinc-400 max-w-xs">Producer & Beatmaker based in LA. Synthesizing retro synthwave with modern lofi beats.</p>
-      </div>
+Then paste this at the end of your `<script>`:
 
-      <div class="grid grid-cols-3 gap-2 py-3 bg-zinc-900/60 rounded-2xl text-center border border-zinc-800">
-        <div>
-          <span class="block font-extrabold text-base text-white" id="profileFollowersCount">1.4K</span>
-          <span class="text-[10px] text-zinc-500 uppercase font-bold">Followers</span>
-        </div>
-        <div>
-          <span class="block font-extrabold text-base text-white" id="profileFollowingCount">340</span>
-          <span class="text-[10px] text-zinc-500 uppercase font-bold">Following</span>
-        </div>
-        <div>
-          <span class="block font-extrabold text-base text-white" id="profileTracksCount">12</span>
-          <span class="text-[10px] text-zinc-500 uppercase font-bold">Tracks</span>
-        </div>
-      </div>
+```js
+// ================= STORAGE (files in IndexedDB, metadata in localStorage) =================
+function idb() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open('instatune', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('files');
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+}
+async function saveFile(key, blob) {
+  const db = await idb();
+  return new Promise((res, rej) => {
+    const t = db.transaction('files', 'readwrite');
+    t.objectStore('files').put(blob, key);
+    t.oncomplete = res; t.onerror = () => rej(t.error);
+  });
+}
+async function getFile(key) {
+  const db = await idb();
+  return new Promise((res, rej) => {
+    const q = db.transaction('files').objectStore('files').get(key);
+    q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error);
+  });
+}
+const getUsers = () => JSON.parse(localStorage.getItem('instatune_users') || '{}');
+const getPosts = () => JSON.parse(localStorage.getItem('instatune_posts') || '[]');
+async function hashPw(p) {
+  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(p));
+  return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
+}
 
-      <div class="space-y-2">
-        <button id="toggleArtistModeBtn" onclick="toggleArtistMode()" class="w-full py-2.5 rounded-xl border border-spotify-green text-spotify-green hover:bg-spotify-green hover:text-black font-bold text-xs transition">
-          Switch to Artist Account
-        </button>
-      </div>
-    </div>
-  </div>
+// ================= AUTH =================
+let authMode = 'login';
+function setAuthMode(mode) {
+  authMode = mode;
+  const login = mode === 'login';
+  document.getElementById('authNameInput').classList.toggle('hidden', login);
+  document.getElementById('authNameInput').required = !login;
+  document.getElementById('authSubmitBtn').textContent = login ? 'Log in' : 'Create account';
+  document.getElementById('authTabLogin').className = 'py-2 rounded-lg text-xs font-bold ' + (login ? 'text-black bg-spotify-green' : 'text-zinc-400');
+  document.getElementById('authTabSignup').className = 'py-2 rounded-lg text-xs font-bold ' + (login ? 'text-zinc-400' : 'text-black bg-spotify-green');
+  document.getElementById('authError').classList.add('hidden');
+}
+function authError(msg) {
+  const el = document.getElementById('authError');
+  el.textContent = msg; el.classList.remove('hidden');
+}
 
-  <!-- MODAL 3: ACCOUNT AUTH / SWITCHER -->
-  <div id="authModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-zinc-950 border border-zinc-800 w-full max-w-sm rounded-3xl p-6 space-y-5 shadow-2xl relative">
-      <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
-      <div class="text-center space-y-1">
-        <h3 class="font-display font-bold text-xl text-white">InstaTune Profile Login</h3>
-        <p class="text-xs text-zinc-400">Select or create user account</p>
-      </div>
+document.getElementById('authForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const username = document.getElementById('authUsernameInput').value.trim().toLowerCase().replace(/^@/, '');
+  const password = document.getElementById('authPasswordInput').value;
+  const users = getUsers();
 
-      <form id="authForm" class="space-y-4">
-        <div>
-          <label class="text-xs text-zinc-400 block mb-1">Username</label>
-          <input type="text" id="authUsernameInput" required placeholder="@username" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-spotify-green">
-        </div>
-        <div>
-          <label class="text-xs text-zinc-400 block mb-1">Display Name</label>
-          <input type="text" id="authNameInput" required placeholder="Your Name" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-spotify-green">
-        </div>
-        <button type="submit" class="w-full bg-spotify-green hover:bg-spotify-hover text-black py-3 rounded-xl font-bold text-sm transition">
-          Login / Create Account
-        </button>
-      </form>
-    </div>
-  </div>
-
-  <!-- DRAWER: DIRECT MESSAGES & CHAT -->
-  <div id="chatDrawer" class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex justify-end opacity-0 pointer-events-none transition-opacity duration-300">
-    <div class="w-full max-w-md bg-zinc-950 h-full border-l border-zinc-800 flex flex-col justify-between transform translate-x-full transition-transform duration-300" id="chatDrawerContent">
-      <div class="p-4 border-b border-zinc-900 flex justify-between items-center">
-        <h3 class="font-display font-bold text-lg text-white flex items-center gap-2">
-          <i class="fa-regular fa-paper-plane text-spotify-green"></i> Messages & Audio Direct
-        </h3>
-        <button onclick="closeChatDrawer()" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
-      </div>
-
-      <!-- Chat list or active message -->
-      <div class="flex-1 overflow-y-auto p-4 space-y-4" id="chatMessages">
-        <!-- Rendered dynamically -->
-      </div>
-
-      <form id="chatForm" class="p-4 border-t border-zinc-900 flex items-center gap-2 bg-zinc-950">
-        <input type="text" id="chatInput" placeholder="Send a message or track link..." class="flex-1 bg-zinc-900 border border-zinc-800 rounded-full px-4 py-2 text-sm text-white focus:outline-none focus:border-spotify-green">
-        <button type="submit" class="w-9 h-9 bg-spotify-green text-black rounded-full flex items-center justify-center hover:scale-105 transition">
-          <i class="fa-solid fa-arrow-up text-sm"></i>
-        </button>
-      </form>
-    </div>
-  </div>
-
-  <!-- Global Audio Element -->
-  <audio id="globalAudioPlayer" crossorigin="anonymous"></audio>
-
-  <!-- APP STATE & LOGIC -->
-  <script>
-    // USER DATA
-    let currentUser = {
-      username: 'alex_music',
-      displayName: 'Alex Rivera',
+  if (authMode === 'signup') {
+    if (!/^[a-z0-9_]{3,20}$/.test(username)) return authError('Username: 3-20 letters, numbers or underscore.');
+    if (users[username]) return authError('That username is taken.');
+    users[username] = {
+      displayName: document.getElementById('authNameInput').value.trim() || username,
+      pw: await hashPw(password),
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop',
-      isArtist: true,
-      followers: 1420,
-      following: 340,
-      tracks: 12
+      isArtist: true, followers: 0, following: 0
     };
+    localStorage.setItem('instatune_users', JSON.stringify(users));
+  } else {
+    const u = users[username];
+    if (!u || u.pw !== await hashPw(password)) return authError('Wrong username or password.');
+  }
+  localStorage.setItem('instatune_session', username);
+  document.getElementById('authForm').reset();
+  document.getElementById('authModal').classList.add('hidden');
+  applyUser(username);
+});
 
-    // ARTISTS DATA & FOLLOW STATE
-    let artistsData = [
-      { id: 'art_1', name: 'Synthwave Pro', username: 'synthwave_pro', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop', isFollowing: false },
-      { id: 'art_2', name: 'Acoustic Soul', username: 'acousticsoul', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop', isFollowing: true },
-      { id: 'art_3', name: 'Berlin Techno Lab', username: 'berlin_techno', avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150&auto=format&fit=crop', isFollowing: false }
-    ];
+function logout() {
+  localStorage.removeItem('instatune_session');
+  setAuthMode('login');
+  document.getElementById('authModal').classList.remove('hidden');
+}
 
-    // FEED TRACKS
-    let feedPostsData = [
-      {
-        id: 'post_1',
-        creator: 'Synthwave Pro',
-        username: 'synthwave_pro',
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop',
-        songTitle: 'Neon Cyber Drive',
-        artist: 'Synthwave Pro',
-        coverImage: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=800&auto=format&fit=crop',
-        audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-        likesCount: 1420,
-        isLiked: false,
-        caption: 'Late night synth session! Check out the synthwave vibes 🎧⚡'
-      },
-      {
-        id: 'post_2',
-        creator: 'Acoustic Soul',
-        username: 'acousticsoul',
-        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop',
-        songTitle: 'Morning Coffee Guitar',
-        artist: 'Acoustic Soul',
-        coverImage: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&auto=format&fit=crop',
-        audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
-        likesCount: 3890,
-        isLiked: true,
-        caption: 'Organic guitar recorded at sunrise. Chill start to the day. ☕🎸'
-      }
-    ];
+function applyUser(username) {
+  const u = getUsers()[username];
+  if (!u) return logout();
+  currentUser = { username, displayName: u.displayName, avatar: u.avatar, isArtist: u.isArtist,
+                  followers: u.followers, following: u.following,
+                  tracks: getPosts().filter(p => p.username === username).length };
+  document.getElementById('headerUserAvatar').src = u.avatar;
+  document.getElementById('profileModalAvatar').src = u.avatar;
+  document.getElementById('sidebarUsername').textContent = '@' + username;
+  document.getElementById('sidebarFollowers').textContent = u.followers;
+  document.getElementById('sidebarFollowing').textContent = u.following;
+  document.getElementById('profileModalName').textContent = u.displayName;
+  document.getElementById('profileModalHandle').textContent = '@' + username;
+  document.getElementById('profileFollowersCount').textContent = u.followers;
+  document.getElementById('profileFollowingCount').textContent = u.following;
+  document.getElementById('profileTracksCount').textContent = currentUser.tracks;
+  document.getElementById('badgeArtist').textContent = u.isArtist ? 'Artist' : 'User';
+  loadUploads();
+}
 
-    // TIKTOK SHORT VIDEOS REELS DATA
-    let reelsData = [
-      {
-        id: 'reel_1',
-        username: 'synthwave_pro',
-        caption: 'Studio workflow making retro synthesizers sound giant! #musicproducer',
-        songTitle: 'Neon Cyber Drive - Synthwave Pro',
-        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-dj-hands-adjusting-sound-controls-41559-large.mp4',
-        likes: 12400,
-        isLiked: false
-      },
-      {
-        id: 'reel_2',
-        username: 'acousticsoul',
-        caption: 'Unplugged guitar riff in the acoustic room 🎸✨',
-        songTitle: 'Morning Coffee Guitar - Acoustic Soul',
-        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-man-playing-guitar-under-a-tree-41549-large.mp4',
-        likes: 8900,
-        isLiked: true
-      }
-    ];
-
-    // CHAT MESSAGES MOCK DATA
-    let chatHistory = [
-      { sender: 'synthwave_pro', text: 'Hey Alex! Loved your new beat upload 🔥', time: '10:14 AM' },
-      { sender: 'alex_music', text: 'Thanks man! Yours is sounding clean too!', time: '10:16 AM' }
-    ];
-
-    // STATE CONTROLS
-    let currentTrackIndex = 0;
-    let isPlaying = false;
-    let postTypeMode = 'music';
-
-    // DOM ELEMENTS
-    const globalAudio = document.getElementById('globalAudioPlayer');
-    const masterPlayBtn = document.getElementById('masterPlayBtn');
-    const masterPlayIcon = document.getElementById('masterPlayIcon');
-    const playerThumb = document.getElementById('playerThumb');
-    const playerTitle = document.getElementById('playerTitle');
-    const playerArtist = document.getElementById('playerArtist');
-    const playerCurrentTime = document.getElementById('playerCurrentTime');
-    const playerDuration = document.getElementById('playerDuration');
-    const playerProgressBar = document.getElementById('playerProgressBar');
-    const playerProgressContainer = document.getElementById('playerProgressContainer');
-
-    // INITIALIZATION
-    window.addEventListener('load', () => {
-      renderFeed();
-      renderReels();
-      renderArtistsToFollow();
-      renderChat();
-      loadTrack(0, false);
-      setupAudioListeners();
-      setupVisualizer();
-    });
-
-    // TAB SWITCHING
-    function switchMainTab(tab) {
-      const feedView = document.getElementById('musicFeedView');
-      const reelsView = document.getElementById('reelsView');
-      const tabFeedBtn = document.getElementById('tabFeedBtn');
-      const tabReelsBtn = document.getElementById('tabReelsBtn');
-
-      if (tab === 'feed') {
-        feedView.classList.remove('hidden');
-        reelsView.classList.add('hidden');
-        tabFeedBtn.className = "px-4 py-1 rounded-full text-xs font-semibold text-black bg-spotify-green transition";
-        tabReelsBtn.className = "px-4 py-1 rounded-full text-xs font-semibold text-zinc-400 hover:text-white transition";
+async function loadUploads() {
+  feedPostsData = feedPostsData.filter(p => !p.uploaded);
+  reelsData = reelsData.filter(r => !r.uploaded);
+  for (const p of getPosts().reverse()) {
+    try {
+      if (p.type === 'music') {
+        const audio = await getFile(p.audioKey); if (!audio) continue;
+        const cover = p.coverKey ? await getFile(p.coverKey) : null;
+        feedPostsData.unshift({ id: p.id, uploaded: true, creator: p.creator, username: p.username,
+          avatar: getUsers()[p.username]?.avatar || '', songTitle: p.title, artist: p.creator,
+          coverImage: cover ? URL.createObjectURL(cover) : 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop',
+          audioUrl: URL.createObjectURL(audio), likesCount: 0, isLiked: false, caption: p.title });
       } else {
-        feedView.classList.add('hidden');
-        reelsView.classList.remove('hidden');
-        tabReelsBtn.className = "px-4 py-1 rounded-full text-xs font-semibold text-black bg-tiktok-pink transition";
-        tabFeedBtn.className = "px-4 py-1 rounded-full text-xs font-semibold text-zinc-400 hover:text-white transition";
+        const video = await getFile(p.videoKey); if (!video) continue;
+        reelsData.unshift({ id: p.id, uploaded: true, username: p.username, caption: p.title,
+          songTitle: p.title + ' - Sound', videoUrl: URL.createObjectURL(video), likes: 0, isLiked: false });
       }
+    } catch (err) { console.error('Could not load upload', err); }
+  }
+  renderFeed(); renderReels();
+}
+
+// ================= UPLOAD =================
+document.getElementById('createContentForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!localStorage.getItem('instatune_session')) return logout();
+  const title = document.getElementById('postTitleInput').value.trim();
+  const id = 'up_' + Date.now();
+  const meta = { id, type: postTypeMode, title, username: currentUser.username, creator: currentUser.displayName };
+
+  try {
+    if (postTypeMode === 'music') {
+      const audio = document.getElementById('postAudioFile').files[0];
+      if (!audio) return alert('Please choose a song file.');
+      await saveFile(id + '_audio', audio); meta.audioKey = id + '_audio';
+      const cover = document.getElementById('postCoverFile').files[0];
+      if (cover) { await saveFile(id + '_cover', cover); meta.coverKey = id + '_cover'; }
+    } else {
+      const video = document.getElementById('postVideoFile').files[0];
+      if (!video) return alert('Please choose a video file.');
+      await saveFile(id + '_video', video); meta.videoKey = id + '_video';
     }
+  } catch (err) { return alert('Upload failed: ' + err.message); }
 
-    // RENDER MUSIC FEED
-    function renderFeed() {
-      const container = document.getElementById('feedContainer');
-      container.innerHTML = feedPostsData.map((post, idx) => {
-        const isCurrent = currentTrackIndex === idx;
-        return `
-          <article class="bg-zinc-950 border border-zinc-900 rounded-2xl overflow-hidden shadow-2xl space-y-3">
-            <div class="p-4 flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <img src="${post.avatar}" class="w-10 h-10 rounded-full object-cover border border-zinc-800" alt="Avatar">
-                <div>
-                  <h4 class="text-sm font-semibold text-white">${post.creator}</h4>
-                  <p class="text-xs text-zinc-400">@${post.username}</p>
-                </div>
-              </div>
-            </div>
+  const posts = getPosts(); posts.push(meta);
+  localStorage.setItem('instatune_posts', JSON.stringify(posts));
+  document.getElementById('createContentForm').reset();
+  closeCreateModal();
+  await loadUploads();
+  document.getElementById('profileTracksCount').textContent = getPosts().filter(p => p.username === currentUser.username).length;
+  if (postTypeMode === 'video') switchMainTab('reels');
+});
 
-            <div class="relative aspect-square bg-zinc-900 overflow-hidden cursor-pointer" onclick="togglePostTrack(${idx})">
-              <img src="${post.coverImage}" class="w-full h-full object-cover" alt="Cover">
-              <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition">
-                <div class="w-16 h-16 rounded-full bg-spotify-green text-black flex items-center justify-center shadow-xl">
-                  <i class="fa-solid ${isCurrent && isPlaying ? 'fa-pause' : 'fa-play'} text-2xl"></i>
-                </div>
-              </div>
-            </div>
+// Make the Post button require login
+const _openCreate = openCreateModal;
+openCreateModal = function () {
+  if (!localStorage.getItem('instatune_session')) return logout();
+  _openCreate();
+};
 
-            <div class="px-4 py-2 flex items-center justify-between text-xl">
-              <div class="flex items-center gap-4">
-                <button onclick="toggleFeedLike('${post.id}')" class="${post.isLiked ? 'text-tiktok-pink animate-heartPop' : 'text-zinc-400 hover:text-white'}">
-                  <i class="${post.isLiked ? 'fa-solid fa-heart' : 'fa-regular fa-heart'}"></i>
-                </button>
-                <button onclick="openChatDrawer()" class="text-zinc-400 hover:text-white"><i class="fa-regular fa-comment"></i></button>
-              </div>
-              <span class="text-xs font-semibold text-zinc-400">${post.likesCount} likes</span>
-            </div>
+// ================= START =================
+function initAuth() {
+  const s = localStorage.getItem('instatune_session');
+  if (s && getUsers()[s]) applyUser(s); else logout();
+}
+```
 
-            <div class="px-4 pb-4 text-xs space-y-1">
-              <p><strong class="text-white mr-1.5">${post.username}</strong>${post.caption}</p>
-            </div>
-          </article>
-        `;
-      }).join('');
-    }
+## 4. Call it on page load
 
-    // RENDER TIKTOK REELS
-    function renderReels() {
-      const container = document.getElementById('reelsContainer');
-      container.innerHTML = reelsData.map((reel) => `
-        <div class="w-full h-full snap-start relative bg-zinc-900 flex items-center justify-center">
-          <video src="${reel.videoUrl}" class="w-full h-full object-cover" loop playsinline onclick="this.paused ? this.play() : this.pause()"></video>
-          
-          <!-- Overlay Controls -->
-          <div class="absolute bottom-6 left-4 right-16 space-y-2 text-white">
-            <h4 class="font-bold text-sm">@${reel.username}</h4>
-            <p class="text-xs text-zinc-200">${reel.caption}</p>
-            <div class="flex items-center gap-2 text-xs text-spotify-green">
-              <i class="fa-solid fa-music animate-spinSlow"></i>
-              <span class="truncate">${reel.songTitle}</span>
-            </div>
-          </div>
+In your existing `window.addEventListener('load', () => { ... })`, add one line at the end:
 
-          <!-- Vertical Action Bar -->
-          <div class="absolute right-4 bottom-12 flex flex-col items-center gap-5 text-white">
-            <button class="flex flex-col items-center text-xs gap-1">
-              <div class="w-10 h-10 rounded-full bg-zinc-800/80 flex items-center justify-center text-tiktok-pink">
-                <i class="fa-solid fa-heart text-lg"></i>
-              </div>
-              <span>${reel.likes}</span>
-            </button>
-            <button onclick="openChatDrawer()" class="flex flex-col items-center text-xs gap-1">
-              <div class="w-10 h-10 rounded-full bg-zinc-800/80 flex items-center justify-center">
-                <i class="fa-solid fa-comment text-lg"></i>
-              </div>
-              <span>Reply</span>
-            </button>
-          </div>
-        </div>
-      `).join('');
-    }
+```js
+initAuth();
+```
 
-    // RENDER ARTISTS TO FOLLOW
-    function renderArtistsToFollow() {
-      const list = document.getElementById('artistsToFollowList');
-      list.innerHTML = artistsData.map((art) => `
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <img src="${art.avatar}" class="w-9 h-9 rounded-full object-cover" alt="${art.name}">
-            <div>
-              <h4 class="text-xs font-semibold text-white">${art.name}</h4>
-              <p class="text-[10px] text-zinc-500">@${art.username}</p>
-            </div>
-          </div>
-          <button onclick="toggleFollowArtist('${art.id}')" class="px-3 py-1 rounded-full text-xs font-bold ${art.isFollowing ? 'border border-zinc-700 text-zinc-400' : 'bg-spotify-green text-black hover:bg-spotify-hover'} transition">
-            ${art.isFollowing ? 'Following' : 'Follow'}
-          </button>
-        </div>
-      `).join('');
-    }
+## Notes
 
-    function toggleFollowArtist(artistId) {
-      const art = artistsData.find(a => a.id === artistId);
-      if (art) {
-        art.isFollowing = !art.isFollowing;
-        renderArtistsToFollow();
-      }
-    }
-
-    // AUDIO CONTROLS
-    function loadTrack(index, autoplay = true) {
-      currentTrackIndex = index;
-      const track = feedPostsData[currentTrackIndex];
-      globalAudio.src = track.audioUrl;
-      playerThumb.src = track.coverImage;
-      playerTitle.textContent = track.songTitle;
-      playerArtist.textContent = track.artist;
-      renderFeed();
-
-      if (autoplay) {
-        globalAudio.play().then(() => { isPlaying = true; updatePlayStateUI(); });
-      } else {
-        isPlaying = false;
-        updatePlayStateUI();
-      }
-    }
-
-    function toggleMasterPlay() {
-      if (isPlaying) {
-        globalAudio.pause();
-        isPlaying = false;
-      } else {
-        globalAudio.play();
-        isPlaying = true;
-      }
-      updatePlayStateUI();
-    }
-
-    function togglePostTrack(idx) {
-      if (currentTrackIndex === idx) {
-        toggleMasterPlay();
-      } else {
-        loadTrack(idx, true);
-      }
-    }
-
-    function updatePlayStateUI() {
-      masterPlayIcon.className = isPlaying ? 'fa-solid fa-pause text-sm' : 'fa-solid fa-play text-sm ml-0.5';
-    }
-
-    function setupAudioListeners() {
-      globalAudio.addEventListener('timeupdate', () => {
-        const current = globalAudio.currentTime;
-        const duration = globalAudio.duration || 0;
-        playerCurrentTime.textContent = formatTime(current);
-        playerDuration.textContent = formatTime(duration);
-        playerProgressBar.style.width = `${(current / duration) * 100}%`;
-      });
-
-      masterPlayBtn.addEventListener('click', toggleMasterPlay);
-    }
-
-    function formatTime(secs) {
-      if (isNaN(secs)) return '0:00';
-      const m = Math.floor(secs / 60);
-      const s = Math.floor(secs % 60);
-      return `${m}:${s < 10 ? '0' : ''}${s}`;
-    }
-
-    // CREATOR STUDIO POSTING MODAL
-    function openCreateModal() { document.getElementById('createModal').classList.remove('hidden'); }
-    function closeCreateModal() { document.getElementById('createModal').classList.add('hidden'); }
-    function switchPostType(type) {
-      postTypeMode = type;
-      const musicInputs = document.getElementById('musicInputsGroup');
-      const videoInputs = document.getElementById('videoInputsGroup');
-      const btnM = document.getElementById('typeMusicBtn');
-      const btnV = document.getElementById('typeVideoBtn');
-
-      if (type === 'music') {
-        musicInputs.classList.remove('hidden');
-        videoInputs.classList.add('hidden');
-        btnM.className = 'py-2 rounded-lg text-xs font-bold text-black bg-spotify-green transition';
-        btnV.className = 'py-2 rounded-lg text-xs font-bold text-zinc-400 hover:text-white transition';
-      } else {
-        videoInputs.classList.remove('hidden');
-        musicInputs.classList.add('hidden');
-        btnV.className = 'py-2 rounded-lg text-xs font-bold text-black bg-tiktok-pink transition';
-        btnM.className = 'py-2 rounded-lg text-xs font-bold text-zinc-400 hover:text-white transition';
-      }
-    }
-
-    document.getElementById('createContentForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const title = document.getElementById('postTitleInput').value;
-
-      if (postTypeMode === 'music') {
-        feedPostsData.unshift({
-          id: 'post_' + Date.now(),
-          creator: currentUser.displayName,
-          username: currentUser.username,
-          avatar: currentUser.avatar,
-          songTitle: title,
-          artist: currentUser.displayName,
-          coverImage: document.getElementById('postCoverInput').value || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop',
-          audioUrl: document.getElementById('postAudioInput').value || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
-          likesCount: 1,
-          isLiked: false,
-          caption: title
-        });
-        renderFeed();
-      } else {
-        reelsData.unshift({
-          id: 'reel_' + Date.now(),
-          username: currentUser.username,
-          caption: title,
-          songTitle: title + ' - Sound',
-          videoUrl: document.getElementById('postVideoInput').value || 'https://assets.mixkit.co/videos/preview/mixkit-dj-hands-adjusting-sound-controls-41559-large.mp4',
-          likes: 1
-        });
-        renderReels();
-        switchMainTab('reels');
-      }
-      closeCreateModal();
-    });
-
-    // PROFILE MODAL & USER SETTINGS
-    function openProfileModal() { document.getElementById('profileModal').classList.remove('hidden'); }
-    function closeProfileModal() { document.getElementById('profileModal').classList.add('hidden'); }
-    function toggleArtistMode() {
-      currentUser.isArtist = !currentUser.isArtist;
-      document.getElementById('badgeArtist').textContent = currentUser.isArtist ? 'Artist' : 'User';
-      closeProfileModal();
-    }
-
-    // AUTH MODAL
-    function openAuthModal() { document.getElementById('authModal').classList.remove('hidden'); }
-    function closeAuthModal() { document.getElementById('authModal').classList.add('hidden'); }
-    document.getElementById('authForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      currentUser.username = document.getElementById('authUsernameInput').value;
-      currentUser.displayName = document.getElementById('authNameInput').value;
-      document.getElementById('sidebarUsername').textContent = '@' + currentUser.username;
-      closeAuthModal();
-    });
-
-    // CHAT SYSTEM
-    function openChatDrawer() {
-      const drawer = document.getElementById('chatDrawer');
-      const content = document.getElementById('chatDrawerContent');
-      drawer.classList.remove('opacity-0', 'pointer-events-none');
-      content.classList.remove('translate-x-full');
-    }
-    function closeChatDrawer() {
-      const drawer = document.getElementById('chatDrawer');
-      const content = document.getElementById('chatDrawerContent');
-      content.classList.add('translate-x-full');
-      drawer.classList.add('opacity-0', 'pointer-events-none');
-    }
-    function renderChat() {
-      const chatContainer = document.getElementById('chatMessages');
-      chatContainer.innerHTML = chatHistory.map(m => `
-        <div class="flex flex-col ${m.sender === currentUser.username ? 'items-end' : 'items-start'}">
-          <div class="px-4 py-2 rounded-2xl text-xs max-w-xs ${m.sender === currentUser.username ? 'bg-spotify-green text-black font-semibold' : 'bg-zinc-900 text-white border border-zinc-800'}">
-            ${m.text}
-          </div>
-          <span class="text-[9px] text-zinc-500 mt-0.5">${m.time}</span>
-        </div>
-      `).join('');
-    }
-    document.getElementById('chatForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const input = document.getElementById('chatInput');
-      if (!input.value.trim()) return;
-      chatHistory.push({ sender: currentUser.username, text: input.value, time: 'Just now' });
-      input.value = '';
-      renderChat();
-    });
-
-    // AUDIO VISUALIZER
-    function setupVisualizer() {
-      const canvas = document.getElementById('miniAudioVisualizer');
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      function draw() {
-        requestAnimationFrame(draw);
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        if (!isPlaying) return;
-        ctx.fillStyle = '#1DB954';
-        for (let i = 0; i < 6; i++) {
-          const h = Math.random() * canvas.height;
-          ctx.fillRect(i * 6, canvas.height - h, 4, h);
-        }
-      }
-      draw();
-    }
-  </script>
-</body>
-</html>
+- **Open the file over `https://` or `http://localhost`.** The password hashing uses the browser's `crypto.subtle`, which does not work on plain `file://` or non-secure `http://` pages.
+- **This is a front-end demo.** Accounts and uploaded files are saved in the browser that created them (localStorage and IndexedDB), so other people and other devices will not see them. For real accounts and shared uploads you need a backend (for example Firebase, Supabase, or your own Node server with file storage).
+- Browser-only hashing is not real security. Do not use it for a public site.
