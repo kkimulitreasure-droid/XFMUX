@@ -1,251 +1,523 @@
-# InstaTune: Login, Sign up and Upload patch
-
-Four small edits to your existing file. Nothing else changes.
-
-## 1. Replace MODAL 3 (the whole `<div id="authModal"> ... </div>` block)
-
-```html
-<div id="authModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[60] hidden flex items-center justify-center p-4">
-  <div class="bg-zinc-950 border border-zinc-800 w-full max-w-sm rounded-3xl p-6 space-y-5 shadow-2xl">
-    <div class="text-center space-y-1">
-      <h3 class="font-display font-bold text-xl text-white">Welcome to InstaTune</h3>
-      <p class="text-xs text-zinc-400">Log in or create an account to upload songs and videos</p>
-    </div>
-    <div class="grid grid-cols-2 bg-zinc-900 p-1 rounded-xl gap-1 border border-zinc-800">
-      <button type="button" id="authTabLogin" onclick="setAuthMode('login')" class="py-2 rounded-lg text-xs font-bold text-black bg-spotify-green">Log in</button>
-      <button type="button" id="authTabSignup" onclick="setAuthMode('signup')" class="py-2 rounded-lg text-xs font-bold text-zinc-400">Sign up</button>
-    </div>
-    <form id="authForm" class="space-y-4">
-      <input type="text" id="authUsernameInput" required placeholder="Username" autocomplete="username" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-spotify-green">
-      <input type="text" id="authNameInput" placeholder="Display name" class="hidden w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-spotify-green">
-      <input type="password" id="authPasswordInput" required minlength="6" placeholder="Password (min 6 characters)" autocomplete="current-password" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-spotify-green">
-      <p id="authError" class="text-xs text-tiktok-pink hidden"></p>
-      <button type="submit" id="authSubmitBtn" class="w-full bg-spotify-green hover:bg-spotify-hover text-black py-3 rounded-xl font-bold text-sm transition">Log in</button>
-    </form>
-  </div>
-</div>
-```
-
-## 2. In the Create modal, replace the three URL inputs with file pickers
-
-Replace the `Cover Image URL` and `Audio MP3 Stream URL` inputs (inside `musicInputsGroup`) with:
-
-```html
-<div>
-  <label class="text-xs text-zinc-400 block mb-1">Song file (MP3, WAV, M4A)</label>
-  <input type="file" id="postAudioFile" accept="audio/*" class="w-full text-xs text-zinc-400 file:mr-3 file:rounded-full file:border-0 file:bg-spotify-green file:px-3 file:py-1.5 file:font-bold file:text-black">
-</div>
-<div>
-  <label class="text-xs text-zinc-400 block mb-1">Cover image (optional)</label>
-  <input type="file" id="postCoverFile" accept="image/*" class="w-full text-xs text-zinc-400 file:mr-3 file:rounded-full file:border-0 file:bg-zinc-800 file:px-3 file:py-1.5 file:text-white">
-</div>
-```
-
-Replace the `MP4 Video URL` input (inside `videoInputsGroup`) with:
-
-```html
-<div>
-  <label class="text-xs text-zinc-400 block mb-1">Video file (MP4, MOV, WebM)</label>
-  <input type="file" id="postVideoFile" accept="video/*" class="w-full text-xs text-zinc-400 file:mr-3 file:rounded-full file:border-0 file:bg-tiktok-pink file:px-3 file:py-1.5 file:font-bold file:text-white">
-</div>
-```
-
-Also change the sidebar button `Switch / Login Account` to:
-
-```html
-<button onclick="logout()" class="w-full py-2 border border-zinc-800 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-zinc-900 transition flex items-center justify-center gap-2">
-  <i class="fa-solid fa-right-from-bracket"></i> Log out
-</button>
-```
-
-## 3. In the script: delete the old code, add the new code
-
-Delete these two old blocks:
-- `document.getElementById('createContentForm').addEventListener('submit', ...)`
-- the whole `// AUTH MODAL` section (`openAuthModal`, `closeAuthModal`, and the `authForm` submit listener)
-
-Keep a stub so the other buttons do not break: `function openAuthModal() {}` is not needed any more, since the sidebar button now calls `logout()`.
-
-Then paste this at the end of your `<script>`:
-
-```js
-// ================= STORAGE (files in IndexedDB, metadata in localStorage) =================
-function idb() {
-  return new Promise((res, rej) => {
-    const r = indexedDB.open('instatune', 1);
-    r.onupgradeneeded = () => r.result.createObjectStore('files');
-    r.onsuccess = () => res(r.result);
-    r.onerror = () => rej(r.error);
-  });
-}
-async function saveFile(key, blob) {
-  const db = await idb();
-  return new Promise((res, rej) => {
-    const t = db.transaction('files', 'readwrite');
-    t.objectStore('files').put(blob, key);
-    t.oncomplete = res; t.onerror = () => rej(t.error);
-  });
-}
-async function getFile(key) {
-  const db = await idb();
-  return new Promise((res, rej) => {
-    const q = db.transaction('files').objectStore('files').get(key);
-    q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error);
-  });
-}
-const getUsers = () => JSON.parse(localStorage.getItem('instatune_users') || '{}');
-const getPosts = () => JSON.parse(localStorage.getItem('instatune_posts') || '[]');
-async function hashPw(p) {
-  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(p));
-  return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
-}
-
-// ================= AUTH =================
-let authMode = 'login';
-function setAuthMode(mode) {
-  authMode = mode;
-  const login = mode === 'login';
-  document.getElementById('authNameInput').classList.toggle('hidden', login);
-  document.getElementById('authNameInput').required = !login;
-  document.getElementById('authSubmitBtn').textContent = login ? 'Log in' : 'Create account';
-  document.getElementById('authTabLogin').className = 'py-2 rounded-lg text-xs font-bold ' + (login ? 'text-black bg-spotify-green' : 'text-zinc-400');
-  document.getElementById('authTabSignup').className = 'py-2 rounded-lg text-xs font-bold ' + (login ? 'text-zinc-400' : 'text-black bg-spotify-green');
-  document.getElementById('authError').classList.add('hidden');
-}
-function authError(msg) {
-  const el = document.getElementById('authError');
-  el.textContent = msg; el.classList.remove('hidden');
-}
-
-document.getElementById('authForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const username = document.getElementById('authUsernameInput').value.trim().toLowerCase().replace(/^@/, '');
-  const password = document.getElementById('authPasswordInput').value;
-  const users = getUsers();
-
-  if (authMode === 'signup') {
-    if (!/^[a-z0-9_]{3,20}$/.test(username)) return authError('Username: 3-20 letters, numbers or underscore.');
-    if (users[username]) return authError('That username is taken.');
-    users[username] = {
-      displayName: document.getElementById('authNameInput').value.trim() || username,
-      pw: await hashPw(password),
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop',
-      isArtist: true, followers: 0, following: 0
-    };
-    localStorage.setItem('instatune_users', JSON.stringify(users));
-  } else {
-    const u = users[username];
-    if (!u || u.pw !== await hashPw(password)) return authError('Wrong username or password.');
-  }
-  localStorage.setItem('instatune_session', username);
-  document.getElementById('authForm').reset();
-  document.getElementById('authModal').classList.add('hidden');
-  applyUser(username);
-});
-
-function logout() {
-  localStorage.removeItem('instatune_session');
-  setAuthMode('login');
-  document.getElementById('authModal').classList.remove('hidden');
-}
-
-function applyUser(username) {
-  const u = getUsers()[username];
-  if (!u) return logout();
-  currentUser = { username, displayName: u.displayName, avatar: u.avatar, isArtist: u.isArtist,
-                  followers: u.followers, following: u.following,
-                  tracks: getPosts().filter(p => p.username === username).length };
-  document.getElementById('headerUserAvatar').src = u.avatar;
-  document.getElementById('profileModalAvatar').src = u.avatar;
-  document.getElementById('sidebarUsername').textContent = '@' + username;
-  document.getElementById('sidebarFollowers').textContent = u.followers;
-  document.getElementById('sidebarFollowing').textContent = u.following;
-  document.getElementById('profileModalName').textContent = u.displayName;
-  document.getElementById('profileModalHandle').textContent = '@' + username;
-  document.getElementById('profileFollowersCount').textContent = u.followers;
-  document.getElementById('profileFollowingCount').textContent = u.following;
-  document.getElementById('profileTracksCount').textContent = currentUser.tracks;
-  document.getElementById('badgeArtist').textContent = u.isArtist ? 'Artist' : 'User';
-  loadUploads();
-}
-
-async function loadUploads() {
-  feedPostsData = feedPostsData.filter(p => !p.uploaded);
-  reelsData = reelsData.filter(r => !r.uploaded);
-  for (const p of getPosts().reverse()) {
-    try {
-      if (p.type === 'music') {
-        const audio = await getFile(p.audioKey); if (!audio) continue;
-        const cover = p.coverKey ? await getFile(p.coverKey) : null;
-        feedPostsData.unshift({ id: p.id, uploaded: true, creator: p.creator, username: p.username,
-          avatar: getUsers()[p.username]?.avatar || '', songTitle: p.title, artist: p.creator,
-          coverImage: cover ? URL.createObjectURL(cover) : 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop',
-          audioUrl: URL.createObjectURL(audio), likesCount: 0, isLiked: false, caption: p.title });
-      } else {
-        const video = await getFile(p.videoKey); if (!video) continue;
-        reelsData.unshift({ id: p.id, uploaded: true, username: p.username, caption: p.title,
-          songTitle: p.title + ' - Sound', videoUrl: URL.createObjectURL(video), likes: 0, isLiked: false });
-      }
-    } catch (err) { console.error('Could not load upload', err); }
-  }
-  renderFeed(); renderReels();
-}
-
-// ================= UPLOAD =================
-document.getElementById('createContentForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  if (!localStorage.getItem('instatune_session')) return logout();
-  const title = document.getElementById('postTitleInput').value.trim();
-  const id = 'up_' + Date.now();
-  const meta = { id, type: postTypeMode, title, username: currentUser.username, creator: currentUser.displayName };
-
-  try {
-    if (postTypeMode === 'music') {
-      const audio = document.getElementById('postAudioFile').files[0];
-      if (!audio) return alert('Please choose a song file.');
-      await saveFile(id + '_audio', audio); meta.audioKey = id + '_audio';
-      const cover = document.getElementById('postCoverFile').files[0];
-      if (cover) { await saveFile(id + '_cover', cover); meta.coverKey = id + '_cover'; }
-    } else {
-      const video = document.getElementById('postVideoFile').files[0];
-      if (!video) return alert('Please choose a video file.');
-      await saveFile(id + '_video', video); meta.videoKey = id + '_video';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spotify Web Player Clone</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-  } catch (err) { return alert('Upload failed: ' + err.message); }
 
-  const posts = getPosts(); posts.push(meta);
-  localStorage.setItem('instatune_posts', JSON.stringify(posts));
-  document.getElementById('createContentForm').reset();
-  closeCreateModal();
-  await loadUploads();
-  document.getElementById('profileTracksCount').textContent = getPosts().filter(p => p.username === currentUser.username).length;
-  if (postTypeMode === 'video') switchMainTab('reels');
-});
+    body {
+      background-color: #000;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
 
-// Make the Post button require login
-const _openCreate = openCreateModal;
-openCreateModal = function () {
-  if (!localStorage.getItem('instatune_session')) return logout();
-  _openCreate();
-};
+    .main-container {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
 
-// ================= START =================
-function initAuth() {
-  const s = localStorage.getItem('instatune_session');
-  if (s && getUsers()[s]) applyUser(s); else logout();
-}
-```
+    /* Sidebar Styling */
+    .sidebar {
+      width: 240px;
+      background-color: #000;
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
 
-## 4. Call it on page load
+    .logo {
+      font-size: 24px;
+      font-weight: bold;
+      color: #1db954;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-In your existing `window.addEventListener('load', () => { ... })`, add one line at the end:
+    .nav-links, .library-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
 
-```js
-initAuth();
-```
+    .nav-links a, .library-links a {
+      color: #b3b3b3;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: color 0.2s ease;
+    }
 
-## Notes
+    .nav-links a:hover, .library-links a:hover, .nav-links a.active {
+      color: #fff;
+    }
 
-- **Open the file over `https://` or `http://localhost`.** The password hashing uses the browser's `crypto.subtle`, which does not work on plain `file://` or non-secure `http://` pages.
-- **This is a front-end demo.** Accounts and uploaded files are saved in the browser that created them (localStorage and IndexedDB), so other people and other devices will not see them. For real accounts and shared uploads you need a backend (for example Firebase, Supabase, or your own Node server with file storage).
-- Browser-only hashing is not real security. Do not use it for a public site.
+    /* Main Content Area */
+    .content {
+      flex: 1;
+      background: linear-gradient(to bottom, #1e1e1e, #121212);
+      overflow-y: auto;
+      padding: 24px 32px;
+      border-radius: 8px;
+      margin: 8px 8px 0 0;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .user-profile {
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .section-title {
+      font-size: 24px;
+      margin-bottom: 16px;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 24px;
+    }
+
+    .card {
+      background-color: #181818;
+      padding: 16px;
+      border-radius: 8px;
+      transition: background-color 0.3s ease;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .card:hover {
+      background-color: #282828;
+    }
+
+    .card img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      border-radius: 4px;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-subtitle {
+      font-size: 12px;
+      color: #b3b3b3;
+    }
+
+    .play-btn-card {
+      position: absolute;
+      bottom: 80px;
+      right: 24px;
+      background-color: #1db954;
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #000;
+      font-size: 18px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    }
+
+    .card:hover .play-btn-card {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Player Footer Bar */
+    .player-bar {
+      height: 90px;
+      background-color: #181818;
+      border-top: 1px solid #282828;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 16px;
+    }
+
+    .now-playing {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      width: 30%;
+    }
+
+    .now-playing img {
+      width: 56px;
+      height: 56px;
+      border-radius: 4px;
+    }
+
+    .track-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .track-name {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .track-artist {
+      font-size: 12px;
+      color: #b3b3b3;
+    }
+
+    .player-controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      width: 40%;
+    }
+
+    .control-buttons {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      color: #b3b3b3;
+    }
+
+    .control-buttons i {
+      cursor: pointer;
+      font-size: 16px;
+      transition: color 0.2s;
+    }
+
+    .control-buttons i:hover {
+      color: #fff;
+    }
+
+    .play-pause-btn {
+      background-color: #fff;
+      color: #000;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .play-pause-btn:hover {
+      transform: scale(1.05);
+    }
+
+    .playback-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      max-width: 500px;
+      font-size: 12px;
+      color: #b3b3b3;
+    }
+
+    .progress-bar-container {
+      flex: 1;
+      height: 4px;
+      background-color: #4d4d4d;
+      border-radius: 2px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background-color: #fff;
+      border-radius: 2px;
+      width: 0%;
+    }
+
+    .volume-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 30%;
+      justify-content: flex-end;
+      color: #b3b3b3;
+    }
+
+    .volume-bar-container {
+      width: 100px;
+      height: 4px;
+      background-color: #4d4d4d;
+      border-radius: 2px;
+      cursor: pointer;
+    }
+
+    .volume-bar {
+      height: 100%;
+      background-color: #fff;
+      border-radius: 2px;
+      width: 70%;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="main-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="logo">
+        <i class="fa-brands fa-spotify"></i> Spotify
+      </div>
+      <ul class="nav-links">
+        <li><a href="#" class="active"><i class="fa-solid fa-house"></i> Home</a></li>
+        <li><a href="#"><i class="fa-solid fa-magnifying-glass"></i> Search</a></li>
+      </ul>
+      <ul class="library-links">
+        <li><a href="#"><i class="fa-solid fa-book"></i> Your Library</a></li>
+        <li><a href="#"><i class="fa-solid fa-square-plus"></i> Create Playlist</a></li>
+        <li><a href="#"><i class="fa-solid fa-heart"></i> Liked Songs</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main Content Stream -->
+    <main class="content">
+      <header class="header">
+        <div></div>
+        <div class="user-profile">
+          <i class="fa-regular fa-user"></i> Profile
+        </div>
+      </header>
+
+      <h2 class="section-title">Popular Tracks</h2>
+      
+      <div class="card-grid" id="cardGrid">
+        <!-- Rendered dynamically by JavaScript -->
+      </div>
+    </main>
+  </div>
+
+  <!-- Audio Player Bar -->
+  <footer class="player-bar">
+    <div class="now-playing">
+      <img id="currentThumb" src="https://picsum.photos/id/10/200/200" alt="Cover">
+      <div class="track-info">
+        <span class="track-name" id="currentTitle">Select a Track</span>
+        <span class="track-artist" id="currentArtist">Artist</span>
+      </div>
+    </div>
+
+    <div class="player-controls">
+      <div class="control-buttons">
+        <i class="fa-solid fa-shuffle"></i>
+        <i class="fa-solid fa-backward-step" id="prevBtn"></i>
+        <div class="play-pause-btn" id="playBtn">
+          <i class="fa-solid fa-play" id="playIcon"></i>
+        </div>
+        <i class="fa-solid fa-forward-step" id="nextBtn"></i>
+        <i class="fa-solid fa-repeat"></i>
+      </div>
+      <div class="playback-bar">
+        <span id="currentTime">0:00</span>
+        <div class="progress-bar-container" id="progressContainer">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <span id="duration">0:00</span>
+      </div>
+    </div>
+
+    <div class="volume-controls">
+      <i class="fa-solid fa-volume-high"></i>
+      <div class="volume-bar-container" id="volumeContainer">
+        <div class="volume-bar" id="volumeBar"></div>
+      </div>
+    </div>
+  </footer>
+
+  <audio id="audioPlayer"></audio>
+
+  <script>
+    // Sample track catalog (using royalty-free audio files)
+    const tracks = [
+      {
+        id: 0,
+        title: "Synthwave Beats",
+        artist: "Chill Producer",
+        cover: "https://picsum.photos/id/146/200/200",
+        src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+      },
+      {
+        id: 1,
+        title: "Acoustic Journey",
+        artist: "Guitar Hero",
+        cover: "https://picsum.photos/id/225/200/200",
+        src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"
+      },
+      {
+        id: 2,
+        title: "Midnight Drive",
+        artist: "Neon Lights",
+        cover: "https://picsum.photos/id/325/200/200",
+        src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
+      },
+      {
+        id: 3,
+        title: "Electronic Sunset",
+        artist: "Digital Wave",
+        cover: "https://picsum.photos/id/445/200/200",
+        src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3"
+      }
+    ];
+
+    let currentTrackIndex = 0;
+    let isPlaying = false;
+
+    // DOM Elements
+    const audio = document.getElementById('audioPlayer');
+    const playBtn = document.getElementById('playBtn');
+    const playIcon = document.getElementById('playIcon');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const currentThumb = document.getElementById('currentThumb');
+    const currentTitle = document.getElementById('currentTitle');
+    const currentArtist = document.getElementById('currentArtist');
+    const progressBar = document.getElementById('progressBar');
+    const progressContainer = document.getElementById('progressContainer');
+    const currentTimeEl = document.getElementById('currentTime');
+    const durationEl = document.getElementById('duration');
+    const cardGrid = document.getElementById('cardGrid');
+    const volumeContainer = document.getElementById('volumeContainer');
+    const volumeBar = document.getElementById('volumeBar');
+
+    // Render song cards dynamically
+    function renderCards() {
+      cardGrid.innerHTML = tracks.map((track, index) => `
+        <div class="card" onclick="selectTrack(${index})">
+          <img src="${track.cover}" alt="${track.title}">
+          <div class="play-btn-card">
+            <i class="fa-solid fa-play"></i>
+          </div>
+          <div class="card-title">${track.title}</div>
+          <div class="card-subtitle">${track.artist}</div>
+        </div>
+      `).join('');
+    }
+
+    // Load track details
+    function loadTrack(index) {
+      currentTrackIndex = index;
+      const track = tracks[currentTrackIndex];
+      audio.src = track.src;
+      currentThumb.src = track.cover;
+      currentTitle.textContent = track.title;
+      currentArtist.textContent = track.artist;
+    }
+
+    // Toggle Play/Pause state
+    function togglePlay() {
+      if (!audio.src) loadTrack(0);
+      
+      if (isPlaying) {
+        audio.pause();
+        playIcon.className = 'fa-solid fa-play';
+      } else {
+        audio.play();
+        playIcon.className = 'fa-solid fa-pause';
+      }
+      isPlaying = !isPlaying;
+    }
+
+    // Select and start playing specific track
+    function selectTrack(index) {
+      loadTrack(index);
+      isPlaying = false;
+      togglePlay();
+    }
+
+    // Format time helpers (mm:ss)
+    function formatTime(seconds) {
+      if (isNaN(seconds)) return "0:00";
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    }
+
+    // Update Progress Bar & Time text
+    audio.addEventListener('timeupdate', () => {
+      const progressPercent = (audio.currentTime / audio.duration) * 100;
+      progressBar.style.width = `${progressPercent}%`;
+      currentTimeEl.textContent = formatTime(audio.currentTime);
+      durationEl.textContent = formatTime(audio.duration);
+    });
+
+    // Seek track timeline on click
+    progressContainer.addEventListener('click', (e) => {
+      const width = progressContainer.clientWidth;
+      const clickX = e.offsetX;
+      const duration = audio.duration;
+      audio.currentTime = (clickX / width) * duration;
+    });
+
+    // Volume adjustment click
+    volumeContainer.addEventListener('click', (e) => {
+      const width = volumeContainer.clientWidth;
+      const clickX = e.offsetX;
+      const volume = clickX / width;
+      audio.volume = volume;
+      volumeBar.style.width = `${volume * 100}%`;
+    });
+
+    // Navigation Controls
+    prevBtn.addEventListener('click', () => {
+      currentTrackIndex = (currentTrackIndex - 1 + tracks.length) % tracks.length;
+      selectTrack(currentTrackIndex);
+    });
+
+    nextBtn.addEventListener('click', () => {
+      currentTrackIndex = (currentTrackIndex + 1) % tracks.length;
+      selectTrack(currentTrackIndex);
+    });
+
+    playBtn.addEventListener('click', togglePlay);
+
+    // Initial load
+    renderCards();
+    loadTrack(0);
+  </script>
+</body>
+</html>
