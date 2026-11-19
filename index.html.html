@@ -1,413 +1,359 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spotify Web Player Clone</title>
+  <title>InstaSound — Instagram meets Spotify</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            spotify: { green: '#1DB954', hover: '#1ed760' },
+            insta: { yellow: '#FCAF45', orange: '#F56040', red: '#FD1D1D', purple: '#833AB4' }
+          },
+          keyframes: {
+            popHeart: {
+              '0%': { transform: 'scale(0)', opacity: '0' },
+              '40%': { transform: 'scale(1.25)', opacity: '1' },
+              '70%': { transform: 'scale(0.95)', opacity: '1' },
+              '100%': { transform: 'scale(1)', opacity: '0' }
+            },
+            eqBounce: {
+              '0%, 100%': { height: '4px' },
+              '50%': { height: '16px' }
+            }
+          },
+          animation: {
+            popHeart: 'popHeart 0.8s ease-out forwards',
+            eq1: 'eqBounce 0.6s ease-in-out infinite',
+            eq2: 'eqBounce 0.45s ease-in-out infinite 0.15s',
+            eq3: 'eqBounce 0.7s ease-in-out infinite 0.3s'
+          }
+        }
+      }
+    };
+  </script>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    /* Instagram gradient ring for Stories & Active Music */
+    .ig-story-ring {
+      background: linear-gradient(45deg, #FCAF45 0%, #F56040 30%, #FD1D1D 60%, #833AB4 100%);
     }
-
-    body {
-      background-color: #000;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      overflow: hidden;
+    .ig-story-seen {
+      background: #27272a;
     }
-
-    .main-container {
-      display: flex;
-      flex: 1;
-      overflow: hidden;
-    }
-
-    /* Sidebar Styling */
-    .sidebar {
-      width: 240px;
-      background-color: #000;
-      padding: 24px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-    }
-
-    .logo {
-      font-size: 24px;
-      font-weight: bold;
-      color: #1db954;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .nav-links, .library-links {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .nav-links a, .library-links a {
-      color: #b3b3b3;
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      transition: color 0.2s ease;
-    }
-
-    .nav-links a:hover, .library-links a:hover, .nav-links a.active {
-      color: #fff;
-    }
-
-    /* Main Content Area */
-    .content {
-      flex: 1;
-      background: linear-gradient(to bottom, #1e1e1e, #121212);
-      overflow-y: auto;
-      padding: 24px 32px;
-      border-radius: 8px;
-      margin: 8px 8px 0 0;
-    }
-
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 24px;
-    }
-
-    .user-profile {
-      background-color: rgba(0, 0, 0, 0.7);
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .section-title {
-      font-size: 24px;
-      margin-bottom: 16px;
-    }
-
-    .card-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 24px;
-    }
-
-    .card {
-      background-color: #181818;
-      padding: 16px;
-      border-radius: 8px;
-      transition: background-color 0.3s ease;
-      cursor: pointer;
-      position: relative;
-    }
-
-    .card:hover {
-      background-color: #282828;
-    }
-
-    .card img {
-      width: 100%;
-      aspect-ratio: 1;
-      object-fit: cover;
-      border-radius: 4px;
-      margin-bottom: 16px;
-    }
-
-    .card-title {
-      font-size: 16px;
-      font-weight: 700;
-      margin-bottom: 8px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .card-subtitle {
-      font-size: 12px;
-      color: #b3b3b3;
-    }
-
-    .play-btn-card {
-      position: absolute;
-      bottom: 80px;
-      right: 24px;
-      background-color: #1db954;
-      border-radius: 50%;
-      width: 48px;
-      height: 48px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      color: #000;
-      font-size: 18px;
-      opacity: 0;
-      transform: translateY(8px);
-      transition: all 0.3s ease;
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-    }
-
-    .card:hover .play-btn-card {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    /* Player Footer Bar */
-    .player-bar {
-      height: 90px;
-      background-color: #181818;
-      border-top: 1px solid #282828;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0 16px;
-    }
-
-    .now-playing {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      width: 30%;
-    }
-
-    .now-playing img {
-      width: 56px;
-      height: 56px;
-      border-radius: 4px;
-    }
-
-    .track-info {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .track-name {
-      font-size: 14px;
-      font-weight: 600;
-    }
-
-    .track-artist {
-      font-size: 12px;
-      color: #b3b3b3;
-    }
-
-    .player-controls {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-      width: 40%;
-    }
-
-    .control-buttons {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      color: #b3b3b3;
-    }
-
-    .control-buttons i {
-      cursor: pointer;
-      font-size: 16px;
-      transition: color 0.2s;
-    }
-
-    .control-buttons i:hover {
-      color: #fff;
-    }
-
-    .play-pause-btn {
-      background-color: #fff;
-      color: #000;
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-    }
-
-    .play-pause-btn:hover {
-      transform: scale(1.05);
-    }
-
-    .playback-bar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      width: 100%;
-      max-width: 500px;
-      font-size: 12px;
-      color: #b3b3b3;
-    }
-
-    .progress-bar-container {
-      flex: 1;
-      height: 4px;
-      background-color: #4d4d4d;
-      border-radius: 2px;
-      cursor: pointer;
-      position: relative;
-    }
-
-    .progress-bar {
-      height: 100%;
-      background-color: #fff;
-      border-radius: 2px;
-      width: 0%;
-    }
-
-    .volume-controls {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      width: 30%;
-      justify-content: flex-end;
-      color: #b3b3b3;
-    }
-
-    .volume-bar-container {
-      width: 100px;
-      height: 4px;
-      background-color: #4d4d4d;
-      border-radius: 2px;
-      cursor: pointer;
-    }
-
-    .volume-bar {
-      height: 100%;
-      background-color: #fff;
-      border-radius: 2px;
-      width: 70%;
-    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
-<body>
+<body class="bg-black text-white font-sans antialiased selection:bg-spotify-green selection:text-black">
 
-  <div class="main-container">
-    <!-- Sidebar Navigation -->
-    <aside class="sidebar">
-      <div class="logo">
-        <i class="fa-brands fa-spotify"></i> Spotify
+  <!-- TOP MOBILE HEADER -->
+  <header class="md:hidden sticky top-0 z-30 bg-black/90 backdrop-blur-md border-b border-zinc-900 px-4 h-14 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <i class="fa-brands fa-instagram text-2xl bg-gradient-to-tr from-insta-yellow via-insta-red to-insta-purple bg-clip-text text-transparent"></i>
+      <span class="font-extrabold text-xl tracking-tight">InstaSound</span>
+    </div>
+    <div class="flex items-center gap-4 text-xl">
+      <button onclick="openCreatePostModal()" class="hover:text-spotify-green transition"><i class="fa-regular fa-square-plus"></i></button>
+      <button onclick="showToast('No new notifications')" class="relative hover:text-insta-red transition">
+        <i class="fa-regular fa-heart"></i>
+        <span class="absolute top-0 right-0 w-2 h-2 bg-insta-red rounded-full"></span>
+      </button>
+      <button onclick="showToast('Direct Messages opened')" class="hover:text-spotify-green transition"><i class="fa-regular fa-paper-plane"></i></button>
+    </div>
+  </header>
+
+  <!-- MAIN SHELL -->
+  <div class="flex min-h-screen pb-24">
+
+    <!-- LEFT INSTAGRAM NAVIGATION SIDEBAR (Desktop) -->
+    <aside class="hidden md:flex flex-col justify-between w-60 lg:w-64 fixed top-0 left-0 bottom-20 bg-black border-r border-zinc-900 px-4 py-6 z-20">
+      <div class="space-y-8">
+        <!-- Brand Logo -->
+        <a href="#" class="flex items-center gap-3 px-3">
+          <div class="w-9 h-9 rounded-xl ig-story-ring p-0.5 flex items-center justify-center">
+            <div class="w-full h-full bg-black rounded-[10px] flex items-center justify-center">
+              <i class="fa-brands fa-spotify text-spotify-green text-lg"></i>
+            </div>
+          </div>
+          <span class="font-extrabold text-xl tracking-tight">InstaSound</span>
+        </a>
+
+        <!-- Navigation Links -->
+        <nav class="space-y-1.5">
+          <button onclick="setFilter('all')" id="navHome" class="w-full flex items-center gap-4 px-3 py-3 rounded-xl font-bold text-white bg-zinc-900/80 transition">
+            <i class="fa-solid fa-house text-xl w-6 text-center"></i>
+            <span>Home Feed</span>
+          </button>
+          <button onclick="focusSearch()" class="w-full flex items-center gap-4 px-3 py-3 rounded-xl font-medium text-zinc-400 hover:text-white hover:bg-zinc-900/50 transition">
+            <i class="fa-solid fa-magnifying-glass text-xl w-6 text-center"></i>
+            <span>Search</span>
+          </button>
+          <button onclick="setFilter('liked')" id="navSaved" class="w-full flex items-center gap-4 px-3 py-3 rounded-xl font-medium text-zinc-400 hover:text-white hover:bg-zinc-900/50 transition">
+            <i class="fa-regular fa-bookmark text-xl w-6 text-center"></i>
+            <span>Saved Tracks</span>
+          </button>
+          <button onclick="openCreatePostModal()" class="w-full flex items-center gap-4 px-3 py-3 rounded-xl font-medium text-zinc-400 hover:text-white hover:bg-zinc-900/50 transition">
+            <i class="fa-regular fa-square-plus text-xl w-6 text-center"></i>
+            <span>Share Track</span>
+          </button>
+          <button onclick="showToast('Viewing your profile')" class="w-full flex items-center gap-4 px-3 py-3 rounded-xl font-medium text-zinc-400 hover:text-white hover:bg-zinc-900/50 transition">
+            <img src="https://picsum.photos/id/64/100/100" alt="Profile" class="w-6 h-6 rounded-full object-cover ring-1 ring-zinc-700">
+            <span>Profile</span>
+          </button>
+        </nav>
       </div>
-      <ul class="nav-links">
-        <li><a href="#" class="active"><i class="fa-solid fa-house"></i> Home</a></li>
-        <li><a href="#"><i class="fa-solid fa-magnifying-glass"></i> Search</a></li>
-      </ul>
-      <ul class="library-links">
-        <li><a href="#"><i class="fa-solid fa-book"></i> Your Library</a></li>
-        <li><a href="#"><i class="fa-solid fa-square-plus"></i> Create Playlist</a></li>
-        <li><a href="#"><i class="fa-solid fa-heart"></i> Liked Songs</a></li>
-      </ul>
+
+      <!-- Mini Now Playing Status Card in Sidebar -->
+      <div class="bg-zinc-900/70 border border-zinc-800/80 rounded-2xl p-3.5 space-y-2">
+        <div class="flex items-center justify-between text-[11px] font-semibold text-spotify-green uppercase tracking-wider">
+          <span><i class="fa-brands fa-spotify mr-1"></i> Listening Activity</span>
+          <span class="w-2 h-2 rounded-full bg-spotify-green animate-pulse"></span>
+        </div>
+        <p id="sidebarTrackStatus" class="text-xs text-zinc-300 truncate font-medium">Synthwave Beats • Chill Producer</p>
+      </div>
     </aside>
 
-    <!-- Main Content Stream -->
-    <main class="content">
-      <header class="header">
-        <div></div>
-        <div class="user-profile">
-          <i class="fa-regular fa-user"></i> Profile
-        </div>
-      </header>
+    <!-- CENTER INSTAGRAM FEED COLUMN -->
+    <main class="flex-1 md:ml-60 lg:ml-64 flex justify-center px-0 sm:px-4 pt-4">
+      <div class="w-full max-w-[470px] space-y-5">
 
-      <h2 class="section-title">Popular Tracks</h2>
-      
-      <div class="card-grid" id="cardGrid">
-        <!-- Rendered dynamically by JavaScript -->
+        <!-- Search Input Bar (Hidden until toggled or visible on focus) -->
+        <div id="searchBarContainer" class="px-4 sm:px-0 hidden">
+          <div class="relative">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 text-sm"></i>
+            <input id="searchInput" type="text" oninput="handleSearch(this.value)" placeholder="Search artists, tracks, or captions..." class="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-600">
+          </div>
+        </div>
+
+        <!-- INSTAGRAM STORIES BAR (Audio Previews) -->
+        <section class="bg-black sm:bg-zinc-950 sm:border sm:border-zinc-900 sm:rounded-2xl py-3.5 px-3">
+          <div id="storiesRow" class="flex items-center gap-4 overflow-x-auto no-scrollbar">
+            <!-- Stories rendered via JS -->
+          </div>
+        </section>
+
+        <!-- INSTAGRAM POSTS FEED -->
+        <section id="feedStream" class="space-y-6 pb-8">
+          <!-- Feed posts rendered via JS -->
+        </section>
+
       </div>
+
+      <!-- RIGHT SUGGESTED ARTISTS SIDEBAR (Large Desktop) -->
+      <aside class="hidden xl:block w-80 pl-10 pt-2 space-y-6">
+        <!-- Current User Profile Row -->
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <img src="https://picsum.photos/id/64/100/100" alt="User" class="w-11 h-11 rounded-full object-cover">
+            <div>
+              <p class="text-sm font-bold text-white">you_listener</p>
+              <p class="text-xs text-zinc-500">Music Curator</p>
+            </div>
+          </div>
+          <button onclick="openCreatePostModal()" class="text-xs font-bold text-spotify-green hover:text-spotify-hover">Post</button>
+        </div>
+
+        <!-- Suggested Artists to Follow -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between text-xs font-semibold">
+            <span class="text-zinc-400">Suggested Artists For You</span>
+            <span class="text-white cursor-pointer hover:underline" onclick="showToast('Showing top artists')">See All</span>
+          </div>
+          <div id="suggestedArtistsList" class="space-y-3.5">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+
+        <p class="text-[11px] text-zinc-600 leading-relaxed">
+          InstaSound • Instagram Social Feed + Spotify Audio Engine • Built with HTML, Tailwind & JS
+        </p>
+      </aside>
     </main>
   </div>
 
-  <!-- Audio Player Bar -->
-  <footer class="player-bar">
-    <div class="now-playing">
-      <img id="currentThumb" src="https://picsum.photos/id/10/200/200" alt="Cover">
-      <div class="track-info">
-        <span class="track-name" id="currentTitle">Select a Track</span>
-        <span class="track-artist" id="currentArtist">Artist</span>
+  <!-- PERSISTENT SPOTIFY-STYLE AUDIO PLAYER BAR -->
+  <footer class="fixed bottom-0 inset-x-0 h-20 bg-zinc-950/95 backdrop-blur-xl border-t border-zinc-800/90 px-4 flex items-center justify-between z-40">
+    <!-- Track Info -->
+    <div class="flex items-center gap-3 w-1/3 min-w-0">
+      <div class="relative flex-shrink-0">
+        <img id="currentThumb" src="https://picsum.photos/id/146/200/200" alt="Cover" class="w-12 h-12 rounded-lg object-cover shadow-md">
+      </div>
+      <div class="min-w-0">
+        <div class="flex items-center gap-2">
+          <p id="currentTitle" class="text-sm font-bold text-white truncate">Synthwave Beats</p>
+          <button id="playerLikeBtn" onclick="likeCurrentTrack()" class="text-zinc-400 hover:text-insta-red text-xs transition">
+            <i class="fa-regular fa-heart"></i>
+          </button>
+        </div>
+        <p id="currentArtist" class="text-xs text-zinc-400 truncate">Chill Producer</p>
       </div>
     </div>
 
-    <div class="player-controls">
-      <div class="control-buttons">
-        <i class="fa-solid fa-shuffle"></i>
-        <i class="fa-solid fa-backward-step" id="prevBtn"></i>
-        <div class="play-pause-btn" id="playBtn">
-          <i class="fa-solid fa-play" id="playIcon"></i>
-        </div>
-        <i class="fa-solid fa-forward-step" id="nextBtn"></i>
-        <i class="fa-solid fa-repeat"></i>
+    <!-- Center Playback Controls -->
+    <div class="flex flex-col items-center gap-1.5 w-1/3 max-w-md">
+      <div class="flex items-center gap-5 text-zinc-300">
+        <button id="prevBtn" class="hover:text-white transition text-base"><i class="fa-solid fa-backward-step"></i></button>
+        <button id="playBtn" class="w-9 h-9 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 transition shadow">
+          <i id="playIcon" class="fa-solid fa-play text-sm ml-0.5"></i>
+        </button>
+        <button id="nextBtn" class="hover:text-white transition text-base"><i class="fa-solid fa-forward-step"></i></button>
       </div>
-      <div class="playback-bar">
-        <span id="currentTime">0:00</span>
-        <div class="progress-bar-container" id="progressContainer">
-          <div class="progress-bar" id="progressBar"></div>
+      <div class="flex items-center gap-2 w-full text-[11px] text-zinc-400">
+        <span id="currentTime" class="w-8 text-right">0:00</span>
+        <div id="progressContainer" class="flex-1 h-1 bg-zinc-700 rounded-full cursor-pointer group relative">
+          <div id="progressBar" class="h-full bg-spotify-green group-hover:bg-spotify-hover rounded-full w-0 transition-all"></div>
         </div>
-        <span id="duration">0:00</span>
+        <span id="duration" class="w-8">0:00</span>
       </div>
     </div>
 
-    <div class="volume-controls">
-      <i class="fa-solid fa-volume-high"></i>
-      <div class="volume-bar-container" id="volumeContainer">
-        <div class="volume-bar" id="volumeBar"></div>
+    <!-- Volume Controls -->
+    <div class="hidden sm:flex items-center justify-end gap-2.5 w-1/3 text-zinc-400">
+      <i class="fa-solid fa-volume-high text-xs"></i>
+      <div id="volumeContainer" class="w-24 h-1 bg-zinc-700 rounded-full cursor-pointer">
+        <div id="volumeBar" class="h-full bg-white rounded-full w-[75%]"></div>
       </div>
     </div>
   </footer>
 
-  <audio id="audioPlayer"></audio>
+  <!-- MODAL: SHARE NEW MUSIC POST (Instagram Style) -->
+  <div id="createPostModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-zinc-950 border border-zinc-800 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+      <div class="flex items-center justify-between px-4 py-3 border-b border-zinc-800">
+        <button onclick="closeCreatePostModal()" class="text-sm text-zinc-400 hover:text-white">Cancel</button>
+        <h3 class="text-sm font-bold text-white">Create Music Post</h3>
+        <button onclick="submitNewPost()" class="text-sm font-bold text-spotify-green hover:text-spotify-hover">Share</button>
+      </div>
+      <div class="p-4 space-y-4">
+        <div class="flex items-center gap-3">
+          <img src="https://picsum.photos/id/64/100/100" alt="You" class="w-9 h-9 rounded-full object-cover">
+          <span class="text-sm font-semibold">you_listener</span>
+        </div>
+        <textarea id="newCaptionInput" rows="2" placeholder="Write a caption about this track..." class="w-full bg-transparent text-sm text-white placeholder-zinc-500 focus:outline-none resize-none"></textarea>
+        <div class="space-y-3 bg-zinc-900/80 p-3.5 rounded-xl border border-zinc-800">
+          <div>
+            <label class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 block mb-1">Track Title</label>
+            <input id="newTitleInput" type="text" placeholder="e.g., Sunset Groove" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-spotify-green">
+          </div>
+          <div>
+            <label class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 block mb-1">Artist Name</label>
+            <input id="newArtistInput" type="text" placeholder="e.g., you_listener" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-spotify-green">
+          </div>
+          <div>
+            <label class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 block mb-1">Audio Stream</label>
+            <select id="newAudioSelect" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-spotify-green">
+              <option value="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3">Chill Ambient Beat #1</option>
+              <option value="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3">Deep House Groove #2</option>
+              <option value="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3">Lo-Fi Study Session #3</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toastBox" class="fixed top-16 left-1/2 -translate-x-1/2 bg-zinc-800 text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-lg border border-zinc-700 opacity-0 pointer-events-none transition-opacity duration-300 z-50">
+    Notification
+  </div>
+
+  <audio id="audioPlayer" crossorigin="anonymous"></audio>
 
   <script>
-    // Sample track catalog (using royalty-free audio files)
-    const tracks = [
+    // Track & Instagram Feed Dataset
+    let posts = [
       {
         id: 0,
+        username: "chill.producer",
+        location: "Tokyo, Japan",
+        avatar: "https://picsum.photos/id/1005/120/120",
         title: "Synthwave Beats",
         artist: "Chill Producer",
-        cover: "https://picsum.photos/id/146/200/200",
-        src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+        cover: "https://picsum.photos/id/146/600/600",
+        src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+        caption: "Late night analog synth sessions. Turn the volume up for the bass drop! 🎹✨ #synthwave #newmusic",
+        likes: 1284,
+        liked: false,
+        saved: false,
+        timeAgo: "2 HOURS AGO",
+        comments: [
+          { user: "neon_lights", text: "The arpeggio at 0:45 is unreal 🔥" },
+          { user: "guitar.hero", text: "Saved straight to my night drive playlist!" }
+        ]
       },
       {
         id: 1,
+        username: "guitar.hero",
+        location: "Nashville, TN",
+        avatar: "https://picsum.photos/id/1011/120/120",
         title: "Acoustic Journey",
         artist: "Guitar Hero",
-        cover: "https://picsum.photos/id/225/200/200",
-        src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"
+        cover: "https://picsum.photos/id/225/600/600",
+        src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+        caption: "Recorded this unplugged piece in one take this morning with fresh strings. ☕🎸",
+        likes: 942,
+        liked: true,
+        saved: false,
+        timeAgo: "5 HOURS AGO",
+        comments: [
+          { user: "digital_wave", text: "So warm and peaceful 🙌" }
+        ]
       },
       {
         id: 2,
+        username: "neon_lights",
+        location: "Berlin, Germany",
+        avatar: "https://picsum.photos/id/1027/120/120",
         title: "Midnight Drive",
         artist: "Neon Lights",
-        cover: "https://picsum.photos/id/325/200/200",
-        src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
+        cover: "https://picsum.photos/id/325/600/600",
+        src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
+        caption: "Cruising through empty city streets at 2 AM. Out now on InstaSound! 🌃🚗",
+        likes: 2150,
+        liked: false,
+        saved: true,
+        timeAgo: "9 HOURS AGO",
+        comments: []
       },
       {
         id: 3,
+        username: "digital_wave",
+        location: "Ibiza, Spain",
+        avatar: "https://picsum.photos/id/1062/120/120",
         title: "Electronic Sunset",
         artist: "Digital Wave",
-        cover: "https://picsum.photos/id/445/200/200",
-        src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3"
+        cover: "https://picsum.photos/id/445/600/600",
+        src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3",
+        caption: "Golden hour melodies to wrap up the weekend. Drop a ❤️ if you feel the vibe!",
+        likes: 1630,
+        liked: false,
+        saved: false,
+        timeAgo: "1 DAY AGO",
+        comments: [
+          { user: "chill.producer", text: "Pure summer energy ☀️" }
+        ]
       }
+    ];
+
+    const suggestedArtists = [
+      { username: "velvet_echo", subtitle: "Followed by chill.producer", avatar: "https://picsum.photos/id/338/100/100", following: false },
+      { username: "bassline_collective", subtitle: "New on InstaSound", avatar: "https://picsum.photos/id/342/100/100", following: false },
+      { username: "aurora_vocals", subtitle: "Followed by guitar.hero", avatar: "https://picsum.photos/id/349/100/100", following: false }
     ];
 
     let currentTrackIndex = 0;
     let isPlaying = false;
+    let currentFilter = 'all';
+    let searchQuery = '';
 
-    // DOM Elements
+    // Audio & Player DOM Elements
     const audio = document.getElementById('audioPlayer');
     const playBtn = document.getElementById('playBtn');
     const playIcon = document.getElementById('playIcon');
@@ -420,56 +366,369 @@
     const progressContainer = document.getElementById('progressContainer');
     const currentTimeEl = document.getElementById('currentTime');
     const durationEl = document.getElementById('duration');
-    const cardGrid = document.getElementById('cardGrid');
     const volumeContainer = document.getElementById('volumeContainer');
     const volumeBar = document.getElementById('volumeBar');
 
-    // Render song cards dynamically
-    function renderCards() {
-      cardGrid.innerHTML = tracks.map((track, index) => `
-        <div class="card" onclick="selectTrack(${index})">
-          <img src="${track.cover}" alt="${track.title}">
-          <div class="play-btn-card">
-            <i class="fa-solid fa-play"></i>
+    // Render Instagram Stories Row (Clicking plays that artist's track)
+    function renderStories() {
+      const storiesRow = document.getElementById('storiesRow');
+      const yourStoryHTML = `
+        <div onclick="openCreatePostModal()" class="flex flex-col items-center gap-1.5 flex-shrink-0 cursor-pointer group">
+          <div class="relative w-16 h-16 rounded-full p-0.5 bg-zinc-800">
+            <img src="https://picsum.photos/id/64/120/120" alt="Your Story" class="w-full h-full rounded-full object-cover border-2 border-black">
+            <div class="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-spotify-green text-black flex items-center justify-center text-xs font-bold border-2 border-black">
+              <i class="fa-solid fa-plus"></i>
+            </div>
           </div>
-          <div class="card-title">${track.title}</div>
-          <div class="card-subtitle">${track.artist}</div>
+          <span class="text-[11px] text-zinc-400 group-hover:text-white truncate w-16 text-center">Share Track</span>
+        </div>
+      `;
+
+      const artistStoriesHTML = posts.map((post, idx) => {
+        const activeRing = (currentTrackIndex === idx && isPlaying) ? 'ig-story-ring animate-pulse' : 'ig-story-ring';
+        return `
+          <div onclick="selectTrack(${idx})" class="flex flex-col items-center gap-1.5 flex-shrink-0 cursor-pointer group">
+            <div class="w-16 h-16 rounded-full p-[2.5px] ${activeRing} transition-transform group-hover:scale-105">
+              <div class="w-full h-full bg-black rounded-full p-[2px] relative">
+                <img src="${post.avatar}" alt="${post.username}" class="w-full h-full rounded-full object-cover">
+                ${currentTrackIndex === idx && isPlaying ? `
+                  <span class="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-spotify-green text-black text-[9px] font-extrabold px-1.5 rounded-full">LIVE</span>
+                ` : ''}
+              </div>
+            </div>
+            <span class="text-[11px] text-zinc-200 truncate w-16 text-center">${post.username}</span>
+          </div>
+        `;
+      }).join('');
+
+      storiesRow.innerHTML = yourStoryHTML + artistStoriesHTML;
+    }
+
+    // Render Instagram Feed Posts
+    function renderFeed() {
+      const feedStream = document.getElementById('feedStream');
+      let filtered = posts.filter(p => {
+        const matchesFilter = currentFilter === 'all' || (currentFilter === 'liked' && p.saved);
+        const q = searchQuery.toLowerCase();
+        const matchesQuery = !q || p.title.toLowerCase().includes(q) || p.artist.toLowerCase().includes(q) || p.username.toLowerCase().includes(q) || p.caption.toLowerCase().includes(q);
+        return matchesFilter && matchesQuery;
+      });
+
+      if (filtered.length === 0) {
+        feedStream.innerHTML = `
+          <div class="text-center py-16 text-zinc-500 space-y-2">
+            <i class="fa-regular fa-compass text-3xl"></i>
+            <p class="text-sm font-medium">No music posts match your filter.</p>
+          </div>
+        `;
+        return;
+      }
+
+      feedStream.innerHTML = filtered.map(post => {
+        const actualIdx = posts.findIndex(p => p.id === post.id);
+        const isCurrentPlaying = currentTrackIndex === actualIdx && isPlaying;
+
+        return `
+          <article class="bg-black sm:bg-zinc-950 sm:border sm:border-zinc-900 sm:rounded-2xl overflow-hidden">
+            <!-- Post Header -->
+            <div class="flex items-center justify-between px-3.5 py-3">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full p-[2px] ig-story-ring">
+                  <img src="${post.avatar}" alt="${post.username}" class="w-full h-full rounded-full object-cover border border-black">
+                </div>
+                <div>
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-sm font-bold text-white hover:underline cursor-pointer">${post.username}</span>
+                    <i class="fa-solid fa-circle-check text-sky-400 text-[11px]"></i>
+                  </div>
+                  <p class="text-[11px] text-zinc-400">${post.location}</p>
+                </div>
+              </div>
+              <button onclick="selectTrack(${actualIdx})" class="text-zinc-400 hover:text-white px-2">
+                <i class="fa-solid fa-ellipsis"></i>
+              </button>
+            </div>
+
+            <!-- Square Cover Artwork with Double-Tap Like & Spotify Audio Pill -->
+            <div ondblclick="doubleTapLike(${post.id})" class="relative aspect-square bg-zinc-900 select-none cursor-pointer group overflow-hidden">
+              <img src="${post.cover}" alt="${post.title}" class="w-full h-full object-cover transition duration-500 group-hover:scale-[1.02]">
+              
+              <!-- Double Tap Heart Animation Overlay -->
+              <div id="bigHeart-${post.id}" class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0">
+                <i class="fa-solid fa-heart text-white text-7xl drop-shadow-[0_4px_20px_rgba(0,0,0,0.6)]"></i>
+              </div>
+
+              <!-- Embedded Spotify Playable Strip Overlay -->
+              <div onclick="event.stopPropagation(); selectTrack(${actualIdx})" class="absolute bottom-3 inset-x-3 bg-black/75 backdrop-blur-md border border-white/10 rounded-xl p-2.5 flex items-center justify-between hover:bg-black/90 transition">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <div class="w-9 h-9 rounded-full bg-spotify-green text-black flex items-center justify-center flex-shrink-0 shadow-lg">
+                    <i class="fa-solid ${isCurrentPlaying ? 'fa-pause' : 'fa-play'} text-xs ${isCurrentPlaying ? '' : 'ml-0.5'}"></i>
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-xs font-bold text-white truncate">${post.title}</p>
+                    <p class="text-[11px] text-zinc-300 truncate">${post.artist}</p>
+                  </div>
+                </div>
+
+                <!-- Animated Equalizer Bars when Playing -->
+                <div class="flex items-end gap-0.5 h-4 pr-2">
+                  ${isCurrentPlaying ? `
+                    <span class="w-1 bg-spotify-green rounded-full animate-eq1"></span>
+                    <span class="w-1 bg-spotify-green rounded-full animate-eq2"></span>
+                    <span class="w-1 bg-spotify-green rounded-full animate-eq3"></span>
+                  ` : `
+                    <i class="fa-brands fa-spotify text-spotify-green text-base"></i>
+                  `}
+                </div>
+              </div>
+            </div>
+
+            <!-- Instagram Action Icons Bar -->
+            <div class="px-3.5 pt-3 pb-1.5 flex items-center justify-between text-xl">
+              <div class="flex items-center gap-4">
+                <button onclick="toggleLike(${post.id})" class="transition transform active:scale-125 ${post.liked ? 'text-insta-red' : 'text-white hover:text-zinc-400'}">
+                  <i class="${post.liked ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
+                </button>
+                <button onclick="document.getElementById('commentInput-${post.id}').focus()" class="text-white hover:text-zinc-400 transition">
+                  <i class="fa-regular fa-comment"></i>
+                </button>
+                <button onclick="sharePost('${post.title}')" class="text-white hover:text-zinc-400 transition">
+                  <i class="fa-regular fa-paper-plane"></i>
+                </button>
+              </div>
+              <button onclick="toggleSave(${post.id})" class="transition ${post.saved ? 'text-spotify-green' : 'text-white hover:text-zinc-400'}">
+                <i class="${post.saved ? 'fa-solid' : 'fa-regular'} fa-bookmark"></i>
+              </button>
+            </div>
+
+            <!-- Likes, Caption, Comments & Timestamp -->
+            <div class="px-3.5 pb-3.5 space-y-1.5 text-sm">
+              <p class="font-bold text-white">${post.likes.toLocaleString()} likes</p>
+              <p class="leading-snug text-zinc-200">
+                <span class="font-bold text-white mr-1.5">${post.username}</span>${post.caption}
+              </p>
+
+              <!-- Comments List -->
+              <div class="space-y-1 pt-1">
+                ${post.comments.map(c => `
+                  <p class="text-xs text-zinc-300">
+                    <span class="font-bold text-white mr-1.5">${c.user}</span>${c.text}
+                  </p>
+                `).join('')}
+              </div>
+
+              <p class="text-[10px] text-zinc-500 tracking-wide uppercase pt-0.5">${post.timeAgo}</p>
+
+              <!-- Add Comment Input -->
+              <form onsubmit="addComment(event, ${post.id})" class="flex items-center gap-2 pt-2 border-t border-zinc-900 mt-2">
+                <input id="commentInput-${post.id}" type="text" placeholder="Add a comment..." class="flex-1 bg-transparent text-xs text-white placeholder-zinc-500 focus:outline-none">
+                <button type="submit" class="text-xs font-bold text-spotify-green hover:text-spotify-hover">Post</button>
+              </form>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    // Render Suggested Artists Sidebar
+    function renderSuggestedArtists() {
+      const container = document.getElementById('suggestedArtistsList');
+      container.innerHTML = suggestedArtists.map((artist, idx) => `
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <img src="${artist.avatar}" alt="${artist.username}" class="w-9 h-9 rounded-full object-cover">
+            <div>
+              <p class="text-xs font-bold text-white">${artist.username}</p>
+              <p class="text-[11px] text-zinc-500">${artist.subtitle}</p>
+            </div>
+          </div>
+          <button onclick="toggleFollowArtist(${idx})" class="text-xs font-bold ${artist.following ? 'text-zinc-400' : 'text-spotify-green hover:text-spotify-hover'}">
+            ${artist.following ? 'Following' : 'Follow'}
+          </button>
         </div>
       `).join('');
     }
 
-    // Load track details
+    // Audio Engine Functions
     function loadTrack(index) {
       currentTrackIndex = index;
-      const track = tracks[currentTrackIndex];
+      const track = posts[currentTrackIndex];
       audio.src = track.src;
       currentThumb.src = track.cover;
       currentTitle.textContent = track.title;
       currentArtist.textContent = track.artist;
+      document.getElementById('sidebarTrackStatus').textContent = `${track.title} • ${track.artist}`;
+      updatePlayerLikeIcon();
     }
 
-    // Toggle Play/Pause state
     function togglePlay() {
       if (!audio.src) loadTrack(0);
-      
       if (isPlaying) {
         audio.pause();
-        playIcon.className = 'fa-solid fa-play';
+        playIcon.className = 'fa-solid fa-play text-sm ml-0.5';
+        isPlaying = false;
       } else {
         audio.play();
-        playIcon.className = 'fa-solid fa-pause';
+        playIcon.className = 'fa-solid fa-pause text-sm';
+        isPlaying = true;
       }
-      isPlaying = !isPlaying;
+      renderStories();
+      renderFeed();
     }
 
-    // Select and start playing specific track
     function selectTrack(index) {
+      if (currentTrackIndex === index && audio.src) {
+        togglePlay();
+        return;
+      }
       loadTrack(index);
       isPlaying = false;
       togglePlay();
     }
 
-    // Format time helpers (mm:ss)
+    function updatePlayerLikeIcon() {
+      const track = posts[currentTrackIndex];
+      const btn = document.getElementById('playerLikeBtn');
+      btn.innerHTML = `<i class="${track.liked ? 'fa-solid text-insta-red' : 'fa-regular'} fa-heart"></i>`;
+    }
+
+    function likeCurrentTrack() {
+      toggleLike(posts[currentTrackIndex].id);
+    }
+
+    // Social Interactions
+    function toggleLike(postId) {
+      const post = posts.find(p => p.id === postId);
+      if (!post) return;
+      post.liked = !post.liked;
+      post.likes += post.liked ? 1 : -1;
+      updatePlayerLikeIcon();
+      renderFeed();
+    }
+
+    function doubleTapLike(postId) {
+      const post = posts.find(p => p.id === postId);
+      if (post && !post.liked) {
+        post.liked = true;
+        post.likes += 1;
+        updatePlayerLikeIcon();
+        renderFeed();
+      }
+      const heartEl = document.getElementById(`bigHeart-${postId}`);
+      if (heartEl) {
+        heartEl.classList.remove('animate-popHeart');
+        void heartEl.offsetWidth;
+        heartEl.classList.add('animate-popHeart');
+      }
+    }
+
+    function toggleSave(postId) {
+      const post = posts.find(p => p.id === postId);
+      if (!post) return;
+      post.saved = !post.saved;
+      showToast(post.saved ? 'Saved to your collection' : 'Removed from saved');
+      renderFeed();
+    }
+
+    function addComment(event, postId) {
+      event.preventDefault();
+      const input = document.getElementById(`commentInput-${postId}`);
+      const text = input.value.trim();
+      if (!text) return;
+      const post = posts.find(p => p.id === postId);
+      post.comments.push({ user: 'you_listener', text });
+      input.value = '';
+      renderFeed();
+    }
+
+    function toggleFollowArtist(idx) {
+      suggestedArtists[idx].following = !suggestedArtists[idx].following;
+      renderSuggestedArtists();
+    }
+
+    function sharePost(title) {
+      showToast(`Link copied for "${title}"`);
+    }
+
+    // Filtering & Search
+    function setFilter(filter) {
+      currentFilter = filter;
+      document.getElementById('navHome').className = filter === 'all'
+        ? 'w-full flex items-center gap-4 px-3 py-3 rounded-xl font-bold text-white bg-zinc-900/80 transition'
+        : 'w-full flex items-center gap-4 px-3 py-3 rounded-xl font-medium text-zinc-400 hover:text-white hover:bg-zinc-900/50 transition';
+      document.getElementById('navSaved').className = filter === 'liked'
+        ? 'w-full flex items-center gap-4 px-3 py-3 rounded-xl font-bold text-white bg-zinc-900/80 transition'
+        : 'w-full flex items-center gap-4 px-3 py-3 rounded-xl font-medium text-zinc-400 hover:text-white hover:bg-zinc-900/50 transition';
+      renderFeed();
+    }
+
+    function focusSearch() {
+      const box = document.getElementById('searchBarContainer');
+      box.classList.toggle('hidden');
+      if (!box.classList.contains('hidden')) {
+        document.getElementById('searchInput').focus();
+      }
+    }
+
+    function handleSearch(val) {
+      searchQuery = val;
+      renderFeed();
+    }
+
+    // Create New Music Post Modal
+    function openCreatePostModal() {
+      const modal = document.getElementById('createPostModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeCreatePostModal() {
+      const modal = document.getElementById('createPostModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function submitNewPost() {
+      const title = document.getElementById('newTitleInput').value.trim() || 'Midnight Vibes';
+      const artist = document.getElementById('newArtistInput').value.trim() || 'you_listener';
+      const caption = document.getElementById('newCaptionInput').value.trim() || 'Sharing a fresh track on InstaSound! 🎶';
+      const src = document.getElementById('newAudioSelect').value;
+
+      const randomImgId = Math.floor(Math.random() * 200) + 100;
+      const newPost = {
+        id: Date.now(),
+        username: 'you_listener',
+        location: 'Studio Session',
+        avatar: 'https://picsum.photos/id/64/120/120',
+        title,
+        artist,
+        cover: `https://picsum.photos/id/${randomImgId}/600/600`,
+        src,
+        caption,
+        likes: 1,
+        liked: true,
+        saved: false,
+        timeAgo: 'JUST NOW',
+        comments: []
+      };
+
+      posts.unshift(newPost);
+      document.getElementById('newTitleInput').value = '';
+      document.getElementById('newArtistInput').value = '';
+      document.getElementById('newCaptionInput').value = '';
+      closeCreatePostModal();
+      selectTrack(0);
+      showToast('Track shared to feed!');
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toastBox');
+      toast.textContent = msg;
+      toast.classList.remove('opacity-0');
+      setTimeout(() => toast.classList.add('opacity-0'), 2500);
+    }
+
+    // Audio Timeline & Volume Listeners
     function formatTime(seconds) {
       if (isNaN(seconds)) return "0:00";
       const mins = Math.floor(seconds / 60);
@@ -477,46 +736,46 @@
       return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
     }
 
-    // Update Progress Bar & Time text
     audio.addEventListener('timeupdate', () => {
-      const progressPercent = (audio.currentTime / audio.duration) * 100;
+      const progressPercent = (audio.currentTime / audio.duration) * 100 || 0;
       progressBar.style.width = `${progressPercent}%`;
       currentTimeEl.textContent = formatTime(audio.currentTime);
       durationEl.textContent = formatTime(audio.duration);
     });
 
-    // Seek track timeline on click
-    progressContainer.addEventListener('click', (e) => {
-      const width = progressContainer.clientWidth;
-      const clickX = e.offsetX;
-      const duration = audio.duration;
-      audio.currentTime = (clickX / width) * duration;
+    audio.addEventListener('ended', () => {
+      currentTrackIndex = (currentTrackIndex + 1) % posts.length;
+      selectTrack(currentTrackIndex);
     });
 
-    // Volume adjustment click
+    progressContainer.addEventListener('click', (e) => {
+      const width = progressContainer.clientWidth;
+      if (audio.duration) audio.currentTime = (e.offsetX / width) * audio.duration;
+    });
+
     volumeContainer.addEventListener('click', (e) => {
       const width = volumeContainer.clientWidth;
-      const clickX = e.offsetX;
-      const volume = clickX / width;
+      const volume = Math.max(0, Math.min(1, e.offsetX / width));
       audio.volume = volume;
       volumeBar.style.width = `${volume * 100}%`;
     });
 
-    // Navigation Controls
     prevBtn.addEventListener('click', () => {
-      currentTrackIndex = (currentTrackIndex - 1 + tracks.length) % tracks.length;
+      currentTrackIndex = (currentTrackIndex - 1 + posts.length) % posts.length;
       selectTrack(currentTrackIndex);
     });
 
     nextBtn.addEventListener('click', () => {
-      currentTrackIndex = (currentTrackIndex + 1) % tracks.length;
+      currentTrackIndex = (currentTrackIndex + 1) % posts.length;
       selectTrack(currentTrackIndex);
     });
 
     playBtn.addEventListener('click', togglePlay);
 
-    // Initial load
-    renderCards();
+    // Initialize App
+    renderStories();
+    renderFeed();
+    renderSuggestedArtists();
     loadTrack(0);
   </script>
 </body>
