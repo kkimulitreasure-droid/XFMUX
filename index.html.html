@@ -1453,26 +1453,6 @@
       showToast('Profile & picture updated!');
     }
 
-    function closeEditProfileModal() {
-      const modal = document.getElementById('editProfileModal');
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
-    }
-
-    function saveProfileEdits() {
-      const oldUsername = currentUser.username;
-      currentUser.fullName = document.getElementById('editFullNameInput').value.trim() || currentUser.fullName;
-      currentUser.username = document.getElementById('editUsernameInput').value.trim() || currentUser.username;
-      currentUser.bio = document.getElementById('editBioInput').value.trim();
-      posts.forEach(p => { if (p.username === oldUsername) p.username = currentUser.username; });
-      videoReels.forEach(v => { if (v.username === oldUsername) v.username = currentUser.username; });
-      closeEditProfileModal();
-      syncUserUI();
-      renderProfile();
-      renderFeed();
-      showToast('Profile updated!');
-    }
-
     // AUTHENTICATION: LOG IN & CREATE ACCOUNT
     function openAuthModal(mode = 'login') {
       toggleAuthMode(mode);
@@ -1493,6 +1473,15 @@
       const subtitle = document.getElementById('authSubtitle');
       if (mode === 'signup') {
         loginForm.classList.add('hidden');
+        signupForm.classList.remove('hidden');
+        subtitle.textContent = 'Create your InstaSound account & set your profile picture.';
+      } else {
+        signupForm.classList.add('hidden');
+        loginForm.classList.remove('hidden');
+        subtitle.textContent = 'Log in to share tracks, follow artists & post videos.';
+      }
+    }
+
     function previewSignupAvatar(event) {
       const file = event.target.files[0];
       if (!file) return;
