@@ -262,8 +262,11 @@
       <div id="view-profile" class="app-view hidden w-full max-w-2xl px-4 sm:px-0 space-y-6 pb-8">
         <div class="bg-zinc-950 border border-zinc-900 rounded-2xl p-6">
           <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-            <div class="w-24 h-24 rounded-full p-1 ig-story-ring flex-shrink-0">
+            <div onclick="openEditProfileModal()" title="Click to change profile picture" class="relative w-24 h-24 rounded-full p-1 ig-story-ring flex-shrink-0 cursor-pointer group">
               <img id="profilePageAvatar" src="https://picsum.photos/id/64/200/200" alt="Profile" class="w-full h-full rounded-full object-cover border-2 border-black">
+              <div class="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-xs font-bold">
+                <i class="fa-solid fa-camera text-base"></i>
+              </div>
             </div>
             <div class="flex-1 text-center sm:text-left space-y-3">
               <div class="flex flex-col sm:flex-row sm:items-center gap-3">
@@ -577,6 +580,18 @@
 
       <!-- CREATE ACCOUNT FORM -->
       <form id="signupForm" onsubmit="handleSignup(event)" class="space-y-3 hidden">
+        <div class="flex flex-col items-center gap-2 pb-1">
+          <label for="signupAvatarFileInput" class="relative w-16 h-16 rounded-full p-0.5 ig-story-ring cursor-pointer group">
+            <img id="signupAvatarPreview" src="https://picsum.photos/id/64/200/200" alt="Avatar Preview" class="w-full h-full rounded-full object-cover border-2 border-black">
+            <div class="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-xs">
+              <i class="fa-solid fa-camera"></i>
+            </div>
+          </label>
+          <label for="signupAvatarFileInput" class="text-[11px] font-bold text-spotify-green hover:underline cursor-pointer">
+            Upload Profile Photo (Optional)
+          </label>
+          <input id="signupAvatarFileInput" type="file" accept="image/*" onchange="previewSignupAvatar(event)" class="hidden">
+        </div>
         <input id="signupFullName" type="text" required placeholder="Full Name (e.g., Alex Rivera)" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-spotify-green">
         <input id="signupUsername" type="text" required placeholder="Username (e.g., alex.beats)" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-spotify-green">
         <input id="signupEmail" type="email" required placeholder="Email address" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-spotify-green">
@@ -600,7 +615,22 @@
         <h3 class="text-sm font-bold text-white">Edit Profile</h3>
         <button onclick="saveProfileEdits()" class="text-sm font-bold text-spotify-green hover:text-spotify-hover">Done</button>
       </div>
-      <div class="p-4 space-y-3">
+      <div class="p-4 space-y-3.5 max-h-[82vh] overflow-y-auto">
+        <!-- Profile Picture Upload & URL Preview -->
+        <div class="flex flex-col items-center gap-2.5 bg-zinc-900/60 p-3.5 rounded-xl border border-zinc-800">
+          <div class="w-20 h-20 rounded-full p-0.5 ig-story-ring">
+            <img id="editAvatarPreview" src="https://picsum.photos/id/64/200/200" alt="Profile Preview" class="w-full h-full rounded-full object-cover border-2 border-black">
+          </div>
+          <label class="px-3.5 py-1.5 rounded-lg bg-spotify-green hover:bg-spotify-hover text-black text-xs font-bold cursor-pointer transition flex items-center gap-1.5">
+            <i class="fa-solid fa-camera"></i> Choose Photo From Device
+            <input id="editAvatarFileInput" type="file" accept="image/*" onchange="previewEditAvatar(event)" class="hidden">
+          </label>
+          <div class="w-full">
+            <label class="text-[10px] font-semibold uppercase text-zinc-400 block mb-1">Or Paste Image URL</label>
+            <input id="editAvatarUrlInput" type="url" oninput="previewEditAvatarUrl(this.value)" placeholder="https://example.com/my-photo.jpg" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-spotify-green">
+          </div>
+        </div>
+
         <div>
           <label class="text-[11px] font-semibold uppercase text-zinc-400 block mb-1">Full Name</label>
           <input id="editFullNameInput" type="text" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white">
@@ -815,8 +845,8 @@
     let profileTab = 'posts';
     let searchQuery = '';
     let storyTimer = null;
-
-    // Studio Editor State
+    let pendingEditAvatar = null;
+    let pendingSignupAvatar = null;
     let studioState = {
       videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-dj-playing-music-at-a-nightclub-4345-large.mp4",
       filter: "none",
@@ -1361,12 +1391,66 @@
     }
 
     function openEditProfileModal() {
+      pendingEditAvatar = currentUser.avatar;
+      document.getElementById('editAvatarPreview').src = currentUser.avatar;
+      document.getElementById('editAvatarUrlInput').value = currentUser.avatar.startsWith('blob:') ? '' : currentUser.avatar;
+      document.getElementById('editAvatarFileInput').value = '';
       document.getElementById('editFullNameInput').value = currentUser.fullName;
       document.getElementById('editUsernameInput').value = currentUser.username;
       document.getElementById('editBioInput').value = currentUser.bio;
       const modal = document.getElementById('editProfileModal');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
+    }
+
+    function previewEditAvatar(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      pendingEditAvatar = URL.createObjectURL(file);
+      document.getElementById('editAvatarPreview').src = pendingEditAvatar;
+      document.getElementById('editAvatarUrlInput').value = '';
+    }
+
+    function previewEditAvatarUrl(url) {
+      const trimmed = url.trim();
+      if (!trimmed) return;
+      pendingEditAvatar = trimmed;
+      document.getElementById('editAvatarPreview').src = trimmed;
+    }
+
+    function closeEditProfileModal() {
+      const modal = document.getElementById('editProfileModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function saveProfileEdits() {
+      const oldUsername = currentUser.username;
+      currentUser.fullName = document.getElementById('editFullNameInput').value.trim() || currentUser.fullName;
+      currentUser.username = document.getElementById('editUsernameInput').value.trim() || currentUser.username;
+      currentUser.bio = document.getElementById('editBioInput').value.trim();
+      if (pendingEditAvatar) {
+        currentUser.avatar = pendingEditAvatar;
+      }
+      posts.forEach(p => {
+        if (p.username === oldUsername) {
+          p.username = currentUser.username;
+          p.avatar = currentUser.avatar;
+        }
+      });
+      videoReels.forEach(v => {
+        if (v.username === oldUsername) {
+          v.username = currentUser.username;
+          v.avatar = currentUser.avatar;
+        }
+      });
+      closeEditProfileModal();
+      syncUserUI();
+      renderStories();
+      renderProfile();
+      renderFeed();
+      renderReels();
+      showToast('Profile & picture updated!');
     }
 
     function closeEditProfileModal() {
@@ -1409,13 +1493,11 @@
       const subtitle = document.getElementById('authSubtitle');
       if (mode === 'signup') {
         loginForm.classList.add('hidden');
-        signupForm.classList.remove('hidden');
-        subtitle.textContent = 'Create an account to publish music, videos & follow artists.';
-      } else {
-        signupForm.classList.add('hidden');
-        loginForm.classList.remove('hidden');
-        subtitle.textContent = 'Log in to share tracks, follow artists & chat.';
-      }
+    function previewSignupAvatar(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      pendingSignupAvatar = URL.createObjectURL(file);
+      document.getElementById('signupAvatarPreview').src = pendingSignupAvatar;
     }
 
     function handleSignup(e) {
@@ -1432,16 +1514,18 @@
       }
 
       const randomAvatarId = Math.floor(Math.random() * 100) + 200;
+      const chosenAvatar = pendingSignupAvatar || `https://picsum.photos/id/${randomAvatarId}/200/200`;
       const newAccount = {
         username,
         fullName,
         email,
         password,
-        avatar: `https://picsum.photos/id/${randomAvatarId}/200/200`,
+        avatar: chosenAvatar,
         bio,
         followers: 1,
         following: 0
       };
+      pendingSignupAvatar = null;
       accounts.push(newAccount);
       currentUser = newAccount;
       syncUserUI();
