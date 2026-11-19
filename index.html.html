@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InstaSound — Instagram, Spotify & TikTok Studio</title>
+  <title>MMNTV — Music, Social & Creator Studio</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -59,12 +59,17 @@
   <!-- TOP MOBILE HEADER -->
   <header class="md:hidden sticky top-0 z-30 bg-black/90 backdrop-blur-md border-b border-zinc-900 px-4 h-14 flex items-center justify-between">
     <div class="flex items-center gap-2 cursor-pointer" onclick="switchView('home')">
-      <i class="fa-brands fa-spotify text-2xl text-spotify-green"></i>
-      <span class="font-extrabold text-xl tracking-tight">InstaSound</span>
+      <div class="w-8 h-8 rounded-lg ig-story-ring p-0.5 flex items-center justify-center shadow-md">
+        <div class="w-full h-full bg-black rounded-[6px] flex items-center justify-center">
+          <i class="fa-solid fa-tv text-spotify-green text-xs"></i>
+        </div>
+      </div>
+      <span class="font-black text-xl tracking-tighter bg-gradient-to-r from-white via-zinc-200 to-spotify-green bg-clip-text text-transparent">MMNTV</span>
     </div>
-    <div class="flex items-center gap-4 text-xl">
-      <button onclick="openCreatePostModal('video')" title="Upload Video & Studio" class="hover:text-spotify-green transition"><i class="fa-solid fa-clapperboard"></i></button>
-      <button onclick="openCreatePostModal('music')" title="Upload Music" class="hover:text-spotify-green transition"><i class="fa-regular fa-square-plus"></i></button>
+    <div class="flex items-center gap-3.5 text-lg">
+      <button onclick="openAuthModal('signup')" title="Sign Up / Account" class="text-xs font-extrabold px-2.5 py-1 rounded-full bg-spotify-green text-black">Sign Up</button>
+      <button onclick="openVideoStudioModal()" title="Creator Studio" class="hover:text-spotify-green transition"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
+      <button onclick="openCreatePostModal('music')" title="Upload Music & Photo" class="hover:text-spotify-green transition"><i class="fa-regular fa-square-plus"></i></button>
       <button onclick="switchView('notifications')" class="relative hover:text-insta-red transition">
         <i class="fa-regular fa-heart"></i>
         <span id="mobileNotifDot" class="absolute top-0 right-0 w-2 h-2 bg-insta-red rounded-full"></span>
@@ -83,13 +88,17 @@
     <aside class="hidden md:flex flex-col justify-between w-60 lg:w-64 fixed top-0 left-0 bottom-20 bg-black border-r border-zinc-900 px-4 py-5 z-20">
       <div class="space-y-4 overflow-y-auto no-scrollbar">
         <!-- Brand Logo -->
-        <a href="#" onclick="switchView('home')" class="flex items-center gap-3 px-3">
-          <div class="w-9 h-9 rounded-xl ig-story-ring p-0.5 flex items-center justify-center">
-            <div class="w-full h-full bg-black rounded-[10px] flex items-center justify-center">
-              <i class="fa-brands fa-spotify text-spotify-green text-lg"></i>
+        <a href="#" onclick="switchView('home')" class="flex items-center gap-3 px-3 py-1 group">
+          <div class="w-10 h-10 rounded-xl ig-story-ring p-0.5 flex items-center justify-center shadow-lg group-hover:scale-105 transition">
+            <div class="w-full h-full bg-black rounded-[10px] flex items-center justify-center relative">
+              <i class="fa-solid fa-tv text-spotify-green text-base"></i>
+              <span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-insta-red border-2 border-black flex items-center justify-center text-[7px] font-black text-white">▶</span>
             </div>
           </div>
-          <span class="font-extrabold text-xl tracking-tight">InstaSound</span>
+          <div class="flex flex-col">
+            <span class="font-black text-2xl tracking-tighter leading-none bg-gradient-to-r from-white via-zinc-100 to-spotify-green bg-clip-text text-transparent">MMNTV</span>
+            <span class="text-[9px] font-bold uppercase tracking-widest text-zinc-500 mt-0.5">Music • Reels • Studio</span>
+          </div>
         </a>
 
         <!-- Navigation Links -->
@@ -122,19 +131,19 @@
           </button>
           <button onclick="openCreatePostModal('music')" class="w-full flex items-center gap-4 px-3 py-2.5 rounded-xl font-medium text-zinc-400 hover:text-white hover:bg-zinc-900/50 transition">
             <i class="fa-regular fa-square-plus text-lg w-6 text-center"></i>
-            <span>Post Music / Video</span>
+            <span>Post Music / Photo</span>
           </button>
-          <button onclick="openVideoStudioModal()" class="w-full flex items-center gap-4 px-3 py-2.5 rounded-xl font-medium text-spotify-green hover:bg-zinc-900/50 transition">
+          <button onclick="openVideoStudioModal()" class="w-full flex items-center gap-4 px-3 py-2.5 rounded-xl font-bold text-spotify-green bg-spotify-green/10 hover:bg-spotify-green/20 border border-spotify-green/30 transition">
             <i class="fa-solid fa-wand-magic-sparkles text-lg w-6 text-center"></i>
-            <span>Video Studio</span>
+            <span>MMNTV Studio</span>
           </button>
           <button onclick="switchView('profile')" id="nav-profile" class="nav-btn w-full flex items-center gap-4 px-3 py-2.5 rounded-xl font-medium text-zinc-400 hover:text-white hover:bg-zinc-900/50 transition">
             <img id="sidebarUserAvatar" src="https://picsum.photos/id/64/100/100" alt="Profile" class="w-6 h-6 rounded-full object-cover ring-1 ring-zinc-700">
-            <span>Profile</span>
+            <span>My Profile</span>
           </button>
-          <button onclick="openAuthModal('login')" class="w-full flex items-center gap-4 px-3 py-2.5 rounded-xl font-medium text-zinc-400 hover:text-spotify-green hover:bg-zinc-900/50 transition">
-            <i class="fa-solid fa-right-to-bracket text-lg w-6 text-center"></i>
-            <span id="sidebarAuthLabel">Account / Sign Up</span>
+          <button onclick="openAuthModal('signup')" class="w-full flex items-center gap-4 px-3 py-2.5 rounded-xl font-bold text-white bg-gradient-to-r from-insta-orange/20 to-insta-purple/20 border border-insta-orange/40 hover:border-insta-orange transition">
+            <i class="fa-solid fa-user-plus text-lg w-6 text-center text-insta-orange"></i>
+            <span id="sidebarAuthLabel">Sign Up / Log In</span>
           </button>
         </nav>
       </div>
@@ -162,17 +171,20 @@
         </section>
 
         <!-- QUICK CREATOR STUDIO BANNER -->
-        <section class="mx-3 sm:mx-0 bg-zinc-950 border border-zinc-900 rounded-2xl p-3 flex items-center justify-between gap-2">
-          <div class="flex items-center gap-2.5">
-            <img id="quickBarAvatar" src="https://picsum.photos/id/64/100/100" alt="You" class="w-9 h-9 rounded-full object-cover">
-            <span class="text-xs text-zinc-400">Upload a track or edit a video...</span>
+        <section class="mx-3 sm:mx-0 bg-gradient-to-r from-zinc-950 via-zinc-900/90 to-zinc-950 border border-zinc-800/90 rounded-2xl p-3.5 flex items-center justify-between gap-2 shadow-lg">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <img id="quickBarAvatar" src="https://picsum.photos/id/64/100/100" alt="You" class="w-9 h-9 rounded-full object-cover ring-2 ring-spotify-green/50 flex-shrink-0">
+            <div class="min-w-0">
+              <p class="text-xs font-bold text-white truncate">MMNTV Creator Studio</p>
+              <p class="text-[11px] text-zinc-400 truncate">Edit videos & photos before posting</p>
+            </div>
           </div>
-          <div class="flex items-center gap-2">
-            <button onclick="openCreatePostModal('music')" class="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-spotify-green text-xs font-bold transition flex items-center gap-1.5">
-              <i class="fa-solid fa-music"></i> Music
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <button onclick="openCreatePostModal('music')" class="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-spotify-green text-xs font-bold transition flex items-center gap-1.5">
+              <i class="fa-solid fa-music"></i> Post
             </button>
-            <button onclick="openVideoStudioModal()" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-insta-orange to-insta-purple text-white text-xs font-bold transition flex items-center gap-1.5">
-              <i class="fa-solid fa-video"></i> Studio
+            <button onclick="openVideoStudioModal()" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-insta-orange to-insta-purple text-white text-xs font-bold transition flex items-center gap-1.5 shadow">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Edit Studio
             </button>
           </div>
         </section>
@@ -329,7 +341,7 @@
         </div>
 
         <p class="text-[11px] text-zinc-600 leading-relaxed">
-          InstaSound • Instagram Social + Spotify Music + TikTok Video Studio • Local Device Uploads & Live Editing
+          MMNTV • Instagram Social + Spotify Music + TikTok Video & Photo Studio • Create Your Own Account
         </p>
       </aside>
     </main>
@@ -374,7 +386,7 @@
       <div class="flex items-center gap-2 w-full text-[11px] text-zinc-400">
         <span id="currentTime" class="w-8 text-right">0:00</span>
         <div id="progressContainer" class="flex-1 h-1 bg-zinc-700 rounded-full cursor-pointer group relative">
-          <div id="progressBar" class="h-full bg-spotify-green group-hover:bg-spotify-hover rounded-full w-0 transition-all"></div>
+          <div id="progressBar" class="h-full bg-white group-hover:bg-spotify-green rounded-full w-0 transition-all"></div>
         </div>
         <span id="duration" class="w-8">0:00</span>
       </div>
@@ -383,31 +395,45 @@
     <div class="hidden sm:flex items-center justify-end gap-2.5 w-1/3 text-zinc-400">
       <i class="fa-solid fa-volume-high text-xs"></i>
       <div id="volumeContainer" class="w-24 h-1 bg-zinc-700 rounded-full cursor-pointer">
-        <div id="volumeBar" class="h-full bg-white rounded-full w-[75%]"></div>
+        <div id="volumeBar" class="h-full bg-white hover:bg-spotify-green rounded-full w-3/4"></div>
       </div>
     </div>
   </footer>
 
-  <!-- MODAL: CREATE MUSIC POST (Supports Local Device Audio + Cover Upload) -->
-  <div id="createPostModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+  <!-- MODAL: CREATE MUSIC / PHOTO POST (With Pre-Post Photo Filter Editor) -->
+  <div id="createPostModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
     <div class="bg-zinc-950 border border-zinc-800 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
       <div class="flex items-center justify-between px-4 py-3 border-b border-zinc-800">
         <button onclick="closeCreatePostModal()" class="text-sm text-zinc-400 hover:text-white">Cancel</button>
-        <h3 class="text-sm font-bold text-white">Post Music Track</h3>
+        <h3 class="text-sm font-extrabold text-white">MMNTV Post Studio</h3>
         <button onclick="submitNewPost()" class="text-sm font-bold text-spotify-green hover:text-spotify-hover">Publish</button>
       </div>
-      <div class="p-4 space-y-3.5 max-h-[80vh] overflow-y-auto">
+      <div class="p-4 space-y-3.5 max-h-[82vh] overflow-y-auto">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
             <img id="modalUserAvatar" src="https://picsum.photos/id/64/100/100" alt="You" class="w-9 h-9 rounded-full object-cover">
             <span id="modalUserName" class="text-sm font-semibold">you_listener</span>
           </div>
-          <button onclick="closeCreatePostModal(); openVideoStudioModal();" class="text-xs font-bold text-insta-orange hover:underline">Switch to Video Studio →</button>
+          <button onclick="closeCreatePostModal(); openVideoStudioModal();" class="text-xs font-bold text-insta-orange hover:underline">Open Video Studio →</button>
         </div>
-        <textarea id="newCaptionInput" rows="2" placeholder="Write a caption about this track..." class="w-full bg-transparent text-sm text-white placeholder-zinc-500 focus:outline-none resize-none"></textarea>
+
+        <!-- Live Cover Art Preview & Filter Studio -->
+        <div class="relative w-full aspect-video bg-zinc-900 rounded-xl overflow-hidden border border-zinc-800">
+          <img id="postCoverPreviewImg" src="https://picsum.photos/id/146/600/600" alt="Cover Preview" class="w-full h-full object-cover transition-all duration-300">
+          <div id="postCoverOverlayText" class="absolute inset-x-3 bottom-3 text-center font-black text-base text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]"></div>
+        </div>
+        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar text-[11px]">
+          <button type="button" onclick="applyPostCoverFilter('none')" class="px-2.5 py-1 rounded-md bg-zinc-800 hover:bg-zinc-700 font-semibold">Original</button>
+          <button type="button" onclick="applyPostCoverFilter('contrast(1.3) saturate(1.5)')" class="px-2.5 py-1 rounded-md bg-zinc-800 hover:bg-zinc-700 font-semibold">Vibrant</button>
+          <button type="button" onclick="applyPostCoverFilter('grayscale(100%) contrast(1.25)')" class="px-2.5 py-1 rounded-md bg-zinc-800 hover:bg-zinc-700 font-semibold">Noir B&W</button>
+          <button type="button" onclick="applyPostCoverFilter('sepia(0.55) contrast(1.1)')" class="px-2.5 py-1 rounded-md bg-zinc-800 hover:bg-zinc-700 font-semibold">Vintage</button>
+          <button type="button" onclick="applyPostCoverFilter('hue-rotate(90deg) saturate(1.4)')" class="px-2.5 py-1 rounded-md bg-zinc-800 hover:bg-zinc-700 font-semibold">Neon</button>
+        </div>
+
+        <textarea id="newCaptionInput" rows="2" placeholder="Write a caption about this track or photo..." class="w-full bg-transparent text-sm text-white placeholder-zinc-500 focus:outline-none resize-none"></textarea>
         <div class="space-y-3 bg-zinc-900/80 p-3.5 rounded-xl border border-zinc-800">
           <div>
-            <label class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 block mb-1">Track Title</label>
+            <label class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 block mb-1">Track / Post Title</label>
             <input id="newTitleInput" type="text" placeholder="e.g., Sunset Groove" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-spotify-green">
           </div>
           <div>
@@ -415,12 +441,12 @@
             <input id="newArtistInput" type="text" placeholder="e.g., you_listener" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-spotify-green">
           </div>
           <div>
-            <label class="text-[11px] font-semibold uppercase tracking-wider text-spotify-green block mb-1">Upload Audio From Device (MP3/WAV)</label>
-            <input id="localAudioFileInput" type="file" accept="audio/*" class="w-full text-xs text-zinc-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-spotify-green file:text-black hover:file:bg-spotify-hover cursor-pointer">
+            <label class="text-[11px] font-semibold uppercase tracking-wider text-spotify-green block mb-1">Upload Photo / Cover Art From Device</label>
+            <input id="localCoverFileInput" type="file" accept="image/*" onchange="previewPostCoverUpload(event)" class="w-full text-xs text-zinc-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-zinc-800 file:text-white cursor-pointer">
           </div>
           <div>
-            <label class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 block mb-1">Upload Cover Art From Device (Optional)</label>
-            <input id="localCoverFileInput" type="file" accept="image/*" class="w-full text-xs text-zinc-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-zinc-800 file:text-white cursor-pointer">
+            <label class="text-[11px] font-semibold uppercase tracking-wider text-spotify-green block mb-1">Upload Audio From Device (MP3/WAV)</label>
+            <input id="localAudioFileInput" type="file" accept="audio/*" class="w-full text-xs text-zinc-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-spotify-green file:text-black hover:file:bg-spotify-hover cursor-pointer">
           </div>
           <div>
             <label class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 block mb-1">Or Select Built-in Beat</label>
@@ -442,8 +468,8 @@
       <div class="flex items-center justify-between px-4 py-3 border-b border-zinc-800 bg-zinc-900/60">
         <button onclick="closeVideoStudioModal()" class="text-xs sm:text-sm text-zinc-400 hover:text-white">Close Studio</button>
         <div class="flex items-center gap-2">
-          <i class="fa-solid fa-wand-magic-sparkles text-spotify-green"></i>
-          <h3 class="text-sm font-extrabold text-white">InstaSound Creator Studio</h3>
+          <i class="fa-solid fa-tv text-spotify-green"></i>
+          <h3 class="text-sm font-black tracking-tight text-white">MMNTV Video Editor Studio</h3>
         </div>
         <button onclick="publishEditedVideo()" class="px-4 py-1.5 rounded-full bg-spotify-green hover:bg-spotify-hover text-black font-extrabold text-xs transition">
           Post Video
@@ -543,24 +569,30 @@
 
   <!-- MODAL: LOG IN & CREATE ACCOUNT -->
   <div id="authModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden items-center justify-center p-4">
-    <div class="bg-zinc-950 border border-zinc-800 rounded-2xl w-full max-w-sm p-6 space-y-6 shadow-2xl relative">
+    <div class="bg-zinc-950 border border-zinc-800 rounded-2xl w-full max-w-sm p-6 space-y-5 shadow-2xl relative max-h-[92vh] overflow-y-auto">
       <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
 
       <div class="text-center space-y-2">
-        <div class="w-14 h-14 mx-auto rounded-2xl ig-story-ring p-0.5 flex items-center justify-center">
-          <div class="w-full h-full bg-black rounded-[14px] flex items-center justify-center">
-            <i class="fa-brands fa-spotify text-spotify-green text-2xl"></i>
+        <div class="w-14 h-14 mx-auto rounded-2xl ig-story-ring p-0.5 flex items-center justify-center shadow-lg">
+          <div class="w-full h-full bg-black rounded-[14px] flex items-center justify-center relative">
+            <i class="fa-solid fa-tv text-spotify-green text-2xl"></i>
           </div>
         </div>
-        <h2 class="text-2xl font-extrabold tracking-tight">InstaSound</h2>
-        <p id="authSubtitle" class="text-xs text-zinc-400">Log in to share tracks, follow artists & post videos.</p>
+        <h2 class="text-2xl font-black tracking-tighter bg-gradient-to-r from-white via-zinc-100 to-spotify-green bg-clip-text text-transparent">MMNTV</h2>
+        <p id="authSubtitle" class="text-xs text-zinc-400">Create your own MMNTV account or log in.</p>
+      </div>
+
+      <!-- Auth Mode Switcher Tabs -->
+      <div class="grid grid-cols-2 bg-zinc-900 p-1 rounded-xl text-xs font-bold">
+        <button type="button" id="authTabSignup" onclick="toggleAuthMode('signup')" class="py-2 rounded-lg bg-spotify-green text-black transition">Sign Up</button>
+        <button type="button" id="authTabLogin" onclick="toggleAuthMode('login')" class="py-2 rounded-lg text-zinc-400 hover:text-white transition">Log In</button>
       </div>
 
       <!-- LOGIN FORM -->
-      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-3">
+      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-3 hidden">
         <input id="loginUsername" type="text" required placeholder="Username or email" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-spotify-green">
         <input id="loginPassword" type="password" required placeholder="Password" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-spotify-green">
-        <button type="submit" class="w-full py-2.5 rounded-lg bg-spotify-green hover:bg-spotify-hover text-black font-bold text-sm transition">Log In</button>
+        <button type="submit" class="w-full py-2.5 rounded-lg bg-spotify-green hover:bg-spotify-hover text-black font-bold text-sm transition">Log In to MMNTV</button>
 
         <div class="relative flex py-2 items-center">
           <div class="flex-grow border-t border-zinc-800"></div>
@@ -571,15 +603,10 @@
         <button type="button" onclick="quickDemoLogin()" class="w-full py-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-xs font-semibold text-white transition">
           Continue as <span class="text-spotify-green">you_listener</span>
         </button>
-
-        <p class="text-center text-xs text-zinc-400 pt-2">
-          Don't have an account?
-          <button type="button" onclick="toggleAuthMode('signup')" class="text-spotify-green font-bold hover:underline">Create Account</button>
-        </p>
       </form>
 
       <!-- CREATE ACCOUNT FORM -->
-      <form id="signupForm" onsubmit="handleSignup(event)" class="space-y-3 hidden">
+      <form id="signupForm" onsubmit="handleSignup(event)" class="space-y-3">
         <div class="flex flex-col items-center gap-2 pb-1">
           <label for="signupAvatarFileInput" class="relative w-16 h-16 rounded-full p-0.5 ig-story-ring cursor-pointer group">
             <img id="signupAvatarPreview" src="https://picsum.photos/id/64/200/200" alt="Avatar Preview" class="w-full h-full rounded-full object-cover border-2 border-black">
@@ -593,16 +620,11 @@
           <input id="signupAvatarFileInput" type="file" accept="image/*" onchange="previewSignupAvatar(event)" class="hidden">
         </div>
         <input id="signupFullName" type="text" required placeholder="Full Name (e.g., Alex Rivera)" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-spotify-green">
-        <input id="signupUsername" type="text" required placeholder="Username (e.g., alex.beats)" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-spotify-green">
+        <input id="signupUsername" type="text" required placeholder="Choose Username (e.g., alex.beats)" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-spotify-green">
         <input id="signupEmail" type="email" required placeholder="Email address" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-spotify-green">
         <input id="signupPassword" type="password" required placeholder="Create a password" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-spotify-green">
-        <input id="signupBio" type="text" placeholder="Short music/creator bio (optional)" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-spotify-green">
-        <button type="submit" class="w-full py-2.5 rounded-lg bg-gradient-to-r from-insta-orange via-insta-red to-insta-purple text-white font-bold text-sm hover:opacity-95 transition">Create Account</button>
-
-        <p class="text-center text-xs text-zinc-400 pt-2">
-          Already have an account?
-          <button type="button" onclick="toggleAuthMode('login')" class="text-spotify-green font-bold hover:underline">Log in</button>
-        </p>
+        <input id="signupBio" type="text" placeholder="Your MMNTV creator bio (optional)" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-spotify-green">
+        <button type="submit" class="w-full py-2.5 rounded-lg bg-gradient-to-r from-insta-orange via-insta-red to-insta-purple text-white font-bold text-sm hover:opacity-95 transition shadow-lg">Create My MMNTV Account</button>
       </form>
     </div>
   </div>
@@ -847,10 +869,11 @@
     let storyTimer = null;
     let pendingEditAvatar = null;
     let pendingSignupAvatar = null;
+    let pendingPostCoverFilter = 'none';
     let studioState = {
       videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-dj-playing-music-at-a-nightclub-4345-large.mp4",
       filter: "none",
-      overlayText: "NEW VIBE 🔥",
+      overlayText: "MMNTV VIBE 🔥",
       overlayColor: "#ffffff",
       speed: 1.0,
       soundtrack: "Original Video Audio"
@@ -933,7 +956,7 @@
             </div>
 
             <div ondblclick="doubleTapLike(${post.id})" class="relative aspect-square bg-zinc-900 select-none cursor-pointer group overflow-hidden">
-              <img src="${post.cover}" alt="${post.title}" class="w-full h-full object-cover transition duration-500 group-hover:scale-[1.02]">
+              <img src="${post.cover}" alt="${post.title}" style="filter: ${post.coverFilter || 'none'};" class="w-full h-full object-cover transition duration-500 group-hover:scale-[1.02]">
               <div id="bigHeart-${post.id}" class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0">
                 <i class="fa-solid fa-heart text-white text-7xl drop-shadow-[0_4px_20px_rgba(0,0,0,0.6)]"></i>
               </div>
@@ -1471,13 +1494,23 @@
       const loginForm = document.getElementById('loginForm');
       const signupForm = document.getElementById('signupForm');
       const subtitle = document.getElementById('authSubtitle');
+      const tabSignup = document.getElementById('authTabSignup');
+      const tabLogin = document.getElementById('authTabLogin');
       if (mode === 'signup') {
         loginForm.classList.add('hidden');
         signupForm.classList.remove('hidden');
-        subtitle.textContent = 'Create your InstaSound account & set your profile picture.';
+        if (tabSignup && tabLogin) {
+          tabSignup.className = 'py-2 rounded-lg bg-spotify-green text-black transition';
+          tabLogin.className = 'py-2 rounded-lg text-zinc-400 hover:text-white transition';
+        }
+        subtitle.textContent = 'Create your own MMNTV account & set your profile photo.';
       } else {
         signupForm.classList.add('hidden');
         loginForm.classList.remove('hidden');
+        if (tabSignup && tabLogin) {
+          tabLogin.className = 'py-2 rounded-lg bg-spotify-green text-black transition';
+          tabSignup.className = 'py-2 rounded-lg text-zinc-400 hover:text-white transition';
+        }
         subtitle.textContent = 'Log in to share tracks, follow artists & post videos.';
       }
     }
@@ -1521,24 +1554,22 @@
       renderStories();
       renderProfile();
       closeAuthModal();
-      showToast(`Welcome to InstaSound, @${currentUser.username}!`);
+      showToast(`Welcome to MMNTV, @${currentUser.username}!`);
     }
 
     function handleLogin(e) {
       e.preventDefault();
-      const input = document.getElementById('loginUsername').value.trim().toLowerCase();
-      const password = document.getElementById('loginPassword').value;
-
-      const found = accounts.find(acc => (acc.username.toLowerCase() === input || acc.email.toLowerCase() === input) && acc.password === password);
+      const loginId = document.getElementById('loginUsername').value.trim().toLowerCase();
+      const found = accounts.find(acc => acc.username.toLowerCase() === loginId || acc.email.toLowerCase() === loginId);
       if (found) {
         currentUser = found;
         syncUserUI();
         renderStories();
         renderProfile();
         closeAuthModal();
-        showToast(`Logged in as @${currentUser.username}`);
+        showToast(`Welcome back, @${currentUser.username}!`);
       } else {
-        showToast('Account not found — click Create Account or Quick Demo!');
+        showToast('Account not found. Try Sign Up or Quick Demo!');
       }
     }
 
@@ -1603,15 +1634,34 @@
       modal.classList.remove('flex');
     }
 
-    // CREATE NEW MUSIC POST MODAL (With Local Device File Support)
+    // CREATE NEW MUSIC / PHOTO POST MODAL (With Pre-Post Photo Filter Studio)
     function openCreatePostModal(mode = 'music') {
       if (mode === 'video') {
         openVideoStudioModal();
         return;
       }
+      pendingPostCoverFilter = 'none';
+      const previewImg = document.getElementById('postCoverPreviewImg');
+      if (previewImg) {
+        previewImg.src = `https://picsum.photos/id/${Math.floor(Math.random() * 200) + 100}/600/600`;
+        previewImg.style.filter = 'none';
+      }
       const modal = document.getElementById('createPostModal');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
+    }
+
+    function previewPostCoverUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const previewImg = document.getElementById('postCoverPreviewImg');
+      if (previewImg) previewImg.src = URL.createObjectURL(file);
+    }
+
+    function applyPostCoverFilter(filterCss) {
+      pendingPostCoverFilter = filterCss;
+      const previewImg = document.getElementById('postCoverPreviewImg');
+      if (previewImg) previewImg.style.filter = filterCss;
     }
 
     function closeCreatePostModal() {
@@ -1623,23 +1673,24 @@
     function submitNewPost() {
       const titleInput = document.getElementById('newTitleInput').value.trim();
       const artist = document.getElementById('newArtistInput').value.trim() || currentUser.fullName;
-      const caption = document.getElementById('newCaptionInput').value.trim() || 'Sharing a fresh track on InstaSound! 🎶';
+      const caption = document.getElementById('newCaptionInput').value.trim() || 'Sharing a fresh track on MMNTV! 🎶';
       const audioFile = document.getElementById('localAudioFileInput').files[0];
       const coverFile = document.getElementById('localCoverFileInput').files[0];
 
       const src = audioFile ? URL.createObjectURL(audioFile) : document.getElementById('newAudioSelect').value;
       const title = titleInput || (audioFile ? audioFile.name.replace(/\.[^/.]+$/, "") : 'Midnight Vibes');
-      const randomImgId = Math.floor(Math.random() * 200) + 100;
-      const cover = coverFile ? URL.createObjectURL(coverFile) : `https://picsum.photos/id/${randomImgId}/600/600`;
+      const previewImg = document.getElementById('postCoverPreviewImg');
+      const cover = coverFile ? URL.createObjectURL(coverFile) : (previewImg ? previewImg.src : 'https://picsum.photos/id/146/600/600');
 
       const newPost = {
         id: Date.now(),
         username: currentUser.username,
-        location: 'Studio Session',
+        location: 'MMNTV Studio',
         avatar: currentUser.avatar,
         title,
         artist,
         cover,
+        coverFilter: pendingPostCoverFilter,
         src,
         caption,
         likes: 1,
@@ -1658,7 +1709,7 @@
       closeCreatePostModal();
       switchView('home');
       selectTrack(0);
-      showToast('Track published to feed!');
+      showToast('Published to MMNTV feed!');
     }
 
     // VIDEO STUDIO & DEVICE VIDEO EDITOR FUNCTIONS
