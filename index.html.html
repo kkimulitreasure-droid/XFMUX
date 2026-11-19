@@ -554,12 +554,9 @@
 
           <!-- 4. Soundtrack & Caption -->
           <div class="bg-zinc-900/70 p-3 rounded-xl border border-zinc-800 space-y-2">
-            <label class="font-bold text-zinc-300 uppercase tracking-wider block">4. Soundtrack & Post Caption</label>
+            <label class="font-bold text-zinc-300 uppercase tracking-wider block">4. Soundtrack (Any MMNTV Uploaded Music) & Caption</label>
             <select id="studioSoundtrackSelect" onchange="updateStudioSoundtrack()" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-spotify-green">
-              <option value="Original Video Audio">Original Video Audio</option>
-              <option value="Synthwave Beats — Chill Producer">🎵 Synthwave Beats — Chill Producer</option>
-              <option value="Acoustic Journey — Guitar Hero">🎵 Acoustic Journey — Guitar Hero</option>
-              <option value="Midnight Drive — Neon Lights">🎵 Midnight Drive — Neon Lights</option>
+              <option value="-1">Original Video Audio</option>
             </select>
             <input id="studioCaptionInput" type="text" placeholder="Write your video caption & #hashtags..." class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-spotify-green">
           </div>
@@ -694,6 +691,7 @@
   </div>
 
   <audio id="audioPlayer" crossorigin="anonymous"></audio>
+  <audio id="studioAudioPlayer" loop crossorigin="anonymous"></audio>
 
   <script>
     // Registered Accounts & Strict Authentication State
@@ -706,8 +704,9 @@
         password: "password123",
         avatar: "https://picsum.photos/id/64/200/200",
         bio: "Sharing daily beats, midnight synthwaves & video reels 🎧✨",
-        followers: 418,
-        following: 192
+        followers: 998,
+        following: 192,
+        goldenTick: false
       }
     ];
     let currentUser = accounts[0];
@@ -800,6 +799,7 @@
         overlayColor: "#ffffff",
         playbackRate: 1.0,
         soundtrack: "Midnight Drive — Neon Lights",
+        soundSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
         caption: "Friday night energy in the booth! #dj #club #mmntv",
         likes: 4320,
         liked: false
@@ -814,6 +814,7 @@
         overlayColor: "#FCAF45",
         playbackRate: 1.0,
         soundtrack: "Acoustic Journey — Guitar Hero",
+        soundSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
         caption: "Unplugged session before the show #acoustic #guitar",
         likes: 1980,
         liked: false
@@ -821,10 +822,10 @@
     ];
 
     let artists = [
-      { username: "chill.producer", name: "Chill Producer", avatar: "https://picsum.photos/id/146/100/100", followers: "142K", following: true },
-      { username: "guitar.hero", name: "Guitar Hero", avatar: "https://picsum.photos/id/225/100/100", followers: "89K", following: false },
-      { username: "neon.lights", name: "Neon Lights", avatar: "https://picsum.photos/id/325/100/100", followers: "310K", following: true },
-      { username: "digital.wave", name: "Digital Wave", avatar: "https://picsum.photos/id/445/100/100", followers: "205K", following: false }
+      { username: "chill.producer", name: "Chill Producer", avatar: "https://picsum.photos/id/146/100/100", followers: "142K", followersNum: 142000, following: true },
+      { username: "guitar.hero", name: "Guitar Hero", avatar: "https://picsum.photos/id/225/100/100", followers: "890", followersNum: 890, following: false },
+      { username: "neon.lights", name: "Neon Lights", avatar: "https://picsum.photos/id/325/100/100", followers: "310K", followersNum: 310000, following: true },
+      { username: "digital.wave", name: "Digital Wave", avatar: "https://picsum.photos/id/445/100/100", followers: "205K", followersNum: 205000, following: false }
     ];
 
     let notifications = [
@@ -897,6 +898,34 @@
       }, 2800);
     }
 
+    // Golden Tick Verification System (1,000+ Likes AND 1,000+ Followers)
+    const GOLDEN_TICK_SVG = `<span title="Verified MMNTV Golden Creator (1K+ Likes & 1K+ Followers)" class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-gradient-to-tr from-amber-500 via-yellow-400 to-amber-200 text-black text-[9px] font-black shadow-sm ml-1 flex-shrink-0"><i class="fa-solid fa-check"></i></span>`;
+
+    function getUserTotalLikes(username) {
+      const postLikes = posts.filter(p => p.username === username).reduce((sum, p) => sum + p.likes, 0);
+      const reelLikes = reels.filter(r => r.username === username).reduce((sum, r) => sum + r.likes, 0);
+      return postLikes + reelLikes;
+    }
+
+    function hasGoldenTick(username) {
+      if (username === currentUser.username) {
+        const totalLikes = getUserTotalLikes(username);
+        const qualified = totalLikes >= 1000 && currentUser.followers >= 1000;
+        if (qualified && !currentUser.goldenTick) {
+          currentUser.goldenTick = true;
+          showToast('🏆 Congratulations! You reached 1K Likes & 1K Followers and earned the MMNTV Golden Tick!');
+        }
+        return qualified || currentUser.goldenTick;
+      }
+      const art = artists.find(a => a.username === username);
+      const followersCount = art ? art.followersNum : 0;
+      return getUserTotalLikes(username) >= 1000 && followersCount >= 1000;
+    }
+
+    function renderGoldenTick(username) {
+      return hasGoldenTick(username) ? GOLDEN_TICK_SVG : '';
+    }
+
     function syncUserUI() {
       const avatarIds = [
         'sidebarUserAvatar', 'quickBarAvatar', 'profilePageAvatar',
@@ -907,12 +936,18 @@
         if (el) el.src = currentUser.avatar;
       });
       const setTxt = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-      setTxt('profilePageUsername', currentUser.username);
+      const profileNameEl = document.getElementById('profilePageUsername');
+      if (profileNameEl) {
+        profileNameEl.innerHTML = `<span class="inline-flex items-center">${currentUser.username}${renderGoldenTick(currentUser.username)}</span>`;
+      }
       setTxt('profilePageFullName', currentUser.fullName);
       setTxt('profilePageBio', currentUser.bio);
-      setTxt('profileFollowersCount', currentUser.followers);
-      setTxt('profileFollowingCount', currentUser.following);
-      setTxt('rightSidebarUsername', currentUser.username);
+      setTxt('profileFollowersCount', currentUser.followers.toLocaleString());
+      setTxt('profileFollowingCount', currentUser.following.toLocaleString());
+      const rightUserEl = document.getElementById('rightSidebarUsername');
+      if (rightUserEl) {
+        rightUserEl.innerHTML = `<span class="inline-flex items-center">${currentUser.username}${renderGoldenTick(currentUser.username)}</span>`;
+      }
       setTxt('rightSidebarName', currentUser.fullName);
       setTxt('dmCurrentUsername', currentUser.username);
       setTxt('modalUserName', currentUser.username);
@@ -1118,39 +1153,17 @@
                   <img src="${post.avatar}" alt="${post.username}" class="w-full h-full rounded-full object-cover border border-black">
                 </div>
                 <div>
-                  <p class="text-xs font-bold text-white leading-tight">${post.username}</p>
+                  <p class="text-xs font-bold text-white leading-tight flex items-center">${post.username}${renderGoldenTick(post.username)}</p>
                   <p class="text-[11px] text-zinc-400">${post.location || 'MMNTV Studio'}</p>
                 </div>
               </div>
-              <button onclick="playTrackByIndex(${idx})" class="text-xs font-bold text-spotify-green hover:underline">
-                ${isCurrentPlaying ? 'Playing' : 'Play Track'}
-              </button>
-            </div>
-
-            <div ondblclick="doubleTapPost(${post.id}, this)" class="relative aspect-square bg-zinc-900 overflow-hidden cursor-pointer select-none">
-              <img src="${post.cover}" alt="${post.title}" style="filter: ${post.coverFilter || 'none'}" class="w-full h-full object-cover">
-              <div class="heart-burst hidden absolute inset-0 flex items-center justify-center pointer-events-none">
-                <i class="fa-solid fa-heart text-white text-7xl drop-shadow-2xl animate-popHeart"></i>
-              </div>
-
-              <!-- Embedded Spotify Play Strip -->
-              <div onclick="event.stopPropagation(); playTrackByIndex(${idx})" class="absolute bottom-3 inset-x-3 bg-black/80 backdrop-blur-md border border-white/10 rounded-xl p-2.5 flex items-center justify-between hover:bg-black/90 transition">
-                <div class="flex items-center gap-2.5 min-w-0">
-                  <div class="w-9 h-9 rounded-full bg-spotify-green text-black flex items-center justify-center flex-shrink-0 shadow">
-                    <i class="fa-solid ${isCurrentPlaying ? 'fa-pause' : 'fa-play'} text-xs"></i>
-                  </div>
-                  <div class="min-w-0">
-                    <p class="text-xs font-bold text-white truncate">${post.title}</p>
-                    <p class="text-[11px] text-zinc-400 truncate">${post.artist}</p>
-                  </div>
-                </div>
-                ${isCurrentPlaying ? `
-                  <div class="flex items-end gap-0.5 h-4 pr-2">
-                    <span class="w-1 bg-spotify-green rounded-full animate-eq1"></span>
-                    <span class="w-1 bg-spotify-green rounded-full animate-eq2"></span>
-                    <span class="w-1 bg-spotify-green rounded-full animate-eq3"></span>
-                  </div>
-                ` : '<i class="fa-brands fa-spotify text-spotify-green text-lg pr-1"></i>'}
+              <div class="flex items-center gap-2.5">
+                <button onclick="useSoundInVideo(${post.id})" title="Use this uploaded song in your video" class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-amber-400 transition flex items-center gap-1">
+                  <i class="fa-solid fa-clapperboard"></i> Use Sound
+                </button>
+                <button onclick="playTrackByIndex(${idx})" class="text-xs font-bold text-spotify-green hover:underline">
+                  ${isCurrentPlaying ? 'Playing' : 'Play'}
+                </button>
               </div>
             </div>
 
@@ -1174,7 +1187,7 @@
 
               <p class="text-xs font-bold text-white">${post.likes.toLocaleString()} likes</p>
               <p class="text-xs text-zinc-200 leading-relaxed">
-                <span class="font-bold text-white mr-1.5">${post.username}</span>${post.caption}
+                <span class="font-bold text-white mr-1.5 inline-flex items-center">${post.username}${renderGoldenTick(post.username)}</span>${post.caption}
               </p>
 
               <div class="space-y-1">
@@ -1217,7 +1230,9 @@
       if (!post) return;
       post.liked = !post.liked;
       post.likes += post.liked ? 1 : -1;
+      syncUserUI();
       renderFeed();
+      renderSuggestedArtists();
       updatePlayerLikeIcon();
     }
 
@@ -1253,9 +1268,10 @@
     function renderReels() {
       const stream = document.getElementById('reelsStream');
       if (!stream) return;
-      stream.innerHTML = reels.map(reel => `
+      stream.innerHTML = reels.map((reel, idx) => `
         <div class="relative w-full aspect-[9/16] bg-zinc-900 rounded-2xl overflow-hidden snap-start border border-zinc-800 shadow-xl">
-          <video src="${reel.videoSrc}" loop playsinline onclick="this.paused ? this.play() : this.pause()" onloadedmetadata="this.playbackRate = ${reel.playbackRate || 1}" style="filter: ${reel.filter || 'none'}" class="w-full h-full object-cover cursor-pointer"></video>
+          <video id="reelVid-${idx}" src="${reel.videoSrc}" loop playsinline onclick="toggleReelPlayback(${idx})" onloadedmetadata="this.playbackRate = ${reel.playbackRate || 1}" style="filter: ${reel.filter || 'none'}" class="w-full h-full object-cover cursor-pointer"></video>
+          ${reel.soundSrc ? `<audio id="reelAudio-${idx}" src="${reel.soundSrc}" loop></audio>` : ''}
           
           ${reel.overlayText ? `
             <div class="absolute inset-x-4 top-1/3 text-center pointer-events-none font-black text-2xl drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]" style="color: ${reel.overlayColor || '#fff'}">
@@ -1268,7 +1284,7 @@
               <div class="w-10 h-10 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-lg">
                 <i class="${reel.liked ? 'fa-solid fa-heart text-insta-red' : 'fa-regular fa-heart text-white'}"></i>
               </div>
-              <span class="text-[11px] font-bold drop-shadow">${reel.likes}</span>
+              <span class="text-[11px] font-bold drop-shadow">${reel.likes.toLocaleString()}</span>
             </button>
             <button onclick="showToast('Reel link copied!')" class="flex flex-col items-center gap-1">
               <div class="w-10 h-10 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-lg">
@@ -1281,7 +1297,7 @@
           <div class="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/90 via-black/40 to-transparent space-y-2 pointer-events-none">
             <div class="flex items-center gap-2">
               <img src="${reel.avatar}" alt="${reel.username}" class="w-8 h-8 rounded-full object-cover border border-white">
-              <span class="text-xs font-extrabold text-white">@${reel.username}</span>
+              <span class="text-xs font-extrabold text-white inline-flex items-center">@${reel.username}${renderGoldenTick(reel.username)}</span>
             </div>
             <p class="text-xs text-zinc-200">${reel.caption}</p>
             <div class="inline-flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-[11px] text-spotify-green font-semibold">
@@ -1293,13 +1309,37 @@
       `).join('');
     }
 
+    function toggleReelPlayback(idx) {
+      const vid = document.getElementById(`reelVid-${idx}`);
+      const aud = document.getElementById(`reelAudio-${idx}`);
+      if (!vid) return;
+      if (vid.paused) {
+        if (isPlaying) {
+          audio.pause();
+          playIcon.className = 'fa-solid fa-play text-sm ml-0.5';
+          isPlaying = false;
+        }
+        vid.play();
+        if (aud) {
+          vid.muted = true;
+          aud.currentTime = 0;
+          aud.play().catch(() => {});
+        }
+      } else {
+        vid.pause();
+        if (aud) aud.pause();
+      }
+    }
+
     function toggleReelLike(reelId) {
       if (!requireAuth()) return;
       const reel = reels.find(r => r.id === reelId);
       if (!reel) return;
       reel.liked = !reel.liked;
       reel.likes += reel.liked ? 1 : -1;
+      syncUserUI();
       renderReels();
+      renderSuggestedArtists();
     }
 
     // EXPLORE & SUGGESTED ARTISTS
@@ -1311,7 +1351,7 @@
           <div class="flex items-center gap-2.5 min-w-0">
             <img src="${art.avatar}" alt="${art.name}" class="w-9 h-9 rounded-full object-cover">
             <div class="min-w-0">
-              <p class="text-xs font-bold text-white truncate">${art.username}</p>
+              <p class="text-xs font-bold text-white truncate flex items-center">${art.username}${renderGoldenTick(art.username)}</p>
               <p class="text-[11px] text-zinc-500 truncate">${art.followers} followers</p>
             </div>
           </div>
@@ -1329,7 +1369,7 @@
         <div class="bg-zinc-950 border border-zinc-900 rounded-xl p-3 flex flex-col items-center text-center gap-2">
           <img src="${art.avatar}" alt="${art.name}" class="w-14 h-14 rounded-full object-cover ring-2 ring-spotify-green/40">
           <div>
-            <p class="text-xs font-bold text-white truncate">${art.name}</p>
+            <p class="text-xs font-bold text-white truncate flex items-center justify-center">${art.name}${renderGoldenTick(art.username)}</p>
             <p class="text-[10px] text-zinc-400">${art.followers} followers</p>
           </div>
           <button onclick="toggleFollowArtist(${i})" class="w-full py-1.5 rounded-lg text-xs font-bold transition ${art.following ? 'bg-zinc-800 text-zinc-300' : 'bg-spotify-green text-black'}">
@@ -1338,15 +1378,153 @@
         </div>
       `).join('');
     }
+    // VIDEO EDITOR STUDIO (With Shared Uploaded MMNTV Music Library)
+    function populateStudioSoundtracks(preselectPostId = null) {
+      const select = document.getElementById('studioSoundtrackSelect');
+      if (!select) return;
+      select.innerHTML = `<option value="-1">Original Video Audio</option>` +
+        posts.map(p => `<option value="${p.id}">🎵 ${p.title} — ${p.artist} (@${p.username})</option>`).join('');
+      if (preselectPostId !== null) {
+        select.value = String(preselectPostId);
+      }
+      updateStudioSoundtrack();
+    }
 
-    function toggleFollowArtist(idx) {
+    function useSoundInVideo(postId) {
       if (!requireAuth()) return;
-      artists[idx].following = !artists[idx].following;
-      currentUser.following += artists[idx].following ? 1 : -1;
-      syncUserUI();
-      renderSuggestedArtists();
-      renderExploreArtists();
-      showToast(artists[idx].following ? `Following ${artists[idx].name}!` : `Unfollowed ${artists[idx].name}`);
+      openVideoStudioModal(postId);
+      const post = posts.find(p => p.id === postId);
+      if (post) showToast(`Loaded "${post.title}" into MMNTV Video Studio!`);
+    }
+
+    function openVideoStudioModal(preselectPostId = null) {
+      if (!requireAuth()) return;
+      populateStudioSoundtracks(preselectPostId);
+      const modal = document.getElementById('videoStudioModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      const vid = document.getElementById('studioVideoPreview');
+      if (vid) vid.play().catch(() => {});
+    }
+
+    function closeVideoStudioModal() {
+      const vid = document.getElementById('studioVideoPreview');
+      const studioAud = document.getElementById('studioAudioPlayer');
+      if (vid) vid.pause();
+      if (studioAud) studioAud.pause();
+      const modal = document.getElementById('videoStudioModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function toggleStudioPlayback() {
+      const vid = document.getElementById('studioVideoPreview');
+      const studioAud = document.getElementById('studioAudioPlayer');
+      const icon = document.getElementById('studioPlayIcon');
+      if (!vid) return;
+      if (vid.paused) {
+        vid.play();
+        if (studioAud && studioAud.src && document.getElementById('studioSoundtrackSelect').value !== '-1') {
+          studioAud.play().catch(() => {});
+        }
+        icon.className = 'fa-solid fa-pause';
+      } else {
+        vid.pause();
+        if (studioAud) studioAud.pause();
+        icon.className = 'fa-solid fa-play';
+      }
+    }
+
+    function handleLocalVideoUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const vid = document.getElementById('studioVideoPreview');
+      vid.src = URL.createObjectURL(file);
+      vid.play().catch(() => {});
+      showToast(`Loaded "${file.name}" into MMNTV Studio!`);
+    }
+
+    function applyStudioFilter(filterStr, btn) {
+      currentStudioFilter = filterStr;
+      document.getElementById('studioVideoPreview').style.filter = filterStr;
+      document.querySelectorAll('.filter-btn').forEach(b => {
+        b.classList.remove('bg-spotify-green', 'text-black', 'font-bold');
+        b.classList.add('bg-zinc-800', 'text-white');
+      });
+      if (btn) {
+        btn.classList.add('bg-spotify-green', 'text-black', 'font-bold');
+        btn.classList.remove('bg-zinc-800', 'text-white');
+      }
+    }
+
+    function updateStudioOverlay() {
+      const txt = document.getElementById('studioOverlayTextInput').value;
+      const color = document.getElementById('studioOverlayColorInput').value;
+      const overlay = document.getElementById('studioTextOverlay');
+      overlay.textContent = txt;
+      overlay.style.color = color;
+    }
+
+    function setStudioSpeed(speed) {
+      currentStudioSpeed = speed;
+      document.getElementById('studioVideoPreview').playbackRate = speed;
+      document.getElementById('studioSpeedLabel').textContent = `${speed.toFixed(1)}x`;
+    }
+
+    function updateStudioSoundtrack() {
+      const select = document.getElementById('studioSoundtrackSelect');
+      const studioAud = document.getElementById('studioAudioPlayer');
+      const vid = document.getElementById('studioVideoPreview');
+      const badge = document.getElementById('studioSoundBadge');
+      if (!select || !studioAud) return;
+
+      const selectedId = Number(select.value);
+      if (selectedId === -1) {
+        studioAud.pause();
+        studioAud.removeAttribute('src');
+        badge.textContent = "Original Video Audio";
+        if (vid) vid.muted = false;
+      } else {
+        const track = posts.find(p => p.id === selectedId);
+        if (track) {
+          badge.textContent = `${track.title} — ${track.artist}`;
+          if (vid) vid.muted = true;
+          studioAud.src = track.src;
+          studioAud.play().catch(() => {});
+        }
+      }
+    }
+
+    function publishEditedVideo() {
+      if (!requireAuth()) return;
+      const vidSrc = document.getElementById('studioVideoPreview').src;
+      const overlayText = document.getElementById('studioOverlayTextInput').value.trim();
+      const overlayColor = document.getElementById('studioOverlayColorInput').value;
+      const selectedTrackId = Number(document.getElementById('studioSoundtrackSelect').value);
+      const selectedTrack = posts.find(p => p.id === selectedTrackId);
+      const soundtrack = selectedTrack ? `${selectedTrack.title} — ${selectedTrack.artist}` : "Original Video Audio";
+      const soundSrc = selectedTrack ? selectedTrack.src : null;
+      const caption = document.getElementById('studioCaptionInput').value.trim() || "Edited in MMNTV Creator Studio 🎬✨ #mmntv #reels";
+
+      reels.unshift({
+        id: Date.now(),
+        username: currentUser.username,
+        avatar: currentUser.avatar,
+        videoSrc: vidSrc,
+        filter: currentStudioFilter,
+        overlayText,
+        overlayColor,
+        playbackRate: currentStudioSpeed,
+        soundtrack,
+        soundSrc,
+        caption,
+        likes: 1,
+        liked: true
+      });
+
+      closeVideoStudioModal();
+      switchView('reels');
+      showToast('Your edited video with custom music is live on MMNTV Reels!');
     }
 
     function renderExploreGrid(filter = '') {
@@ -1587,106 +1765,6 @@
       renderFeed();
       playTrackByIndex(0);
       showToast(`Published "${title}" to your MMNTV feed!`);
-    }
-
-    // VIDEO EDITOR STUDIO
-    function openVideoStudioModal() {
-      if (!requireAuth()) return;
-      const modal = document.getElementById('videoStudioModal');
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-      const vid = document.getElementById('studioVideoPreview');
-      if (vid) vid.play().catch(() => {});
-    }
-
-    function closeVideoStudioModal() {
-      const vid = document.getElementById('studioVideoPreview');
-      if (vid) vid.pause();
-      const modal = document.getElementById('videoStudioModal');
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
-    }
-
-    function toggleStudioPlayback() {
-      const vid = document.getElementById('studioVideoPreview');
-      const icon = document.getElementById('studioPlayIcon');
-      if (!vid) return;
-      if (vid.paused) {
-        vid.play();
-        icon.className = 'fa-solid fa-pause';
-      } else {
-        vid.pause();
-        icon.className = 'fa-solid fa-play';
-      }
-    }
-
-    function handleLocalVideoUpload(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const vid = document.getElementById('studioVideoPreview');
-      vid.src = URL.createObjectURL(file);
-      vid.play().catch(() => {});
-      showToast(`Loaded "${file.name}" into MMNTV Studio!`);
-    }
-
-    function applyStudioFilter(filterStr, btn) {
-      currentStudioFilter = filterStr;
-      document.getElementById('studioVideoPreview').style.filter = filterStr;
-      document.querySelectorAll('.filter-btn').forEach(b => {
-        b.classList.remove('bg-spotify-green', 'text-black', 'font-bold');
-        b.classList.add('bg-zinc-800', 'text-white');
-      });
-      if (btn) {
-        btn.classList.add('bg-spotify-green', 'text-black', 'font-bold');
-        btn.classList.remove('bg-zinc-800', 'text-white');
-      }
-    }
-
-    function updateStudioOverlay() {
-      const txt = document.getElementById('studioOverlayTextInput').value;
-      const color = document.getElementById('studioOverlayColorInput').value;
-      const overlay = document.getElementById('studioTextOverlay');
-      overlay.textContent = txt;
-      overlay.style.color = color;
-    }
-
-    function setStudioSpeed(speed) {
-      currentStudioSpeed = speed;
-      document.getElementById('studioVideoPreview').playbackRate = speed;
-      document.getElementById('studioSpeedLabel').textContent = `${speed.toFixed(1)}x`;
-    }
-
-    function updateStudioSoundtrack() {
-      const val = document.getElementById('studioSoundtrackSelect').value;
-      document.getElementById('studioSoundBadge').textContent = val;
-    }
-
-    function publishEditedVideo() {
-      if (!requireAuth()) return;
-      const vidSrc = document.getElementById('studioVideoPreview').src;
-      const overlayText = document.getElementById('studioOverlayTextInput').value.trim();
-      const overlayColor = document.getElementById('studioOverlayColorInput').value;
-      const soundtrack = document.getElementById('studioSoundtrackSelect').value;
-      const caption = document.getElementById('studioCaptionInput').value.trim() || "Edited in MMNTV Creator Studio 🎬✨ #mmntv #reels";
-
-      reels.unshift({
-        id: Date.now(),
-        username: currentUser.username,
-        avatar: currentUser.avatar,
-        videoSrc: vidSrc,
-        filter: currentStudioFilter,
-        overlayText,
-        overlayColor,
-        playbackRate: currentStudioSpeed,
-        soundtrack,
-        caption,
-        likes: 1,
-        liked: true
-      });
-
-      closeVideoStudioModal();
-      switchView('reels');
-      showToast('Your edited video is live on MMNTV Reels!');
     }
 
     // EDIT PROFILE & CUSTOM AVATAR
