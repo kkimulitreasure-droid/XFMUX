@@ -287,6 +287,7 @@
                   <button onclick="openEditProfileModal()" class="px-3.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold transition">Edit Profile</button>
                   <button onclick="openVideoStudioModal()" class="px-3.5 py-1.5 rounded-lg bg-spotify-green text-black text-xs font-bold transition">+ Video Studio</button>
                   <button onclick="openAuthModal('login')" class="px-3.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 hover:border-white text-xs font-bold transition">Switch Account</button>
+                  <button onclick="logoutUser()" class="px-3.5 py-1.5 rounded-lg bg-red-950/60 border border-red-800/60 hover:bg-red-900/60 text-red-400 text-xs font-bold transition">Log Out</button>
                 </div>
               </div>
               <div class="flex items-center justify-center sm:justify-start gap-6 text-sm">
@@ -568,9 +569,9 @@
   </div>
 
   <!-- MODAL: LOG IN & CREATE ACCOUNT -->
-  <div id="authModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden items-center justify-center p-4">
+  <div id="authModal" class="fixed inset-0 bg-black/95 backdrop-blur-xl z-50 flex items-center justify-center p-4">
     <div class="bg-zinc-950 border border-zinc-800 rounded-2xl w-full max-w-sm p-6 space-y-5 shadow-2xl relative max-h-[92vh] overflow-y-auto">
-      <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      <button id="closeAuthBtn" onclick="closeAuthModal()" class="hidden absolute top-4 right-4 text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
 
       <div class="text-center space-y-2">
         <div class="w-14 h-14 mx-auto rounded-2xl ig-story-ring p-0.5 flex items-center justify-center shadow-lg">
@@ -579,7 +580,7 @@
           </div>
         </div>
         <h2 class="text-2xl font-black tracking-tighter bg-gradient-to-r from-white via-zinc-100 to-spotify-green bg-clip-text text-transparent">MMNTV</h2>
-        <p id="authSubtitle" class="text-xs text-zinc-400">Create your own MMNTV account or log in.</p>
+        <p id="authSubtitle" class="text-xs text-zinc-400">Sign up to create an account or log in to access MMNTV.</p>
       </div>
 
       <!-- Auth Mode Switcher Tabs -->
@@ -593,16 +594,6 @@
         <input id="loginUsername" type="text" required placeholder="Username or email" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-spotify-green">
         <input id="loginPassword" type="password" required placeholder="Password" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-spotify-green">
         <button type="submit" class="w-full py-2.5 rounded-lg bg-spotify-green hover:bg-spotify-hover text-black font-bold text-sm transition">Log In to MMNTV</button>
-
-        <div class="relative flex py-2 items-center">
-          <div class="flex-grow border-t border-zinc-800"></div>
-          <span class="flex-shrink mx-3 text-[11px] text-zinc-500 uppercase">Or quick demo</span>
-          <div class="flex-grow border-t border-zinc-800"></div>
-        </div>
-
-        <button type="button" onclick="quickDemoLogin()" class="w-full py-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-xs font-semibold text-white transition">
-          Continue as <span class="text-spotify-green">you_listener</span>
-        </button>
       </form>
 
       <!-- CREATE ACCOUNT FORM -->
@@ -705,12 +696,13 @@
   <audio id="audioPlayer" crossorigin="anonymous"></audio>
 
   <script>
-    // Registered Accounts & Current User State
+    // Registered Accounts & Strict Authentication State
+    let isAuthenticated = false;
     let accounts = [
       {
         username: "you_listener",
         fullName: "Music Curator",
-        email: "you@instasound.app",
+        email: "you@mmntv.app",
         password: "password123",
         avatar: "https://picsum.photos/id/64/200/200",
         bio: "Sharing daily beats, midnight synthwaves & video reels 🎧✨",
@@ -720,166 +712,163 @@
     ];
     let currentUser = accounts[0];
 
-    // Track & Instagram Feed Dataset
+    // Core App State
     let posts = [
       {
-        id: 0,
+        id: 1,
         username: "chill.producer",
-        location: "Tokyo, Japan",
-        avatar: "https://picsum.photos/id/1005/120/120",
+        avatar: "https://picsum.photos/id/146/100/100",
+        location: "Tokyo Lo-Fi Studio",
         title: "Synthwave Beats",
         artist: "Chill Producer",
         cover: "https://picsum.photos/id/146/600/600",
+        coverFilter: "none",
         src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-        caption: "Late night analog synth sessions. Turn the volume up for the bass drop! 🎹✨ #synthwave #newmusic",
+        caption: "Late night analog synth sessions. Turn up the bass and drift away 🌃🎹 #synthwave #nightdrive",
         likes: 1284,
         liked: false,
-        saved: false,
+        bookmarked: false,
         timeAgo: "2 HOURS AGO",
         comments: [
-          { user: "neon_lights", text: "The arpeggio at 0:45 is unreal 🔥" },
-          { user: "guitar.hero", text: "Saved straight to my night drive playlist!" }
-        ]
-      },
-      {
-        id: 1,
-        username: "guitar.hero",
-        location: "Nashville, TN",
-        avatar: "https://picsum.photos/id/1011/120/120",
-        title: "Acoustic Journey",
-        artist: "Guitar Hero",
-        cover: "https://picsum.photos/id/225/600/600",
-        src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
-        caption: "Recorded this unplugged piece in one take this morning with fresh strings. ☕🎸",
-        likes: 942,
-        liked: true,
-        saved: false,
-        timeAgo: "5 HOURS AGO",
-        comments: [
-          { user: "digital_wave", text: "So warm and peaceful 🙌" }
+          { user: "neon.lights", text: "That bassline hits different at 2 AM 🔥" },
+          { user: "guitar.hero", text: "Cleanest mix this week!" }
         ]
       },
       {
         id: 2,
-        username: "neon_lights",
-        location: "Berlin, Germany",
-        avatar: "https://picsum.photos/id/1027/120/120",
-        title: "Midnight Drive",
-        artist: "Neon Lights",
-        cover: "https://picsum.photos/id/325/600/600",
-        src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
-        caption: "Cruising through empty city streets at 2 AM. Out now on InstaSound! 🌃🚗",
-        likes: 2150,
+        username: "guitar.hero",
+        avatar: "https://picsum.photos/id/225/100/100",
+        location: "Nashville Acoustic Room",
+        title: "Acoustic Journey",
+        artist: "Guitar Hero",
+        cover: "https://picsum.photos/id/225/600/600",
+        coverFilter: "none",
+        src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+        caption: "Recorded this fingerstyle piece in one take by the window ☕🎸 #acoustic #chill",
+        likes: 892,
         liked: false,
-        saved: true,
-        timeAgo: "9 HOURS AGO",
-        comments: []
+        bookmarked: false,
+        timeAgo: "5 HOURS AGO",
+        comments: [
+          { user: "digital.wave", text: "So peaceful, adding to my morning playlist." }
+        ]
       },
       {
         id: 3,
-        username: "digital_wave",
-        location: "Ibiza, Spain",
-        avatar: "https://picsum.photos/id/1062/120/120",
+        username: "neon.lights",
+        avatar: "https://picsum.photos/id/325/100/100",
+        location: "Berlin Club Underground",
+        title: "Midnight Drive",
+        artist: "Neon Lights",
+        cover: "https://picsum.photos/id/325/600/600",
+        coverFilter: "none",
+        src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
+        caption: "Windows down, city lights blurring past. Stream the full track right here! 🚗💨 #electronic #midnight",
+        likes: 2410,
+        liked: true,
+        bookmarked: true,
+        timeAgo: "1 DAY AGO",
+        comments: []
+      },
+      {
+        id: 4,
+        username: "digital.wave",
+        avatar: "https://picsum.photos/id/445/100/100",
+        location: "Ibiza Sunset Deck",
         title: "Electronic Sunset",
         artist: "Digital Wave",
         cover: "https://picsum.photos/id/445/600/600",
+        coverFilter: "none",
         src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3",
-        caption: "Golden hour melodies to wrap up the weekend. Drop a ❤️ if you feel the vibe!",
-        likes: 1630,
+        caption: "Golden hour melodies for your weekend warm-up 🌅🎶 #electronic #sunset",
+        likes: 1645,
         liked: false,
-        saved: false,
-        timeAgo: "1 DAY AGO",
-        comments: [
-          { user: "chill.producer", text: "Pure summer energy ☀️" }
-        ]
+        bookmarked: false,
+        timeAgo: "2 DAYS AGO",
+        comments: []
       }
     ];
 
-    // TikTok / Reels Short Video Dataset
-    let videoReels = [
+    let reels = [
       {
         id: 101,
-        username: "chill.producer",
-        avatar: "https://picsum.photos/id/1005/120/120",
-        videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-dj-playing-music-at-a-nightclub-4345-large.mp4",
-        caption: "Live club set testing the new synth bassline! 🔥🎧 #dj #nightlife",
-        soundtrack: "Synthwave Beats — Chill Producer",
+        username: "neon.lights",
+        avatar: "https://picsum.photos/id/325/100/100",
+        videoSrc: "https://assets.mixkit.co/videos/preview/mixkit-dj-playing-music-at-a-nightclub-4345-large.mp4",
         filter: "contrast(1.2) saturate(1.3)",
-        overlayText: "LIVE CLUB SET 🎛️",
-        overlayColor: "#1DB954",
-        speed: 1.0,
+        overlayText: "LIVE CLUB SET 🔥",
+        overlayColor: "#ffffff",
+        playbackRate: 1.0,
+        soundtrack: "Midnight Drive — Neon Lights",
+        caption: "Friday night energy in the booth! #dj #club #mmntv",
         likes: 4320,
         liked: false
       },
       {
         id: 102,
         username: "guitar.hero",
-        avatar: "https://picsum.photos/id/1011/120/120",
-        videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-man-playing-an-acoustic-guitar-in-a-room-42874-large.mp4",
-        caption: "Morning acoustic warmups before studio recording 🎸☀️ #acoustic",
+        avatar: "https://picsum.photos/id/225/100/100",
+        videoSrc: "https://assets.mixkit.co/videos/preview/mixkit-man-playing-an-acoustic-guitar-in-a-room-42925-large.mp4",
+        filter: "sepia(0.25)",
+        overlayText: "SUNSET CHORDS 🎸",
+        overlayColor: "#FCAF45",
+        playbackRate: 1.0,
         soundtrack: "Acoustic Journey — Guitar Hero",
-        filter: "sepia(0.35)",
-        overlayText: "MORNING SESSIONS ☕",
-        overlayColor: "#ffffff",
-        speed: 1.0,
-        likes: 2890,
-        liked: true
+        caption: "Unplugged session before the show #acoustic #guitar",
+        likes: 1980,
+        liked: false
       }
     ];
 
-    const suggestedArtists = [
-      { username: "velvet_echo", subtitle: "Electronic • 142K followers", avatar: "https://picsum.photos/id/338/100/100", following: false },
-      { username: "bassline_collective", subtitle: "Hip-Hop & Beats • 89K", avatar: "https://picsum.photos/id/342/100/100", following: false },
-      { username: "aurora_vocals", subtitle: "Indie Pop • 210K followers", avatar: "https://picsum.photos/id/349/100/100", following: false },
-      { username: "kampala_grooves", subtitle: "Afrobeats • 315K followers", avatar: "https://picsum.photos/id/355/100/100", following: false }
+    let artists = [
+      { username: "chill.producer", name: "Chill Producer", avatar: "https://picsum.photos/id/146/100/100", followers: "142K", following: true },
+      { username: "guitar.hero", name: "Guitar Hero", avatar: "https://picsum.photos/id/225/100/100", followers: "89K", following: false },
+      { username: "neon.lights", name: "Neon Lights", avatar: "https://picsum.photos/id/325/100/100", followers: "310K", following: true },
+      { username: "digital.wave", name: "Digital Wave", avatar: "https://picsum.photos/id/445/100/100", followers: "205K", following: false }
     ];
 
     let notifications = [
-      { id: 1, user: "chill.producer", avatar: "https://picsum.photos/id/1005/100/100", text: "liked your playlist recommendation.", time: "12m", unread: true },
-      { id: 2, user: "neon_lights", avatar: "https://picsum.photos/id/1027/100/100", text: "started following you.", time: "1h", unread: true },
-      { id: 3, user: "guitar.hero", avatar: "https://picsum.photos/id/1011/100/100", text: "commented: 'Pure summer energy ☀️'", time: "3h", unread: false }
+      { id: 1, user: "chill.producer", avatar: "https://picsum.photos/id/146/100/100", text: "liked your playlist vibe.", time: "12m", unread: true },
+      { id: 2, user: "neon.lights", avatar: "https://picsum.photos/id/325/100/100", text: "started following you on MMNTV.", time: "1h", unread: true },
+      { id: 3, user: "guitar.hero", avatar: "https://picsum.photos/id/225/100/100", text: "posted a new acoustic track.", time: "3h", unread: false }
     ];
 
     let dmThreads = [
       {
+        id: 0,
         username: "chill.producer",
-        avatar: "https://picsum.photos/id/1005/100/100",
-        online: true,
+        name: "Chill Producer",
+        avatar: "https://picsum.photos/id/146/100/100",
         messages: [
-          { from: "chill.producer", text: "Yo! Thanks for sharing Synthwave Beats on your story 🙌" },
-          { from: "me", text: "That bass drop is insane, had it on repeat all night!" }
+          { from: "them", text: "Yo! Check out my new synthwave drop on MMNTV 🎹" },
+          { from: "me", text: "Listening right now, the mix is super clean!" }
         ]
       },
       {
-        username: "neon_lights",
-        avatar: "https://picsum.photos/id/1027/100/100",
-        online: false,
+        id: 1,
+        username: "neon.lights",
+        name: "Neon Lights",
+        avatar: "https://picsum.photos/id/325/100/100",
         messages: [
-          { from: "neon_lights", text: "Dropping a new synth EP this Friday, stay tuned 🌃" }
+          { from: "them", text: "Collab soon? Send over your latest beat!" }
         ]
       }
     ];
 
-    let activeDmIdx = 0;
+    let activeDmIndex = 0;
+    let currentView = "home";
+    let currentProfileTab = "posts";
     let currentTrackIndex = 0;
     let isPlaying = false;
-    let currentView = 'home';
-    let profileTab = 'posts';
-    let searchQuery = '';
     let storyTimer = null;
-    let pendingEditAvatar = null;
     let pendingSignupAvatar = null;
-    let pendingPostCoverFilter = 'none';
-    let studioState = {
-      videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-dj-playing-music-at-a-nightclub-4345-large.mp4",
-      filter: "none",
-      overlayText: "MMNTV VIBE 🔥",
-      overlayColor: "#ffffff",
-      speed: 1.0,
-      soundtrack: "Original Video Audio"
-    };
+    let pendingEditAvatar = null;
+    let pendingPostCover = null;
+    let currentPostCoverFilter = "none";
+    let currentStudioFilter = "none";
+    let currentStudioSpeed = 1.0;
 
-    // Audio & Player DOM Elements
+    // Audio DOM Elements
     const audio = document.getElementById('audioPlayer');
     const playBtn = document.getElementById('playBtn');
     const playIcon = document.getElementById('playIcon');
@@ -895,125 +884,308 @@
     const volumeContainer = document.getElementById('volumeContainer');
     const volumeBar = document.getElementById('volumeBar');
 
-    // Render Instagram Stories Row
-    function renderStories() {
-      const storiesRow = document.getElementById('storiesRow');
-      const yourStoryHTML = `
-        <div onclick="openCreatePostModal('music')" class="flex flex-col items-center gap-1.5 flex-shrink-0 cursor-pointer group">
-          <div class="relative w-16 h-16 rounded-full p-0.5 bg-zinc-800">
-            <img src="${currentUser.avatar}" alt="Your Story" class="w-full h-full rounded-full object-cover border-2 border-black">
-            <div class="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-spotify-green text-black flex items-center justify-center text-xs font-bold border-2 border-black">
-              <i class="fa-solid fa-plus"></i>
-            </div>
-          </div>
-          <span class="text-[11px] text-zinc-400 group-hover:text-white truncate w-16 text-center">Your Story</span>
-        </div>
-      `;
-
-      const artistStoriesHTML = posts.map((post, idx) => {
-        const activeRing = (currentTrackIndex === idx && isPlaying) ? 'ig-story-ring animate-pulse' : 'ig-story-ring';
-        return `
-          <div onclick="openStoryViewer(${idx})" class="flex flex-col items-center gap-1.5 flex-shrink-0 cursor-pointer group">
-            <div class="w-16 h-16 rounded-full p-[2.5px] ${activeRing} transition-transform group-hover:scale-105">
-              <div class="w-full h-full bg-black rounded-full p-[2px] relative">
-                <img src="${post.avatar}" alt="${post.username}" class="w-full h-full rounded-full object-cover">
-                ${currentTrackIndex === idx && isPlaying ? `
-                  <span class="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-spotify-green text-black text-[9px] font-extrabold px-1.5 rounded-full">LIVE</span>
-                ` : ''}
-              </div>
-            </div>
-            <span class="text-[11px] text-zinc-200 truncate w-16 text-center">${post.username}</span>
-          </div>
-        `;
-      }).join('');
-
-      storiesRow.innerHTML = yourStoryHTML + artistStoriesHTML;
+    function showToast(msg) {
+      const box = document.getElementById('toastBox');
+      if (!box) return;
+      box.textContent = msg;
+      box.classList.remove('opacity-0');
+      box.classList.add('opacity-100');
+      clearTimeout(box._toastTimeout);
+      box._toastTimeout = setTimeout(() => {
+        box.classList.remove('opacity-100');
+        box.classList.add('opacity-0');
+      }, 2800);
     }
 
-    // Render Instagram Feed Posts
+    function syncUserUI() {
+      const avatarIds = [
+        'sidebarUserAvatar', 'quickBarAvatar', 'profilePageAvatar',
+        'rightSidebarAvatar', 'mobileNavAvatar', 'modalUserAvatar'
+      ];
+      avatarIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.src = currentUser.avatar;
+      });
+      const setTxt = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+      setTxt('profilePageUsername', currentUser.username);
+      setTxt('profilePageFullName', currentUser.fullName);
+      setTxt('profilePageBio', currentUser.bio);
+      setTxt('profileFollowersCount', currentUser.followers);
+      setTxt('profileFollowingCount', currentUser.following);
+      setTxt('rightSidebarUsername', currentUser.username);
+      setTxt('rightSidebarName', currentUser.fullName);
+      setTxt('dmCurrentUsername', currentUser.username);
+      setTxt('modalUserName', currentUser.username);
+      setTxt('sidebarAuthLabel', isAuthenticated ? `@${currentUser.username}` : 'Sign Up / Log In');
+    }
+
+    // Audio Engine Functions
+    function loadTrack(index) {
+      if (!posts.length) return;
+      currentTrackIndex = ((index % posts.length) + posts.length) % posts.length;
+      const track = posts[currentTrackIndex];
+      audio.src = track.src;
+      currentThumb.src = track.cover;
+      currentTitle.textContent = track.title;
+      currentArtist.textContent = track.artist;
+      const statusEl = document.getElementById('sidebarTrackStatus');
+      if (statusEl) statusEl.textContent = `${track.title} • ${track.artist}`;
+      updatePlayerLikeIcon();
+    }
+
+    function requireAuth() {
+      if (!isAuthenticated) {
+        openAuthModal('signup');
+        showToast('Please Sign Up or Log In first to use MMNTV!');
+        return false;
+      }
+      return true;
+    }
+
+    function togglePlay() {
+      if (!requireAuth()) return;
+      if (!audio.src) loadTrack(0);
+      if (isPlaying) {
+        audio.pause();
+        playIcon.className = 'fa-solid fa-play text-sm ml-0.5';
+        isPlaying = false;
+      } else {
+        audio.play().catch(() => {});
+        playIcon.className = 'fa-solid fa-pause text-sm';
+        isPlaying = true;
+      }
+      renderFeed();
+    }
+
+    function playTrackByIndex(index) {
+      if (!requireAuth()) return;
+      if (currentTrackIndex === index && isPlaying) {
+        togglePlay();
+        return;
+      }
+      loadTrack(index);
+      audio.play().catch(() => {});
+      playIcon.className = 'fa-solid fa-pause text-sm';
+      isPlaying = true;
+      renderFeed();
+    }
+
+    function formatTime(seconds) {
+      if (isNaN(seconds) || !isFinite(seconds)) return "0:00";
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    }
+
+    audio.addEventListener('timeupdate', () => {
+      if (audio.duration) {
+        const pct = (audio.currentTime / audio.duration) * 100;
+        progressBar.style.width = `${pct}%`;
+        currentTimeEl.textContent = formatTime(audio.currentTime);
+        durationEl.textContent = formatTime(audio.duration);
+      }
+    });
+
+    audio.addEventListener('ended', () => {
+      playTrackByIndex(currentTrackIndex + 1);
+    });
+
+    progressContainer.addEventListener('click', (e) => {
+      if (!requireAuth() || !audio.duration) return;
+      const pct = e.offsetX / progressContainer.clientWidth;
+      audio.currentTime = pct * audio.duration;
+    });
+
+    volumeContainer.addEventListener('click', (e) => {
+      const pct = Math.max(0, Math.min(1, e.offsetX / volumeContainer.clientWidth));
+      audio.volume = pct;
+      volumeBar.style.width = `${pct * 100}%`;
+    });
+
+    prevBtn.addEventListener('click', () => playTrackByIndex(currentTrackIndex - 1));
+    nextBtn.addEventListener('click', () => playTrackByIndex(currentTrackIndex + 1));
+    playBtn.addEventListener('click', togglePlay);
+
+    function updatePlayerLikeIcon() {
+      const btn = document.getElementById('playerLikeBtn');
+      const track = posts[currentTrackIndex];
+      if (!btn || !track) return;
+      btn.innerHTML = track.liked
+        ? '<i class="fa-solid fa-heart text-insta-red"></i>'
+        : '<i class="fa-regular fa-heart"></i>';
+    }
+
+    function likeCurrentTrack() {
+      if (!requireAuth()) return;
+      togglePostLike(posts[currentTrackIndex].id);
+    }
+
+    // MULTI-VIEW NAVIGATION
+    function switchView(viewName) {
+      if (!requireAuth()) return;
+      currentView = viewName;
+      document.querySelectorAll('.app-view').forEach(el => el.classList.add('hidden'));
+      const target = document.getElementById(`view-${viewName}`);
+      if (target) target.classList.remove('hidden');
+
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('font-bold', 'text-white', 'bg-zinc-900/80');
+        btn.classList.add('font-medium', 'text-zinc-400');
+      });
+      const activeNav = document.getElementById(`nav-${viewName}`);
+      if (activeNav) {
+        activeNav.classList.add('font-bold', 'text-white', 'bg-zinc-900/80');
+        activeNav.classList.remove('font-medium', 'text-zinc-400');
+      }
+
+      const rightSidebar = document.getElementById('rightSidebar');
+      if (rightSidebar) {
+        if (viewName === 'home') rightSidebar.classList.add('xl:block');
+        else rightSidebar.classList.remove('xl:block');
+      }
+
+      if (viewName === 'reels') renderReels();
+      if (viewName === 'explore') { renderExploreArtists(); renderExploreGrid(); }
+      if (viewName === 'messages') renderDMs();
+      if (viewName === 'notifications') renderNotifications();
+      if (viewName === 'profile') renderProfile();
+    }
+
+    // STORIES BAR & VIEWER
+    function renderStories() {
+      const row = document.getElementById('storiesRow');
+      if (!row) return;
+      const items = [
+        { username: "Your Story", avatar: currentUser.avatar, isSelf: true, index: 0 },
+        ...posts.map((p, idx) => ({ username: p.username, avatar: p.avatar, isSelf: false, index: idx }))
+      ];
+      row.innerHTML = items.map(item => `
+        <button onclick="${item.isSelf ? "openCreatePostModal('music')" : `openStoryViewer(${item.index})`}" class="flex flex-col items-center gap-1.5 flex-shrink-0 group">
+          <div class="w-16 h-16 rounded-full p-0.5 ${item.isSelf ? 'bg-zinc-700' : 'ig-story-ring'} group-hover:scale-105 transition relative">
+            <img src="${item.avatar}" alt="${item.username}" class="w-full h-full rounded-full object-cover border-2 border-black">
+            ${item.isSelf ? '<span class="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-spotify-green text-black font-black text-xs flex items-center justify-center border-2 border-black">+</span>' : ''}
+          </div>
+          <span class="text-[11px] text-zinc-300 w-16 truncate text-center">${item.username}</span>
+        </button>
+      `).join('');
+    }
+
+    function openStoryViewer(index) {
+      if (!requireAuth()) return;
+      const post = posts[index];
+      if (!post) return;
+      document.getElementById('storyViewerAvatar').src = post.avatar;
+      document.getElementById('storyViewerUser').textContent = post.username;
+      document.getElementById('storyViewerCover').src = post.cover;
+      document.getElementById('storyViewerTrack').textContent = post.title;
+      document.getElementById('storyViewerArtist').textContent = post.artist;
+
+      const modal = document.getElementById('storyViewerModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      playTrackByIndex(index);
+
+      const fill = document.getElementById('storyProgressFill');
+      fill.style.width = '0%';
+      let pct = 0;
+      clearInterval(storyTimer);
+      storyTimer = setInterval(() => {
+        pct += 2;
+        fill.style.width = `${pct}%`;
+        if (pct >= 100) closeStoryViewer();
+      }, 100);
+    }
+
+    function closeStoryViewer() {
+      clearInterval(storyTimer);
+      const modal = document.getElementById('storyViewerModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    // FEED RENDERING & INTERACTIONS
     function renderFeed() {
-      const feedStream = document.getElementById('feedStream');
-      feedStream.innerHTML = posts.map((post, actualIdx) => {
-        const isCurrentPlaying = currentTrackIndex === actualIdx && isPlaying;
+      const stream = document.getElementById('feedStream');
+      if (!stream) return;
+      stream.innerHTML = posts.map((post, idx) => {
+        const isCurrentPlaying = (idx === currentTrackIndex && isPlaying);
         return `
           <article class="bg-black sm:bg-zinc-950 sm:border sm:border-zinc-900 sm:rounded-2xl overflow-hidden">
             <div class="flex items-center justify-between px-3.5 py-3">
-              <div class="flex items-center gap-3">
-                <div onclick="openStoryViewer(${actualIdx})" class="w-9 h-9 rounded-full p-[2px] ig-story-ring cursor-pointer">
+              <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-full p-0.5 ig-story-ring">
                   <img src="${post.avatar}" alt="${post.username}" class="w-full h-full rounded-full object-cover border border-black">
                 </div>
                 <div>
-                  <div class="flex items-center gap-1.5">
-                    <span class="text-sm font-bold text-white hover:underline cursor-pointer">${post.username}</span>
-                    <i class="fa-solid fa-circle-check text-sky-400 text-[11px]"></i>
-                  </div>
-                  <p class="text-[11px] text-zinc-400">${post.location}</p>
+                  <p class="text-xs font-bold text-white leading-tight">${post.username}</p>
+                  <p class="text-[11px] text-zinc-400">${post.location || 'MMNTV Studio'}</p>
                 </div>
               </div>
-              <button onclick="selectTrack(${actualIdx})" class="text-zinc-400 hover:text-white px-2">
-                <i class="fa-solid fa-ellipsis"></i>
+              <button onclick="playTrackByIndex(${idx})" class="text-xs font-bold text-spotify-green hover:underline">
+                ${isCurrentPlaying ? 'Playing' : 'Play Track'}
               </button>
             </div>
 
-            <div ondblclick="doubleTapLike(${post.id})" class="relative aspect-square bg-zinc-900 select-none cursor-pointer group overflow-hidden">
-              <img src="${post.cover}" alt="${post.title}" style="filter: ${post.coverFilter || 'none'};" class="w-full h-full object-cover transition duration-500 group-hover:scale-[1.02]">
-              <div id="bigHeart-${post.id}" class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0">
-                <i class="fa-solid fa-heart text-white text-7xl drop-shadow-[0_4px_20px_rgba(0,0,0,0.6)]"></i>
+            <div ondblclick="doubleTapPost(${post.id}, this)" class="relative aspect-square bg-zinc-900 overflow-hidden cursor-pointer select-none">
+              <img src="${post.cover}" alt="${post.title}" style="filter: ${post.coverFilter || 'none'}" class="w-full h-full object-cover">
+              <div class="heart-burst hidden absolute inset-0 flex items-center justify-center pointer-events-none">
+                <i class="fa-solid fa-heart text-white text-7xl drop-shadow-2xl animate-popHeart"></i>
               </div>
 
-              <div onclick="event.stopPropagation(); selectTrack(${actualIdx})" class="absolute bottom-3 inset-x-3 bg-black/75 backdrop-blur-md border border-white/10 rounded-xl p-2.5 flex items-center justify-between hover:bg-black/90 transition">
+              <!-- Embedded Spotify Play Strip -->
+              <div onclick="event.stopPropagation(); playTrackByIndex(${idx})" class="absolute bottom-3 inset-x-3 bg-black/80 backdrop-blur-md border border-white/10 rounded-xl p-2.5 flex items-center justify-between hover:bg-black/90 transition">
                 <div class="flex items-center gap-2.5 min-w-0">
-                  <div class="w-9 h-9 rounded-full bg-spotify-green text-black flex items-center justify-center flex-shrink-0 shadow-lg">
-                    <i class="fa-solid ${isCurrentPlaying ? 'fa-pause' : 'fa-play'} text-xs ${isCurrentPlaying ? '' : 'ml-0.5'}"></i>
+                  <div class="w-9 h-9 rounded-full bg-spotify-green text-black flex items-center justify-center flex-shrink-0 shadow">
+                    <i class="fa-solid ${isCurrentPlaying ? 'fa-pause' : 'fa-play'} text-xs"></i>
                   </div>
                   <div class="min-w-0">
                     <p class="text-xs font-bold text-white truncate">${post.title}</p>
-                    <p class="text-[11px] text-zinc-300 truncate">${post.artist}</p>
+                    <p class="text-[11px] text-zinc-400 truncate">${post.artist}</p>
                   </div>
                 </div>
-                <div class="flex items-end gap-0.5 h-4 pr-2">
-                  ${isCurrentPlaying ? `
+                ${isCurrentPlaying ? `
+                  <div class="flex items-end gap-0.5 h-4 pr-2">
                     <span class="w-1 bg-spotify-green rounded-full animate-eq1"></span>
                     <span class="w-1 bg-spotify-green rounded-full animate-eq2"></span>
                     <span class="w-1 bg-spotify-green rounded-full animate-eq3"></span>
-                  ` : `
-                    <i class="fa-brands fa-spotify text-spotify-green text-base"></i>
-                  `}
+                  </div>
+                ` : '<i class="fa-brands fa-spotify text-spotify-green text-lg pr-1"></i>'}
+              </div>
+            </div>
+
+            <div class="p-3.5 space-y-2.5">
+              <div class="flex items-center justify-between text-xl">
+                <div class="flex items-center gap-4">
+                  <button onclick="togglePostLike(${post.id})" class="hover:scale-110 transition">
+                    <i class="${post.liked ? 'fa-solid fa-heart text-insta-red' : 'fa-regular fa-heart text-white'}"></i>
+                  </button>
+                  <button onclick="document.getElementById('commentInput-${post.id}').focus()" class="hover:text-zinc-300 transition">
+                    <i class="fa-regular fa-comment"></i>
+                  </button>
+                  <button onclick="sharePostToast('${post.title}')" class="hover:text-zinc-300 transition">
+                    <i class="fa-regular fa-paper-plane"></i>
+                  </button>
                 </div>
-              </div>
-            </div>
-
-            <div class="px-3.5 pt-3 pb-1.5 flex items-center justify-between text-xl">
-              <div class="flex items-center gap-4">
-                <button onclick="toggleLike(${post.id})" class="transition transform active:scale-125 ${post.liked ? 'text-insta-red' : 'text-white hover:text-zinc-400'}">
-                  <i class="${post.liked ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
-                </button>
-                <button onclick="document.getElementById('commentInput-${post.id}').focus()" class="text-white hover:text-zinc-400 transition">
-                  <i class="fa-regular fa-comment"></i>
-                </button>
-                <button onclick="sharePost('${post.title}')" class="text-white hover:text-zinc-400 transition">
-                  <i class="fa-regular fa-paper-plane"></i>
+                <button onclick="togglePostBookmark(${post.id})" class="hover:text-zinc-300 transition">
+                  <i class="${post.bookmarked ? 'fa-solid fa-bookmark text-white' : 'fa-regular fa-bookmark'}"></i>
                 </button>
               </div>
-              <button onclick="toggleSave(${post.id})" class="transition ${post.saved ? 'text-spotify-green' : 'text-white hover:text-zinc-400'}">
-                <i class="${post.saved ? 'fa-solid' : 'fa-regular'} fa-bookmark"></i>
-              </button>
-            </div>
 
-            <div class="px-3.5 pb-3.5 space-y-1.5 text-sm">
-              <p class="font-bold text-white">${post.likes.toLocaleString()} likes</p>
-              <p class="leading-snug text-zinc-200">
+              <p class="text-xs font-bold text-white">${post.likes.toLocaleString()} likes</p>
+              <p class="text-xs text-zinc-200 leading-relaxed">
                 <span class="font-bold text-white mr-1.5">${post.username}</span>${post.caption}
               </p>
-              <div class="space-y-1 pt-1">
+
+              <div class="space-y-1">
                 ${post.comments.map(c => `
-                  <p class="text-xs text-zinc-300">
-                    <span class="font-bold text-white mr-1.5">${c.user}</span>${c.text}
-                  </p>
+                  <p class="text-xs text-zinc-300"><span class="font-bold text-white mr-1.5">${c.user}</span>${c.text}</p>
                 `).join('')}
               </div>
-              <p class="text-[10px] text-zinc-500 tracking-wide uppercase pt-0.5">${post.timeAgo}</p>
-              <form onsubmit="addComment(event, ${post.id})" class="flex items-center gap-2 pt-2 border-t border-zinc-900 mt-2">
+
+              <p class="text-[10px] text-zinc-500 uppercase tracking-wider">${post.timeAgo}</p>
+
+              <form onsubmit="addPostComment(event, ${post.id})" class="pt-2 border-t border-zinc-900 flex items-center gap-2">
                 <input id="commentInput-${post.id}" type="text" placeholder="Add a comment..." class="flex-1 bg-transparent text-xs text-white placeholder-zinc-500 focus:outline-none">
                 <button type="submit" class="text-xs font-bold text-spotify-green hover:text-spotify-hover">Post</button>
               </form>
@@ -1023,290 +1195,222 @@
       }).join('');
     }
 
-    // Render TikTok / Reels Vertical Video Feed
-    function renderReels() {
-      const reelsStream = document.getElementById('reelsStream');
-      reelsStream.innerHTML = videoReels.map((reel, idx) => `
-        <div class="snap-start relative aspect-[9/16] w-full bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-800 shadow-2xl">
-          <video src="${reel.videoUrl}" loop playsinline autoplay muted onclick="this.muted = !this.muted; showToast(this.muted ? 'Video Muted' : 'Video Unmuted')" style="filter: ${reel.filter};" onloadedmetadata="this.playbackRate = ${reel.speed}" class="w-full h-full object-cover cursor-pointer"></video>
-          
-          ${reel.overlayText ? `
-            <div class="absolute inset-x-4 top-1/3 text-center pointer-events-none font-extrabold text-2xl drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]" style="color: ${reel.overlayColor};">
-              ${reel.overlayText}
-            </div>
-          ` : ''}
-
-          <!-- Right TikTok Engagement Column -->
-          <div class="absolute right-3 bottom-20 flex flex-col items-center gap-5 z-10">
-            <button onclick="toggleReelLike(${idx})" class="flex flex-col items-center gap-1">
-              <div class="w-10 h-10 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center text-xl ${reel.liked ? 'text-insta-red' : 'text-white'}">
-                <i class="fa-solid fa-heart"></i>
-              </div>
-              <span class="text-[11px] font-bold drop-shadow">${reel.likes.toLocaleString()}</span>
-            </button>
-            <button onclick="switchView('messages')" class="flex flex-col items-center gap-1">
-              <div class="w-10 h-10 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center text-lg text-white">
-                <i class="fa-solid fa-share"></i>
-              </div>
-              <span class="text-[11px] font-bold drop-shadow">Share</span>
-            </button>
-            <div class="w-10 h-10 rounded-full bg-zinc-900 border-2 border-white/40 p-1 animate-spinSlow">
-              <img src="${reel.avatar}" alt="" class="w-full h-full rounded-full object-cover">
-            </div>
-          </div>
-
-          <!-- Bottom Metadata Overlay -->
-          <div class="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/90 via-black/40 to-transparent space-y-2">
-            <div class="flex items-center gap-2.5">
-              <img src="${reel.avatar}" alt="${reel.username}" class="w-9 h-9 rounded-full object-cover border border-white">
-              <span class="text-sm font-bold text-white">@${reel.username}</span>
-            </div>
-            <p class="text-xs text-zinc-200 line-clamp-2 pr-12">${reel.caption}</p>
-            <div class="flex items-center gap-2 text-[11px] text-spotify-green font-semibold bg-black/60 w-fit px-2.5 py-1 rounded-full">
-              <i class="fa-solid fa-music"></i>
-              <span class="truncate max-w-[220px]">${reel.soundtrack}</span>
-            </div>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function toggleReelLike(idx) {
-      videoReels[idx].liked = !videoReels[idx].liked;
-      videoReels[idx].likes += videoReels[idx].liked ? 1 : -1;
-      renderReels();
-    }
-
-    // Render Suggested Artists Sidebar & Explore Artists
-    function renderSuggestedArtists() {
-      const container = document.getElementById('suggestedArtistsList');
-      container.innerHTML = suggestedArtists.map((artist, idx) => `
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2.5">
-            <img src="${artist.avatar}" alt="${artist.username}" class="w-9 h-9 rounded-full object-cover">
-            <div>
-              <p class="text-xs font-bold text-white">${artist.username}</p>
-              <p class="text-[11px] text-zinc-500">${artist.subtitle}</p>
-            </div>
-          </div>
-          <button onclick="toggleFollowArtist(${idx})" class="text-xs font-bold ${artist.following ? 'text-zinc-400' : 'text-spotify-green hover:text-spotify-hover'}">
-            ${artist.following ? 'Following' : 'Follow'}
-          </button>
-        </div>
-      `).join('');
-
-      const exploreRow = document.getElementById('exploreArtistsRow');
-      if (exploreRow) {
-        exploreRow.innerHTML = suggestedArtists.map((artist, idx) => `
-          <div class="bg-zinc-950 border border-zinc-900 rounded-xl p-3 flex flex-col items-center text-center gap-2">
-            <img src="${artist.avatar}" alt="${artist.username}" class="w-14 h-14 rounded-full object-cover">
-            <div class="min-w-0 w-full">
-              <p class="text-xs font-bold text-white truncate">${artist.username}</p>
-              <p class="text-[10px] text-zinc-500 truncate">${artist.subtitle}</p>
-            </div>
-            <button onclick="toggleFollowArtist(${idx})" class="w-full py-1.5 rounded-lg text-xs font-bold transition ${artist.following ? 'bg-zinc-800 text-zinc-300' : 'bg-spotify-green text-black hover:bg-spotify-hover'}">
-              ${artist.following ? 'Following' : 'Follow'}
-            </button>
-          </div>
-        `).join('');
+    function doubleTapPost(postId, container) {
+      if (!requireAuth()) return;
+      const post = posts.find(p => p.id === postId);
+      if (post && !post.liked) {
+        post.liked = true;
+        post.likes++;
+        renderFeed();
+        updatePlayerLikeIcon();
+      }
+      const burst = container.querySelector('.heart-burst');
+      if (burst) {
+        burst.classList.remove('hidden');
+        setTimeout(() => burst.classList.add('hidden'), 800);
       }
     }
 
-    // Audio Engine Functions
-    function loadTrack(index) {
-      currentTrackIndex = index;
-      const track = posts[currentTrackIndex];
-      audio.src = track.src;
-      currentThumb.src = track.cover;
-      currentTitle.textContent = track.title;
-      currentArtist.textContent = track.artist;
-      document.getElementById('sidebarTrackStatus').textContent = `${track.title} • ${track.artist}`;
-      updatePlayerLikeIcon();
-    }
-
-    function togglePlay() {
-      if (!audio.src) loadTrack(0);
-      if (isPlaying) {
-        audio.pause();
-        playIcon.className = 'fa-solid fa-play text-sm ml-0.5';
-        isPlaying = false;
-      } else {
-        audio.play();
-        playIcon.className = 'fa-solid fa-pause text-sm';
-        isPlaying = true;
-      }
-      renderStories();
-      renderFeed();
-    }
-
-    function selectTrack(index) {
-      if (currentTrackIndex === index && audio.src) {
-        togglePlay();
-        return;
-      }
-      loadTrack(index);
-      isPlaying = false;
-      togglePlay();
-    }
-
-    function updatePlayerLikeIcon() {
-      const track = posts[currentTrackIndex];
-      const btn = document.getElementById('playerLikeBtn');
-      btn.innerHTML = `<i class="${track.liked ? 'fa-solid text-insta-red' : 'fa-regular'} fa-heart"></i>`;
-    }
-
-    function likeCurrentTrack() {
-      toggleLike(posts[currentTrackIndex].id);
-    }
-
-    // Social Interactions
-    function toggleLike(postId) {
+    function togglePostLike(postId) {
+      if (!requireAuth()) return;
       const post = posts.find(p => p.id === postId);
       if (!post) return;
       post.liked = !post.liked;
       post.likes += post.liked ? 1 : -1;
-      updatePlayerLikeIcon();
       renderFeed();
+      updatePlayerLikeIcon();
     }
 
-    function doubleTapLike(postId) {
-      const post = posts.find(p => p.id === postId);
-      if (post && !post.liked) {
-        post.liked = true;
-        post.likes += 1;
-        updatePlayerLikeIcon();
-        renderFeed();
-      }
-      const heartEl = document.getElementById(`bigHeart-${postId}`);
-      if (heartEl) {
-        heartEl.classList.remove('animate-popHeart');
-        void heartEl.offsetWidth;
-        heartEl.classList.add('animate-popHeart');
-      }
-    }
-
-    function toggleSave(postId) {
+    function togglePostBookmark(postId) {
+      if (!requireAuth()) return;
       const post = posts.find(p => p.id === postId);
       if (!post) return;
-      post.saved = !post.saved;
-      showToast(post.saved ? 'Saved to your collection' : 'Removed from saved');
+      post.bookmarked = !post.bookmarked;
       renderFeed();
+      showToast(post.bookmarked ? 'Saved to your collection!' : 'Removed from saved.');
     }
 
-    function addComment(event, postId) {
-      event.preventDefault();
+    function addPostComment(e, postId) {
+      e.preventDefault();
+      if (!requireAuth()) return;
       const input = document.getElementById(`commentInput-${postId}`);
       const text = input.value.trim();
       if (!text) return;
       const post = posts.find(p => p.id === postId);
-      post.comments.push({ user: currentUser.username, text });
-      input.value = '';
-      renderFeed();
+      if (post) {
+        post.comments.push({ user: currentUser.username, text });
+        input.value = '';
+        renderFeed();
+      }
+    }
+
+    function sharePostToast(title) {
+      if (!requireAuth()) return;
+      showToast(`Copied share link for "${title}"!`);
+    }
+
+    // REELS & TIKTOK VERTICAL VIDEO FEED
+    function renderReels() {
+      const stream = document.getElementById('reelsStream');
+      if (!stream) return;
+      stream.innerHTML = reels.map(reel => `
+        <div class="relative w-full aspect-[9/16] bg-zinc-900 rounded-2xl overflow-hidden snap-start border border-zinc-800 shadow-xl">
+          <video src="${reel.videoSrc}" loop playsinline onclick="this.paused ? this.play() : this.pause()" onloadedmetadata="this.playbackRate = ${reel.playbackRate || 1}" style="filter: ${reel.filter || 'none'}" class="w-full h-full object-cover cursor-pointer"></video>
+          
+          ${reel.overlayText ? `
+            <div class="absolute inset-x-4 top-1/3 text-center pointer-events-none font-black text-2xl drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]" style="color: ${reel.overlayColor || '#fff'}">
+              ${reel.overlayText}
+            </div>
+          ` : ''}
+
+          <div class="absolute right-3 bottom-20 flex flex-col items-center gap-4 z-10">
+            <button onclick="toggleReelLike(${reel.id})" class="flex flex-col items-center gap-1">
+              <div class="w-10 h-10 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-lg">
+                <i class="${reel.liked ? 'fa-solid fa-heart text-insta-red' : 'fa-regular fa-heart text-white'}"></i>
+              </div>
+              <span class="text-[11px] font-bold drop-shadow">${reel.likes}</span>
+            </button>
+            <button onclick="showToast('Reel link copied!')" class="flex flex-col items-center gap-1">
+              <div class="w-10 h-10 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-lg">
+                <i class="fa-solid fa-share"></i>
+              </div>
+              <span class="text-[11px] font-bold drop-shadow">Share</span>
+            </button>
+          </div>
+
+          <div class="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/90 via-black/40 to-transparent space-y-2 pointer-events-none">
+            <div class="flex items-center gap-2">
+              <img src="${reel.avatar}" alt="${reel.username}" class="w-8 h-8 rounded-full object-cover border border-white">
+              <span class="text-xs font-extrabold text-white">@${reel.username}</span>
+            </div>
+            <p class="text-xs text-zinc-200">${reel.caption}</p>
+            <div class="inline-flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-[11px] text-spotify-green font-semibold">
+              <i class="fa-solid fa-music animate-spinSlow"></i>
+              <span>${reel.soundtrack}</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function toggleReelLike(reelId) {
+      if (!requireAuth()) return;
+      const reel = reels.find(r => r.id === reelId);
+      if (!reel) return;
+      reel.liked = !reel.liked;
+      reel.likes += reel.liked ? 1 : -1;
+      renderReels();
+    }
+
+    // EXPLORE & SUGGESTED ARTISTS
+    function renderSuggestedArtists() {
+      const list = document.getElementById('suggestedArtistsList');
+      if (!list) return;
+      list.innerHTML = artists.map((art, i) => `
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <img src="${art.avatar}" alt="${art.name}" class="w-9 h-9 rounded-full object-cover">
+            <div class="min-w-0">
+              <p class="text-xs font-bold text-white truncate">${art.username}</p>
+              <p class="text-[11px] text-zinc-500 truncate">${art.followers} followers</p>
+            </div>
+          </div>
+          <button onclick="toggleFollowArtist(${i})" class="text-xs font-bold ${art.following ? 'text-zinc-400' : 'text-spotify-green hover:text-spotify-hover'}">
+            ${art.following ? 'Following' : 'Follow'}
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function renderExploreArtists() {
+      const row = document.getElementById('exploreArtistsRow');
+      if (!row) return;
+      row.innerHTML = artists.map((art, i) => `
+        <div class="bg-zinc-950 border border-zinc-900 rounded-xl p-3 flex flex-col items-center text-center gap-2">
+          <img src="${art.avatar}" alt="${art.name}" class="w-14 h-14 rounded-full object-cover ring-2 ring-spotify-green/40">
+          <div>
+            <p class="text-xs font-bold text-white truncate">${art.name}</p>
+            <p class="text-[10px] text-zinc-400">${art.followers} followers</p>
+          </div>
+          <button onclick="toggleFollowArtist(${i})" class="w-full py-1.5 rounded-lg text-xs font-bold transition ${art.following ? 'bg-zinc-800 text-zinc-300' : 'bg-spotify-green text-black'}">
+            ${art.following ? 'Following' : 'Follow'}
+          </button>
+        </div>
+      `).join('');
     }
 
     function toggleFollowArtist(idx) {
-      suggestedArtists[idx].following = !suggestedArtists[idx].following;
-      currentUser.following += suggestedArtists[idx].following ? 1 : -1;
+      if (!requireAuth()) return;
+      artists[idx].following = !artists[idx].following;
+      currentUser.following += artists[idx].following ? 1 : -1;
       syncUserUI();
       renderSuggestedArtists();
-      showToast(suggestedArtists[idx].following ? `Following @${suggestedArtists[idx].username}` : `Unfollowed @${suggestedArtists[idx].username}`);
+      renderExploreArtists();
+      showToast(artists[idx].following ? `Following ${artists[idx].name}!` : `Unfollowed ${artists[idx].name}`);
     }
 
-    function sharePost(title) {
-      showToast(`Link copied for "${title}"`);
-    }
-
-    // MULTI-VIEW NAVIGATION
-    function switchView(viewName) {
-      currentView = viewName;
-      document.querySelectorAll('.app-view').forEach(el => el.classList.add('hidden'));
-      document.getElementById(`view-${viewName}`).classList.remove('hidden');
-
-      const rightSidebar = document.getElementById('rightSidebar');
-      if (rightSidebar) {
-        rightSidebar.style.display = viewName === 'home' ? '' : 'none';
-      }
-
-      document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.className = 'nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-medium text-zinc-400 hover:text-white hover:bg-zinc-900/50 transition';
-      });
-      const activeNav = document.getElementById(`nav-${viewName}`);
-      if (activeNav) {
-        activeNav.className = 'nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-white bg-zinc-900/80 transition';
-      }
-
-      if (viewName === 'reels') renderReels();
-      if (viewName === 'explore') { renderSuggestedArtists(); renderExplore(); }
-      if (viewName === 'messages') renderMessages();
-      if (viewName === 'notifications') renderNotifications();
-      if (viewName === 'profile') renderProfile();
-    }
-
-    // EXPLORE VIEW
-    function handleSearch(val) {
-      searchQuery = val;
-      renderExplore();
-    }
-
-    function filterExploreTag(tag) {
-      searchQuery = tag;
-      document.getElementById('exploreSearchInput').value = tag;
-      renderExplore();
-    }
-
-    function renderExplore() {
+    function renderExploreGrid(filter = '') {
       const grid = document.getElementById('exploreGrid');
-      const q = searchQuery.toLowerCase();
+      if (!grid) return;
+      const q = filter.toLowerCase();
       const filtered = posts.filter(p =>
-        !q || p.title.toLowerCase().includes(q) || p.artist.toLowerCase().includes(q) || p.username.toLowerCase().includes(q) || p.caption.toLowerCase().includes(q)
+        p.title.toLowerCase().includes(q) ||
+        p.artist.toLowerCase().includes(q) ||
+        p.caption.toLowerCase().includes(q) ||
+        p.username.toLowerCase().includes(q)
       );
-      grid.innerHTML = filtered.map(post => {
-        const idx = posts.findIndex(p => p.id === post.id);
+      grid.innerHTML = filtered.map(p => {
+        const realIdx = posts.findIndex(item => item.id === p.id);
         return `
-          <div onclick="selectTrack(${idx})" class="relative aspect-square bg-zinc-900 rounded-lg overflow-hidden cursor-pointer group">
-            <img src="${post.cover}" alt="${post.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+          <div onclick="playTrackByIndex(${realIdx})" class="relative aspect-square bg-zinc-900 rounded-lg overflow-hidden cursor-pointer group">
+            <img src="${p.cover}" alt="${p.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
             <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center p-2 text-center">
-              <i class="fa-solid fa-play text-spotify-green text-xl mb-1"></i>
-              <p class="text-xs font-bold text-white truncate w-full">${post.title}</p>
-              <p class="text-[10px] text-zinc-300"><i class="fa-solid fa-heart text-insta-red mr-1"></i>${post.likes}</p>
+              <i class="fa-solid fa-play text-spotify-green text-2xl mb-1"></i>
+              <p class="text-xs font-bold text-white truncate w-full">${p.title}</p>
+              <p class="text-[10px] text-zinc-300 truncate w-full">${p.artist}</p>
             </div>
           </div>
         `;
       }).join('');
     }
 
-    // DIRECT MESSAGES VIEW
-    function renderMessages() {
-      document.getElementById('dmCurrentUsername').textContent = currentUser.username;
+    function handleSearch(val) { renderExploreGrid(val); }
+    function filterExploreTag(tag) {
+      document.getElementById('exploreSearchInput').value = tag;
+      renderExploreGrid(tag);
+    }
+
+    // DIRECT MESSAGES
+    function renderDMs() {
       const list = document.getElementById('dmThreadsList');
-      list.innerHTML = dmThreads.map((t, idx) => `
-        <div onclick="selectDmThread(${idx})" class="p-3.5 flex items-center gap-3 cursor-pointer hover:bg-zinc-900/70 transition ${activeDmIdx === idx ? 'bg-zinc-900' : ''}">
-          <div class="relative">
-            <img src="${t.avatar}" alt="${t.username}" class="w-10 h-10 rounded-full object-cover">
-            ${t.online ? '<span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-spotify-green rounded-full border-2 border-black"></span>' : ''}
-          </div>
-          <div class="min-w-0 flex-1">
-            <p class="text-xs font-bold text-white truncate">${t.username}</p>
+      const header = document.getElementById('dmChatHeader');
+      const box = document.getElementById('dmMessagesBox');
+      if (!list || !header || !box) return;
+
+      list.innerHTML = dmThreads.map((t, i) => `
+        <button onclick="selectDmThread(${i})" class="w-full p-3 flex items-center gap-2.5 text-left hover:bg-zinc-900/60 transition ${i === activeDmIndex ? 'bg-zinc-900' : ''}">
+          <img src="${t.avatar}" alt="${t.name}" class="w-10 h-10 rounded-full object-cover">
+          <div class="min-w-0">
+            <p class="text-xs font-bold text-white truncate">${t.name}</p>
             <p class="text-[11px] text-zinc-400 truncate">${t.messages[t.messages.length - 1]?.text || ''}</p>
           </div>
-        </div>
+        </button>
       `).join('');
 
-      const active = dmThreads[activeDmIdx];
-      document.getElementById('dmChatHeader').innerHTML = `
+      const active = dmThreads[activeDmIndex];
+      header.innerHTML = `
         <div class="flex items-center gap-2.5">
-          <img src="${active.avatar}" alt="${active.username}" class="w-8 h-8 rounded-full object-cover">
+          <img src="${active.avatar}" alt="${active.name}" class="w-8 h-8 rounded-full object-cover">
           <div>
-            <p class="text-xs font-bold text-white">${active.username}</p>
-            <p class="text-[10px] text-spotify-green">${active.online ? 'Active now' : 'Offline'}</p>
+            <p class="text-xs font-bold text-white">${active.name}</p>
+            <p class="text-[10px] text-spotify-green">Active on MMNTV</p>
           </div>
         </div>
       `;
 
-      const box = document.getElementById('dmMessagesBox');
       box.innerHTML = active.messages.map(m => `
         <div class="flex ${m.from === 'me' ? 'justify-end' : 'justify-start'}">
-          <div class="max-w-[75%] px-3.5 py-2 rounded-2xl ${m.from === 'me' ? 'bg-spotify-green text-black font-medium' : 'bg-zinc-800 text-white'}">
+          <div class="max-w-[75%] px-3.5 py-2 rounded-2xl ${m.from === 'me' ? 'bg-spotify-green text-black font-semibold' : 'bg-zinc-900 text-zinc-200'}">
             ${m.text}
           </div>
         </div>
@@ -1314,35 +1418,38 @@
       box.scrollTop = box.scrollHeight;
     }
 
-    function selectDmThread(idx) {
-      activeDmIdx = idx;
-      renderMessages();
-    }
+    function selectDmThread(i) { activeDmIndex = i; renderDMs(); }
 
     function sendDirectMessage(e) {
       e.preventDefault();
+      if (!requireAuth()) return;
       const input = document.getElementById('dmInput');
       const text = input.value.trim();
       if (!text) return;
-      dmThreads[activeDmIdx].messages.push({ from: 'me', text });
+      dmThreads[activeDmIndex].messages.push({ from: 'me', text });
       input.value = '';
-      renderMessages();
+      renderDMs();
     }
 
     function sendTrackInDM() {
+      if (!requireAuth()) return;
       const track = posts[currentTrackIndex];
-      dmThreads[activeDmIdx].messages.push({ from: 'me', text: `🎵 Shared Track: "${track.title}" by ${track.artist}` });
-      renderMessages();
+      dmThreads[activeDmIndex].messages.push({
+        from: 'me',
+        text: `🎵 Shared Track: "${track.title}" by ${track.artist}`
+      });
+      renderDMs();
     }
 
-    // NOTIFICATIONS VIEW
+    // NOTIFICATIONS
     function renderNotifications() {
       const list = document.getElementById('notificationsList');
+      if (!list) return;
       list.innerHTML = notifications.map(n => `
         <div class="p-3.5 flex items-center justify-between ${n.unread ? 'bg-zinc-900/40' : ''}">
           <div class="flex items-center gap-3">
             <img src="${n.avatar}" alt="${n.user}" class="w-10 h-10 rounded-full object-cover">
-            <p class="text-xs text-zinc-200"><strong class="text-white">${n.user}</strong> ${n.text} <span class="text-zinc-500 ml-1">${n.time}</span></p>
+            <p class="text-xs text-zinc-200"><span class="font-bold text-white">${n.user}</span> ${n.text} <span class="text-zinc-500 ml-1">${n.time}</span></p>
           </div>
           ${n.unread ? '<span class="w-2 h-2 rounded-full bg-spotify-green"></span>' : ''}
         </div>
@@ -1351,73 +1458,243 @@
 
     function markNotificationsRead() {
       notifications.forEach(n => n.unread = false);
-      document.getElementById('desktopNotifDot')?.classList.add('hidden');
       document.getElementById('mobileNotifDot')?.classList.add('hidden');
+      document.getElementById('desktopNotifDot')?.classList.add('hidden');
       renderNotifications();
-      showToast('All notifications marked read');
+      showToast('All notifications marked read.');
     }
 
-    // PROFILE VIEW & EDITING
+    // PROFILE VIEW & TABS
+    function renderProfile() {
+      syncUserUI();
+      const userPosts = posts.filter(p => p.username === currentUser.username);
+      const userVideos = reels.filter(r => r.username === currentUser.username);
+      const savedPosts = posts.filter(p => p.bookmarked);
+
+      document.getElementById('profilePostsCount').textContent = userPosts.length + userVideos.length;
+      const grid = document.getElementById('profileGrid');
+      if (!grid) return;
+
+      let items = userPosts;
+      if (currentProfileTab === 'videos') items = userVideos;
+      if (currentProfileTab === 'saved') items = savedPosts;
+
+      if (!items.length) {
+        grid.innerHTML = `<div class="col-span-3 py-12 text-center text-xs text-zinc-500">Nothing here yet. Use MMNTV Studio to publish!</div>`;
+        return;
+      }
+
+      if (currentProfileTab === 'videos') {
+        grid.innerHTML = items.map(v => `
+          <div onclick="switchView('reels')" class="relative aspect-[9/16] bg-zinc-900 rounded-xl overflow-hidden cursor-pointer border border-zinc-800">
+            <video src="${v.videoSrc}" style="filter: ${v.filter || 'none'}" class="w-full h-full object-cover"></video>
+            <span class="absolute bottom-2 left-2 text-[10px] font-bold bg-black/70 px-2 py-0.5 rounded"><i class="fa-solid fa-play mr-1"></i>${v.likes}</span>
+          </div>
+        `).join('');
+      } else {
+        grid.innerHTML = items.map(p => {
+          const idx = posts.findIndex(item => item.id === p.id);
+          return `
+            <div onclick="playTrackByIndex(${idx})" class="relative aspect-square bg-zinc-900 rounded-xl overflow-hidden cursor-pointer group">
+              <img src="${p.cover}" alt="${p.title}" style="filter: ${p.coverFilter || 'none'}" class="w-full h-full object-cover">
+              <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                <i class="fa-solid fa-play text-spotify-green text-2xl"></i>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
     function setProfileTab(tab) {
-      profileTab = tab;
+      currentProfileTab = tab;
       ['posts', 'videos', 'saved'].forEach(t => {
-        const el = document.getElementById(`tabProfile${t.charAt(0).toUpperCase() + t.slice(1)}`);
-        if (el) {
-          el.className = tab === t
-            ? 'py-3 border-t-2 border-white text-white flex items-center gap-2'
-            : 'py-3 border-t-2 border-transparent text-zinc-500 hover:text-zinc-300 flex items-center gap-2';
+        const btn = document.getElementById(`tabProfile${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        if (!btn) return;
+        if (t === tab) {
+          btn.classList.add('border-white', 'text-white');
+          btn.classList.remove('border-transparent', 'text-zinc-500');
+        } else {
+          btn.classList.remove('border-white', 'text-white');
+          btn.classList.add('border-transparent', 'text-zinc-500');
         }
       });
       renderProfile();
     }
 
-    function renderProfile() {
-      syncUserUI();
-      const userPosts = posts.filter(p => p.username === currentUser.username);
-      const userVideos = videoReels.filter(v => v.username === currentUser.username);
-      document.getElementById('profilePostsCount').textContent = userPosts.length + userVideos.length;
-
-      const grid = document.getElementById('profileGrid');
-      if (profileTab === 'videos') {
-        if (userVideos.length === 0) {
-          grid.innerHTML = `<div class="col-span-3 text-center py-12 text-xs text-zinc-500">No videos yet. Open Video Studio to upload & edit a video!</div>`;
-          return;
-        }
-        grid.innerHTML = userVideos.map(vid => `
-          <div onclick="switchView('reels')" class="relative aspect-[9/16] bg-zinc-900 rounded-lg overflow-hidden cursor-pointer group">
-            <video src="${vid.videoUrl}" muted style="filter: ${vid.filter};" class="w-full h-full object-cover"></video>
-            <div class="absolute bottom-2 left-2 text-[11px] font-bold bg-black/70 px-2 py-0.5 rounded-full">
-              <i class="fa-solid fa-play mr-1"></i>${vid.likes}
-            </div>
-          </div>
-        `).join('');
-        return;
-      }
-
-      const list = profileTab === 'posts' ? userPosts : posts.filter(p => p.saved);
-      if (list.length === 0) {
-        grid.innerHTML = `<div class="col-span-3 text-center py-12 text-xs text-zinc-500">No ${profileTab} yet. Share a track to build your profile!</div>`;
-        return;
-      }
-      grid.innerHTML = list.map(post => {
-        const idx = posts.findIndex(p => p.id === post.id);
-        return `
-          <div onclick="selectTrack(${idx})" class="relative aspect-square bg-zinc-900 rounded-lg overflow-hidden cursor-pointer group">
-            <img src="${post.cover}" alt="${post.title}" class="w-full h-full object-cover">
-            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center p-2 text-center">
-              <i class="fa-solid fa-play text-spotify-green text-lg mb-1"></i>
-              <p class="text-xs font-bold truncate w-full">${post.title}</p>
-            </div>
-          </div>
-        `;
-      }).join('');
+    // CREATE MUSIC / PHOTO POST STUDIO
+    function openCreatePostModal() {
+      if (!requireAuth()) return;
+      pendingPostCover = null;
+      currentPostCoverFilter = "none";
+      document.getElementById('postCoverPreviewImg').style.filter = "none";
+      document.getElementById('postCoverPreviewImg').src = "https://picsum.photos/id/146/600/600";
+      document.getElementById('newArtistInput').value = currentUser.fullName;
+      const modal = document.getElementById('createPostModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
     }
 
+    function closeCreatePostModal() {
+      const modal = document.getElementById('createPostModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function previewPostCoverUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      pendingPostCover = URL.createObjectURL(file);
+      document.getElementById('postCoverPreviewImg').src = pendingPostCover;
+    }
+
+    function applyPostCoverFilter(filterStr) {
+      currentPostCoverFilter = filterStr;
+      document.getElementById('postCoverPreviewImg').style.filter = filterStr;
+    }
+
+    function submitNewPost() {
+      if (!requireAuth()) return;
+      const title = document.getElementById('newTitleInput').value.trim() || "Untitled Track";
+      const artist = document.getElementById('newArtistInput').value.trim() || currentUser.fullName;
+      const caption = document.getElementById('newCaptionInput').value.trim() || `New release "${title}" out now on MMNTV! 🎶`;
+      const audioFile = document.getElementById('localAudioFileInput').files[0];
+      const audioSrc = audioFile ? URL.createObjectURL(audioFile) : document.getElementById('newAudioSelect').value;
+      const coverSrc = pendingPostCover || `https://picsum.photos/id/${Math.floor(Math.random() * 200) + 100}/600/600`;
+
+      posts.unshift({
+        id: Date.now(),
+        username: currentUser.username,
+        avatar: currentUser.avatar,
+        location: "MMNTV Creator Studio",
+        title,
+        artist,
+        cover: coverSrc,
+        coverFilter: currentPostCoverFilter,
+        src: audioSrc,
+        caption,
+        likes: 1,
+        liked: true,
+        bookmarked: false,
+        timeAgo: "JUST NOW",
+        comments: []
+      });
+
+      document.getElementById('newTitleInput').value = '';
+      document.getElementById('newCaptionInput').value = '';
+      closeCreatePostModal();
+      switchView('home');
+      renderFeed();
+      playTrackByIndex(0);
+      showToast(`Published "${title}" to your MMNTV feed!`);
+    }
+
+    // VIDEO EDITOR STUDIO
+    function openVideoStudioModal() {
+      if (!requireAuth()) return;
+      const modal = document.getElementById('videoStudioModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      const vid = document.getElementById('studioVideoPreview');
+      if (vid) vid.play().catch(() => {});
+    }
+
+    function closeVideoStudioModal() {
+      const vid = document.getElementById('studioVideoPreview');
+      if (vid) vid.pause();
+      const modal = document.getElementById('videoStudioModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function toggleStudioPlayback() {
+      const vid = document.getElementById('studioVideoPreview');
+      const icon = document.getElementById('studioPlayIcon');
+      if (!vid) return;
+      if (vid.paused) {
+        vid.play();
+        icon.className = 'fa-solid fa-pause';
+      } else {
+        vid.pause();
+        icon.className = 'fa-solid fa-play';
+      }
+    }
+
+    function handleLocalVideoUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const vid = document.getElementById('studioVideoPreview');
+      vid.src = URL.createObjectURL(file);
+      vid.play().catch(() => {});
+      showToast(`Loaded "${file.name}" into MMNTV Studio!`);
+    }
+
+    function applyStudioFilter(filterStr, btn) {
+      currentStudioFilter = filterStr;
+      document.getElementById('studioVideoPreview').style.filter = filterStr;
+      document.querySelectorAll('.filter-btn').forEach(b => {
+        b.classList.remove('bg-spotify-green', 'text-black', 'font-bold');
+        b.classList.add('bg-zinc-800', 'text-white');
+      });
+      if (btn) {
+        btn.classList.add('bg-spotify-green', 'text-black', 'font-bold');
+        btn.classList.remove('bg-zinc-800', 'text-white');
+      }
+    }
+
+    function updateStudioOverlay() {
+      const txt = document.getElementById('studioOverlayTextInput').value;
+      const color = document.getElementById('studioOverlayColorInput').value;
+      const overlay = document.getElementById('studioTextOverlay');
+      overlay.textContent = txt;
+      overlay.style.color = color;
+    }
+
+    function setStudioSpeed(speed) {
+      currentStudioSpeed = speed;
+      document.getElementById('studioVideoPreview').playbackRate = speed;
+      document.getElementById('studioSpeedLabel').textContent = `${speed.toFixed(1)}x`;
+    }
+
+    function updateStudioSoundtrack() {
+      const val = document.getElementById('studioSoundtrackSelect').value;
+      document.getElementById('studioSoundBadge').textContent = val;
+    }
+
+    function publishEditedVideo() {
+      if (!requireAuth()) return;
+      const vidSrc = document.getElementById('studioVideoPreview').src;
+      const overlayText = document.getElementById('studioOverlayTextInput').value.trim();
+      const overlayColor = document.getElementById('studioOverlayColorInput').value;
+      const soundtrack = document.getElementById('studioSoundtrackSelect').value;
+      const caption = document.getElementById('studioCaptionInput').value.trim() || "Edited in MMNTV Creator Studio 🎬✨ #mmntv #reels";
+
+      reels.unshift({
+        id: Date.now(),
+        username: currentUser.username,
+        avatar: currentUser.avatar,
+        videoSrc: vidSrc,
+        filter: currentStudioFilter,
+        overlayText,
+        overlayColor,
+        playbackRate: currentStudioSpeed,
+        soundtrack,
+        caption,
+        likes: 1,
+        liked: true
+      });
+
+      closeVideoStudioModal();
+      switchView('reels');
+      showToast('Your edited video is live on MMNTV Reels!');
+    }
+
+    // EDIT PROFILE & CUSTOM AVATAR
     function openEditProfileModal() {
-      pendingEditAvatar = currentUser.avatar;
+      if (!requireAuth()) return;
+      pendingEditAvatar = null;
       document.getElementById('editAvatarPreview').src = currentUser.avatar;
-      document.getElementById('editAvatarUrlInput').value = currentUser.avatar.startsWith('blob:') ? '' : currentUser.avatar;
-      document.getElementById('editAvatarFileInput').value = '';
+      document.getElementById('editAvatarUrlInput').value = '';
       document.getElementById('editFullNameInput').value = currentUser.fullName;
       document.getElementById('editUsernameInput').value = currentUser.username;
       document.getElementById('editBioInput').value = currentUser.bio;
@@ -1426,100 +1703,124 @@
       modal.classList.add('flex');
     }
 
-    function previewEditAvatar(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      pendingEditAvatar = URL.createObjectURL(file);
-      document.getElementById('editAvatarPreview').src = pendingEditAvatar;
-      document.getElementById('editAvatarUrlInput').value = '';
-    }
-
-    function previewEditAvatarUrl(url) {
-      const trimmed = url.trim();
-      if (!trimmed) return;
-      pendingEditAvatar = trimmed;
-      document.getElementById('editAvatarPreview').src = trimmed;
-    }
-
     function closeEditProfileModal() {
       const modal = document.getElementById('editProfileModal');
       modal.classList.add('hidden');
       modal.classList.remove('flex');
     }
 
+    function previewEditAvatar(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      pendingEditAvatar = URL.createObjectURL(file);
+      document.getElementById('editAvatarPreview').src = pendingEditAvatar;
+    }
+
+    function previewEditAvatarUrl(url) {
+      if (url && url.trim().startsWith('http')) {
+        pendingEditAvatar = url.trim();
+        document.getElementById('editAvatarPreview').src = pendingEditAvatar;
+      }
+    }
+
     function saveProfileEdits() {
       const oldUsername = currentUser.username;
-      currentUser.fullName = document.getElementById('editFullNameInput').value.trim() || currentUser.fullName;
-      currentUser.username = document.getElementById('editUsernameInput').value.trim() || currentUser.username;
-      currentUser.bio = document.getElementById('editBioInput').value.trim();
-      if (pendingEditAvatar) {
-        currentUser.avatar = pendingEditAvatar;
-      }
+      const newFullName = document.getElementById('editFullNameInput').value.trim();
+      const newUsername = document.getElementById('editUsernameInput').value.trim().toLowerCase().replace(/\s+/g, '_');
+      const newBio = document.getElementById('editBioInput').value.trim();
+
+      if (newFullName) currentUser.fullName = newFullName;
+      if (newUsername) currentUser.username = newUsername;
+      currentUser.bio = newBio;
+      if (pendingEditAvatar) currentUser.avatar = pendingEditAvatar;
+
       posts.forEach(p => {
         if (p.username === oldUsername) {
           p.username = currentUser.username;
           p.avatar = currentUser.avatar;
         }
       });
-      videoReels.forEach(v => {
-        if (v.username === oldUsername) {
-          v.username = currentUser.username;
-          v.avatar = currentUser.avatar;
+      reels.forEach(r => {
+        if (r.username === oldUsername) {
+          r.username = currentUser.username;
+          r.avatar = currentUser.avatar;
         }
       });
-      closeEditProfileModal();
+
       syncUserUI();
       renderStories();
-      renderProfile();
       renderFeed();
-      renderReels();
-      showToast('Profile & picture updated!');
+      renderProfile();
+      closeEditProfileModal();
+      showToast('Profile updated!');
     }
 
     // AUTHENTICATION: LOG IN & CREATE ACCOUNT
-    function openAuthModal(mode = 'login') {
+    function toggleAuthMode(mode) {
+      const loginForm = document.getElementById('loginForm');
+      const signupForm = document.getElementById('signupForm');
+      const tabLogin = document.getElementById('authTabLogin');
+      const tabSignup = document.getElementById('authTabSignup');
+
+      if (mode === 'login') {
+        loginForm.classList.remove('hidden');
+        signupForm.classList.add('hidden');
+        tabLogin.classList.add('bg-spotify-green', 'text-black');
+        tabLogin.classList.remove('text-zinc-400');
+        tabSignup.classList.remove('bg-spotify-green', 'text-black');
+        tabSignup.classList.add('text-zinc-400');
+      } else {
+        signupForm.classList.remove('hidden');
+        loginForm.classList.add('hidden');
+        tabSignup.classList.add('bg-spotify-green', 'text-black');
+        tabSignup.classList.remove('text-zinc-400');
+        tabLogin.classList.remove('bg-spotify-green', 'text-black');
+        tabLogin.classList.add('text-zinc-400');
+      }
+    }
+
+    function previewSignupAvatar(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      pendingSignupAvatar = URL.createObjectURL(file);
+      document.getElementById('signupAvatarPreview').src = pendingSignupAvatar;
+    }
+
+    function openAuthModal(mode = 'signup') {
       toggleAuthMode(mode);
+      const closeBtn = document.getElementById('closeAuthBtn');
+      if (closeBtn) {
+        if (isAuthenticated) {
+          closeBtn.classList.remove('hidden');
+        } else {
+          closeBtn.classList.add('hidden');
+        }
+      }
       const modal = document.getElementById('authModal');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
     }
 
     function closeAuthModal() {
+      if (!isAuthenticated) {
+        showToast('You must Sign Up or Log In to enter MMNTV.');
+        return;
+      }
       const modal = document.getElementById('authModal');
       modal.classList.add('hidden');
       modal.classList.remove('flex');
     }
 
-    function toggleAuthMode(mode) {
-      const loginForm = document.getElementById('loginForm');
-      const signupForm = document.getElementById('signupForm');
-      const subtitle = document.getElementById('authSubtitle');
-      const tabSignup = document.getElementById('authTabSignup');
-      const tabLogin = document.getElementById('authTabLogin');
-      if (mode === 'signup') {
-        loginForm.classList.add('hidden');
-        signupForm.classList.remove('hidden');
-        if (tabSignup && tabLogin) {
-          tabSignup.className = 'py-2 rounded-lg bg-spotify-green text-black transition';
-          tabLogin.className = 'py-2 rounded-lg text-zinc-400 hover:text-white transition';
-        }
-        subtitle.textContent = 'Create your own MMNTV account & set your profile photo.';
-      } else {
-        signupForm.classList.add('hidden');
-        loginForm.classList.remove('hidden');
-        if (tabSignup && tabLogin) {
-          tabLogin.className = 'py-2 rounded-lg bg-spotify-green text-black transition';
-          tabSignup.className = 'py-2 rounded-lg text-zinc-400 hover:text-white transition';
-        }
-        subtitle.textContent = 'Log in to share tracks, follow artists & post videos.';
+    function logoutUser() {
+      isAuthenticated = false;
+      if (isPlaying) {
+        audio.pause();
+        playIcon.className = 'fa-solid fa-play text-sm ml-0.5';
+        isPlaying = false;
       }
-    }
-
-    function previewSignupAvatar(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      pendingSignupAvatar = URL.createObjectURL(file);
-      document.getElementById('signupAvatarPreview').src = pendingSignupAvatar;
+      document.querySelectorAll('video').forEach(v => v.pause());
+      openAuthModal('login');
+      showToast('Logged out of MMNTV.');
     }
 
     function handleSignup(e) {
@@ -1528,15 +1829,14 @@
       const username = document.getElementById('signupUsername').value.trim().toLowerCase().replace(/\s+/g, '_');
       const email = document.getElementById('signupEmail').value.trim();
       const password = document.getElementById('signupPassword').value;
-      const bio = document.getElementById('signupBio').value.trim() || 'Music & video creator on InstaSound 🎶';
+      const bio = document.getElementById('signupBio').value.trim() || "Creating music & videos on MMNTV 🎶🎬";
+      const chosenAvatar = pendingSignupAvatar || `https://picsum.photos/id/${Math.floor(Math.random() * 150) + 50}/200/200`;
 
       if (accounts.some(acc => acc.username === username)) {
-        showToast('Username already taken!');
+        showToast('That username is already taken! Pick another.');
         return;
       }
 
-      const randomAvatarId = Math.floor(Math.random() * 100) + 200;
-      const chosenAvatar = pendingSignupAvatar || `https://picsum.photos/id/${randomAvatarId}/200/200`;
       const newAccount = {
         username,
         fullName,
@@ -1550,6 +1850,7 @@
       pendingSignupAvatar = null;
       accounts.push(newAccount);
       currentUser = newAccount;
+      isAuthenticated = true;
       syncUserUI();
       renderStories();
       renderProfile();
@@ -1560,309 +1861,28 @@
     function handleLogin(e) {
       e.preventDefault();
       const loginId = document.getElementById('loginUsername').value.trim().toLowerCase();
-      const found = accounts.find(acc => acc.username.toLowerCase() === loginId || acc.email.toLowerCase() === loginId);
+      const loginPass = document.getElementById('loginPassword').value;
+      const found = accounts.find(acc => (acc.username.toLowerCase() === loginId || acc.email.toLowerCase() === loginId) && acc.password === loginPass);
       if (found) {
         currentUser = found;
+        isAuthenticated = true;
         syncUserUI();
         renderStories();
         renderProfile();
         closeAuthModal();
         showToast(`Welcome back, @${currentUser.username}!`);
       } else {
-        showToast('Account not found. Try Sign Up or Quick Demo!');
+        showToast('Invalid username/email or password. Create an account if you are new!');
       }
     }
 
-    function quickDemoLogin() {
-      currentUser = accounts[0];
-      syncUserUI();
-      renderStories();
-      closeAuthModal();
-      showToast(`Logged in as @${currentUser.username}`);
-    }
-
-    function syncUserUI() {
-      document.getElementById('sidebarUserAvatar').src = currentUser.avatar;
-      document.getElementById('rightSidebarAvatar').src = currentUser.avatar;
-      document.getElementById('rightSidebarUsername').textContent = currentUser.username;
-      document.getElementById('rightSidebarName').textContent = currentUser.fullName;
-      document.getElementById('mobileNavAvatar').src = currentUser.avatar;
-      document.getElementById('quickBarAvatar').src = currentUser.avatar;
-      document.getElementById('modalUserAvatar').src = currentUser.avatar;
-      document.getElementById('modalUserName').textContent = currentUser.username;
-
-      document.getElementById('profilePageAvatar').src = currentUser.avatar;
-      document.getElementById('profilePageUsername').textContent = currentUser.username;
-      document.getElementById('profilePageFullName').textContent = currentUser.fullName;
-      document.getElementById('profilePageBio').textContent = currentUser.bio;
-      document.getElementById('profileFollowersCount').textContent = currentUser.followers;
-      document.getElementById('profileFollowingCount').textContent = currentUser.following;
-    }
-
-    // FULLSCREEN INSTAGRAM STORY VIEWER
-    function openStoryViewer(idx) {
-      const post = posts[idx];
-      if (!post) return;
-      selectTrack(idx);
-      document.getElementById('storyViewerAvatar').src = post.avatar;
-      document.getElementById('storyViewerUser').textContent = post.username;
-      document.getElementById('storyViewerCover').src = post.cover;
-      document.getElementById('storyViewerTrack').textContent = post.title;
-      document.getElementById('storyViewerArtist').textContent = post.artist;
-
-      const modal = document.getElementById('storyViewerModal');
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-
-      let progress = 0;
-      const fill = document.getElementById('storyProgressFill');
-      fill.style.width = '0%';
-      clearInterval(storyTimer);
-      storyTimer = setInterval(() => {
-        progress += 2;
-        fill.style.width = `${progress}%`;
-        if (progress >= 100) {
-          closeStoryViewer();
-        }
-      }, 100);
-    }
-
-    function closeStoryViewer() {
-      clearInterval(storyTimer);
-      const modal = document.getElementById('storyViewerModal');
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
-    }
-
-    // CREATE NEW MUSIC / PHOTO POST MODAL (With Pre-Post Photo Filter Studio)
-    function openCreatePostModal(mode = 'music') {
-      if (mode === 'video') {
-        openVideoStudioModal();
-        return;
-      }
-      pendingPostCoverFilter = 'none';
-      const previewImg = document.getElementById('postCoverPreviewImg');
-      if (previewImg) {
-        previewImg.src = `https://picsum.photos/id/${Math.floor(Math.random() * 200) + 100}/600/600`;
-        previewImg.style.filter = 'none';
-      }
-      const modal = document.getElementById('createPostModal');
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-    }
-
-    function previewPostCoverUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const previewImg = document.getElementById('postCoverPreviewImg');
-      if (previewImg) previewImg.src = URL.createObjectURL(file);
-    }
-
-    function applyPostCoverFilter(filterCss) {
-      pendingPostCoverFilter = filterCss;
-      const previewImg = document.getElementById('postCoverPreviewImg');
-      if (previewImg) previewImg.style.filter = filterCss;
-    }
-
-    function closeCreatePostModal() {
-      const modal = document.getElementById('createPostModal');
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
-    }
-
-    function submitNewPost() {
-      const titleInput = document.getElementById('newTitleInput').value.trim();
-      const artist = document.getElementById('newArtistInput').value.trim() || currentUser.fullName;
-      const caption = document.getElementById('newCaptionInput').value.trim() || 'Sharing a fresh track on MMNTV! 🎶';
-      const audioFile = document.getElementById('localAudioFileInput').files[0];
-      const coverFile = document.getElementById('localCoverFileInput').files[0];
-
-      const src = audioFile ? URL.createObjectURL(audioFile) : document.getElementById('newAudioSelect').value;
-      const title = titleInput || (audioFile ? audioFile.name.replace(/\.[^/.]+$/, "") : 'Midnight Vibes');
-      const previewImg = document.getElementById('postCoverPreviewImg');
-      const cover = coverFile ? URL.createObjectURL(coverFile) : (previewImg ? previewImg.src : 'https://picsum.photos/id/146/600/600');
-
-      const newPost = {
-        id: Date.now(),
-        username: currentUser.username,
-        location: 'MMNTV Studio',
-        avatar: currentUser.avatar,
-        title,
-        artist,
-        cover,
-        coverFilter: pendingPostCoverFilter,
-        src,
-        caption,
-        likes: 1,
-        liked: true,
-        saved: false,
-        timeAgo: 'JUST NOW',
-        comments: []
-      };
-
-      posts.unshift(newPost);
-      document.getElementById('newTitleInput').value = '';
-      document.getElementById('newArtistInput').value = '';
-      document.getElementById('newCaptionInput').value = '';
-      document.getElementById('localAudioFileInput').value = '';
-      document.getElementById('localCoverFileInput').value = '';
-      closeCreatePostModal();
-      switchView('home');
-      selectTrack(0);
-      showToast('Published to MMNTV feed!');
-    }
-
-    // VIDEO STUDIO & DEVICE VIDEO EDITOR FUNCTIONS
-    function openVideoStudioModal() {
-      const modal = document.getElementById('videoStudioModal');
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-      const vid = document.getElementById('studioVideoPreview');
-      vid.play().catch(() => {});
-    }
-
-    function closeVideoStudioModal() {
-      const modal = document.getElementById('videoStudioModal');
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
-      document.getElementById('studioVideoPreview').pause();
-    }
-
-    function handleLocalVideoUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const localUrl = URL.createObjectURL(file);
-      studioState.videoUrl = localUrl;
-      const vid = document.getElementById('studioVideoPreview');
-      vid.src = localUrl;
-      vid.play().catch(() => {});
-      showToast(`Loaded "${file.name}" into Studio!`);
-    }
-
-    function toggleStudioPlayback() {
-      const vid = document.getElementById('studioVideoPreview');
-      const icon = document.getElementById('studioPlayIcon');
-      if (vid.paused) {
-        vid.play();
-        icon.className = 'fa-solid fa-pause';
-      } else {
-        vid.pause();
-        icon.className = 'fa-solid fa-play';
-      }
-    }
-
-    function applyStudioFilter(filterCss, btn) {
-      studioState.filter = filterCss;
-      document.getElementById('studioVideoPreview').style.filter = filterCss;
-      document.querySelectorAll('.filter-btn').forEach(b => {
-        b.className = 'filter-btn py-1.5 rounded-lg bg-zinc-800 text-white';
-      });
-      if (btn) btn.className = 'filter-btn py-1.5 rounded-lg bg-spotify-green text-black font-bold';
-    }
-
-    function updateStudioOverlay() {
-      const text = document.getElementById('studioOverlayTextInput').value;
-      const color = document.getElementById('studioOverlayColorInput').value;
-      studioState.overlayText = text;
-      studioState.overlayColor = color;
-      const overlayEl = document.getElementById('studioTextOverlay');
-      overlayEl.textContent = text;
-      overlayEl.style.color = color;
-    }
-
-    function setStudioSpeed(rate) {
-      studioState.speed = rate;
-      document.getElementById('studioVideoPreview').playbackRate = rate;
-      document.getElementById('studioSpeedLabel').textContent = `${rate.toFixed(1)}x`;
-    }
-
-    function updateStudioSoundtrack() {
-      const val = document.getElementById('studioSoundtrackSelect').value;
-      studioState.soundtrack = val;
-      document.getElementById('studioSoundBadge').textContent = val;
-    }
-
-    function publishEditedVideo() {
-      const caption = document.getElementById('studioCaptionInput').value.trim() || 'Edited in InstaSound Creator Studio 🎬✨ #reels #musicvideo';
-      const newReel = {
-        id: Date.now(),
-        username: currentUser.username,
-        avatar: currentUser.avatar,
-        videoUrl: studioState.videoUrl,
-        caption,
-        soundtrack: studioState.soundtrack,
-        filter: studioState.filter,
-        overlayText: studioState.overlayText,
-        overlayColor: studioState.overlayColor,
-        speed: studioState.speed,
-        likes: 1,
-        liked: true
-      };
-      videoReels.unshift(newReel);
-      document.getElementById('studioCaptionInput').value = '';
-      closeVideoStudioModal();
-      switchView('reels');
-      showToast('Edited video published to Reels!');
-    }
-
-    function showToast(msg) {
-      const toast = document.getElementById('toastBox');
-      toast.textContent = msg;
-      toast.classList.remove('opacity-0');
-      setTimeout(() => toast.classList.add('opacity-0'), 2500);
-    }
-
-    // Audio Timeline & Volume Listeners
-    function formatTime(seconds) {
-      if (isNaN(seconds)) return "0:00";
-      const mins = Math.floor(seconds / 60);
-      const secs = Math.floor(seconds % 60);
-      return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-    }
-
-    audio.addEventListener('timeupdate', () => {
-      const progressPercent = (audio.currentTime / audio.duration) * 100 || 0;
-      progressBar.style.width = `${progressPercent}%`;
-      currentTimeEl.textContent = formatTime(audio.currentTime);
-      durationEl.textContent = formatTime(audio.duration);
-    });
-
-    audio.addEventListener('ended', () => {
-      currentTrackIndex = (currentTrackIndex + 1) % posts.length;
-      selectTrack(currentTrackIndex);
-    });
-
-    progressContainer.addEventListener('click', (e) => {
-      const width = progressContainer.clientWidth;
-      if (audio.duration) audio.currentTime = (e.offsetX / width) * audio.duration;
-    });
-
-    volumeContainer.addEventListener('click', (e) => {
-      const width = volumeContainer.clientWidth;
-      const volume = Math.max(0, Math.min(1, e.offsetX / width));
-      audio.volume = volume;
-      volumeBar.style.width = `${volume * 100}%`;
-    });
-
-    prevBtn.addEventListener('click', () => {
-      currentTrackIndex = (currentTrackIndex - 1 + posts.length) % posts.length;
-      selectTrack(currentTrackIndex);
-    });
-
-    nextBtn.addEventListener('click', () => {
-      currentTrackIndex = (currentTrackIndex + 1) % posts.length;
-      selectTrack(currentTrackIndex);
-    });
-
-    playBtn.addEventListener('click', togglePlay);
-
-    // Initialize App
+    // Initialize App (Locked behind Sign Up / Log In Gate)
     syncUserUI();
     renderStories();
     renderFeed();
-    renderReels();
     renderSuggestedArtists();
     loadTrack(0);
+    openAuthModal('signup');
   </script>
 </body>
 </html>
