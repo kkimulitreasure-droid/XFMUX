@@ -214,9 +214,37 @@
         <i class="fa-solid fa-xmark"></i>
       </button>
 
-      <div class="mb-6">
+      <div class="mb-5">
         <h3 class="text-2xl font-display font-extrabold text-white">Upload Movie or Music</h3>
-        <p class="text-xs text-slate-400 mt-1">Select a file from your device or paste a direct video/audio link.</p>
+        <p class="text-xs text-slate-400 mt-1">Connect your Google Drive storage first so your uploaded files have a storage destination.</p>
+      </div>
+
+      <!-- REQUIRED GOOGLE DRIVE STORAGE CONNECTION BOX -->
+      <div id="driveStorageGateBox" class="mb-5 bg-dark-900/95 border border-amber-500/40 rounded-2xl p-4 space-y-3">
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-blue-500/15 border border-blue-400/30 flex items-center justify-center text-blue-400 text-sm">
+              <i class="fa-brands fa-google-drive"></i>
+            </div>
+            <div>
+              <p class="text-xs font-bold text-white">Google Drive Storage <span class="text-rose-400">*Required</span></p>
+              <p id="driveStatusSubtext" class="text-[11px] text-amber-300/90">Not connected â€” connect your Google Drive before uploading</p>
+            </div>
+          </div>
+          <button type="button" id="disconnectDriveBtn" onclick="disconnectUserDriveStorage()" class="hidden px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-rose-600/30 text-slate-300 hover:text-rose-300 text-[11px] font-semibold transition-all">
+            Disconnect
+          </button>
+        </div>
+
+        <div id="driveConnectFormFields" class="space-y-2.5 pt-1">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-400 mb-1">Your Google Drive Folder / File Link or Storage ID *</label>
+            <input type="text" id="userDriveInput" placeholder="https://drive.google.com/drive/folders/... or Drive ID" class="w-full bg-dark-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-400" />
+          </div>
+          <button type="button" onclick="connectUserDriveStorage()" class="w-full py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow">
+            <i class="fa-brands fa-google-drive"></i> Connect My Google Drive for Storage
+          </button>
+        </div>
       </div>
 
       <form onsubmit="handleUserUploadSubmit(event)" class="space-y-4">
@@ -465,7 +493,7 @@
             </div>
             <div>
               <label class="block text-[11px] font-semibold text-slate-400 mb-1">Storage Bucket Name</label>
-              <input type="text" id="settingSupabaseBucket" placeholder="media" value="media" class="w-full bg-dark-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:border-emerald-400 focus:outline-none" />
+              <input type="text" id="settingSupabaseBucket" placeholder="1986" value="1986" class="w-full bg-dark-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:border-emerald-400 focus:outline-none" />
             </div>
           </div>
 
@@ -522,10 +550,81 @@
 
   <!-- ================= JAVASCRIPT APPLICATION LOGIC ================= -->
   <script>
+    // --- GOOGLE DRIVE STORAGE CONNECTION REQUIREMENT FOR UPLOADS ---
+    let userDriveStorage = JSON.parse(localStorage.getItem("cinewave_user_drive_storage") || "null");
+
+    function parseDriveLinkOrId(raw) {
+      const val = (raw || "").trim();
+      if (!val) return null;
+      const folderMatch = val.match(/folders\/([a-zA-Z0-9_-]+)/);
+      const fileMatch = val.match(/\/d\/([a-zA-Z0-9_-]+)/);
+      const idParamMatch = val.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+      const folderId = (folderMatch && folderMatch[1]) || (fileMatch && fileMatch[1]) || (idParamMatch && idParamMatch[1]) || val;
+      return {
+        rawInput: val,
+        folderId,
+        connectedAt: new Date().toISOString()
+      };
+    }
+
+    function refreshDriveStorageUI() {
+      const gateBox = document.getElementById("driveStorageGateBox");
+      const statusSub = document.getElementById("driveStatusSubtext");
+      const formFields = document.getElementById("driveConnectFormFields");
+      const discBtn = document.getElementById("disconnectDriveBtn");
+      const driveInp = document.getElementById("userDriveInput");
+
+      if (!gateBox) return;
+
+      if (userDriveStorage && userDriveStorage.folderId) {
+        gateBox.className = "mb-5 bg-emerald-950/30 border border-emerald-500/40 rounded-2xl p-4 space-y-2";
+        if (statusSub) {
+          statusSub.className = "text-[11px] text-emerald-400 font-medium truncate max-w-[230px] sm:max-w-[320px]";
+          statusSub.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> Connected: ${userDriveStorage.folderId}`;
+        }
+        if (formFields) formFields.classList.add("hidden");
+        if (discBtn) discBtn.classList.remove("hidden");
+      } else {
+        gateBox.className = "mb-5 bg-dark-900/95 border border-amber-500/40 rounded-2xl p-4 space-y-3";
+        if (statusSub) {
+          statusSub.className = "text-[11px] text-amber-300/90";
+          statusSub.innerText = "Not connected â€” connect your Google Drive before uploading";
+        }
+        if (formFields) formFields.classList.remove("hidden");
+        if (discBtn) discBtn.classList.add("hidden");
+        if (driveInp && !driveInp.value && userDriveStorage && userDriveStorage.rawInput) {
+          driveInp.value = userDriveStorage.rawInput;
+        }
+      }
+    }
+
+    function connectUserDriveStorage() {
+      const inp = document.getElementById("userDriveInput");
+      const parsed = parseDriveLinkOrId(inp ? inp.value : "");
+      if (!parsed || parsed.folderId.length < 4) {
+        showToast("Please enter a valid Google Drive folder/file link or ID first!");
+        if (inp) inp.focus();
+        return;
+      }
+      userDriveStorage = parsed;
+      localStorage.setItem("cinewave_user_drive_storage", JSON.stringify(userDriveStorage));
+      refreshDriveStorageUI();
+      showToast("Google Drive connected as your upload storage!");
+    }
+
+    function disconnectUserDriveStorage() {
+      userDriveStorage = null;
+      localStorage.removeItem("cinewave_user_drive_storage");
+      const inp = document.getElementById("userDriveInput");
+      if (inp) inp.value = "";
+      refreshDriveStorageUI();
+      showToast("Google Drive disconnected.");
+    }
+
     // --- SUPABASE DEFAULT CONFIG (OPTIONAL: PASTE YOUR KEYS HERE FOR ALL VISITORS) ---
-    const HARDCODED_SUPABASE_URL = ""; 
-    const HARDCODED_SUPABASE_ANON_KEY = "";
-    const HARDCODED_SUPABASE_BUCKET = "media";
+    const HARDCODED_SUPABASE_URL = "https://lggdzryghrfpjxsypjtc.supabase.co"; 
+    const HARDCODED_SUPABASE_ANON_KEY = "sb_publishable_NXu7MdwBQrC1ok34HG9N6g_v7qChF1c";
+    const HARDCODED_SUPABASE_BUCKET = "1986";
 
     // --- SITE SETTINGS (SAVED IN LOCALSTORAGE) ---
     const defaultSiteSettings = {
@@ -545,7 +644,7 @@
 
     let supabaseClient = null;
     function initSupabase() {
-      const url = (siteSettings.supabaseUrl || "").trim();
+      const url = (siteSettings.supabaseUrl || "").trim().replace(/\/rest\/v1\/?$/i, "");
       const key = (siteSettings.supabaseKey || "").trim();
       const badge = document.getElementById("supabaseStatusBadge");
       if (url && key && window.supabase) {
@@ -787,6 +886,7 @@
         return;
       }
       toggleUploadSourceInput('file');
+      refreshDriveStorageUI();
       document.getElementById("userUploadModal").classList.remove("hidden");
     }
 
@@ -808,6 +908,13 @@
 
     async function handleUserUploadSubmit(e) {
       e.preventDefault();
+      if (!userDriveStorage || !userDriveStorage.folderId) {
+        refreshDriveStorageUI();
+        showToast("Please connect your Google Drive storage before uploading!");
+        const inp = document.getElementById("userDriveInput");
+        if (inp) inp.focus();
+        return;
+      }
       const submitBtn = document.getElementById("publishSubmitBtn");
       const sourceType = document.querySelector('input[name="uploadSourceType"]:checked')?.value || 'file';
       const posterFileInput = document.getElementById("userUploadPosterFile");
@@ -873,7 +980,8 @@
           comments: [],
           description: document.getElementById("userUploadDesc")?.value.trim() || "",
           poster: posterUrl,
-          streamUrl: mediaStreamUrl
+          streamUrl: mediaStreamUrl,
+          driveStorageId: userDriveStorage.folderId
         };
 
         if (supabaseClient) {
