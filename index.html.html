@@ -641,6 +641,7 @@
     let siteSettings = { ...defaultSiteSettings, ...(JSON.parse(localStorage.getItem("cinewave_site_settings")) || {}) };
     if (HARDCODED_SUPABASE_URL && !siteSettings.supabaseUrl) siteSettings.supabaseUrl = HARDCODED_SUPABASE_URL;
     if (HARDCODED_SUPABASE_ANON_KEY && !siteSettings.supabaseKey) siteSettings.supabaseKey = HARDCODED_SUPABASE_ANON_KEY;
+    if (!siteSettings.supabaseBucket || siteSettings.supabaseBucket === "media") siteSettings.supabaseBucket = HARDCODED_SUPABASE_BUCKET;
 
     let supabaseClient = null;
     function initSupabase() {
@@ -894,13 +895,23 @@
       document.getElementById("userUploadModal").classList.add("hidden");
     }
 
+    function normalizeMediaUrl(rawUrl) {
+      const url = (rawUrl || "").trim();
+      // Convert Google Drive share links to direct download/stream links
+      const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/) || url.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/);
+      if (driveMatch && driveMatch[1]) {
+        return `https://drive.google.com/uc?export=download&id=${driveMatch[1]}`;
+      }
+      return url;
+    }
+
     async function uploadFileToSupabaseStorage(file, folder) {
-      const bucket = (siteSettings.supabaseBucket || "media").trim();
+      const bucket = (siteSettings.supabaseBucket || "1986").trim();
       const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
       const filePath = `${folder}/${Date.now()}_${safeName}`;
       const { error } = await supabaseClient.storage
         .from(bucket)
-        .upload(filePath, file, { cacheControl: "3600", upsert: false });
+        .upload(filePath, file, { cacheControl: "3600", upsert: true, contentType: file.type || undefined });
       if (error) throw error;
       const { data } = supabaseClient.storage.from(bucket).getPublicUrl(filePath);
       return data.publicUrl;
@@ -908,13 +919,23 @@
 
     async function handleUserUploadSubmit(e) {
       e.preventDefault();
+
+      // Auto-connect Drive if user typed it in the input box without clicking the connect button
       if (!userDriveStorage || !userDriveStorage.folderId) {
-        refreshDriveStorageUI();
-        showToast("Please connect your Google Drive storage before uploading!");
         const inp = document.getElementById("userDriveInput");
-        if (inp) inp.focus();
-        return;
+        const parsed = parseDriveLinkOrId(inp ? inp.value : "");
+        if (parsed && parsed.folderId.length >= 4) {
+          userDriveStorage = parsed;
+          localStorage.setItem("cinewave_user_drive_storage", JSON.stringify(userDriveStorage));
+          refreshDriveStorageUI();
+        } else {
+          refreshDriveStorageUI();
+          showToast("Please paste your Google Drive link or ID at the top first!");
+          if (inp) inp.focus();
+          return;
+        }
       }
+
       const submitBtn = document.getElementById("publishSubmitBtn");
       const sourceType = document.querySelector('input[name="uploadSourceType"]:checked')?.value || 'file';
       const posterFileInput = document.getElementById("userUploadPosterFile");
@@ -934,36 +955,54 @@
 
       try {
         let mediaStreamUrl = "";
+        let uploadedToCloudStorage = false;
+
         if (sourceType === 'file') {
           const fileInput = document.getElementById("userUploadFileInput");
           if (!fileInput || !fileInput.files || !fileInput.files[0]) {
             showToast("Please select a video or music file from your device!");
             return;
           }
+          const mediaFile = fileInput.files[0];
+          const sizeMB = (mediaFile.size / (1024 * 1024)).toFixed(1);
+
           if (supabaseClient) {
-            showToast("Uploading file to Supabase Storage...");
-            mediaStreamUrl = await uploadFileToSupabaseStorage(fileInput.files[0], "videos");
+            try {
+              showToast(`Uploading (${sizeMB} MB) to Supabase Storage...`);
+              mediaStreamUrl = await uploadFileToSupabaseStorage(mediaFile, "videos");
+              uploadedToCloudStorage = true;
+            } catch (storageErr) {
+              console.warn("Supabase Storage upload failed, falling back to local session URL:", storageErr);
+              showToast(`Cloud storage rejected (${storageErr.message || "file > 50MB or bucket policy"}). Publishing locally!`);
+              mediaStreamUrl = URL.createObjectURL(mediaFile);
+            }
           } else {
-            mediaStreamUrl = URL.createObjectURL(fileInput.files[0]);
+            mediaStreamUrl = URL.createObjectURL(mediaFile);
           }
         } else {
           const urlInput = document.getElementById("userUploadStreamUrl");
-          mediaStreamUrl = urlInput ? urlInput.value.trim() : "";
+          mediaStreamUrl = normalizeMediaUrl(urlInput ? urlInput.value : "");
           if (!mediaStreamUrl) {
             showToast("Please paste a valid video or audio URL!");
             return;
           }
+          uploadedToCloudStorage = true;
         }
 
         let posterUrl = "https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=600&q=80";
         if (posterFileInput && posterFileInput.files && posterFileInput.files[0]) {
           if (supabaseClient) {
-            posterUrl = await uploadFileToSupabaseStorage(posterFileInput.files[0], "posters");
+            try {
+              posterUrl = await uploadFileToSupabaseStorage(posterFileInput.files[0], "posters");
+            } catch (posterErr) {
+              console.warn("Poster cloud upload failed, using local preview:", posterErr);
+              posterUrl = URL.createObjectURL(posterFileInput.files[0]);
+            }
           } else {
             posterUrl = URL.createObjectURL(posterFileInput.files[0]);
           }
         } else if (posterUrlInput && posterUrlInput.value.trim()) {
-          posterUrl = posterUrlInput.value.trim();
+          posterUrl = normalizeMediaUrl(posterUrlInput.value);
         }
 
         const categoryVal = document.getElementById("userUploadCategory")?.value || "Movies";
@@ -984,7 +1023,8 @@
           driveStorageId: userDriveStorage.folderId
         };
 
-        if (supabaseClient) {
+        let savedToCloudDb = false;
+        if (supabaseClient && uploadedToCloudStorage) {
           const { data, error } = await supabaseClient
             .from("media_items")
             .insert([{
@@ -1003,13 +1043,18 @@
             }])
             .select();
 
-          if (error) throw error;
-          if (data && data[0]) newItem.id = data[0].id;
-          newItem.isCloud = true;
+          if (error) {
+            console.warn("Supabase DB insert warning:", error);
+            showToast("Published on screen (DB note: " + error.message + ")");
+          } else {
+            if (data && data[0]) newItem.id = data[0].id;
+            newItem.isCloud = true;
+            savedToCloudDb = true;
+          }
         }
 
         mediaDatabase.unshift(newItem);
-        if (sourceType === 'url' || supabaseClient) {
+        if (uploadedToCloudStorage) {
           localStorage.setItem("cinewave_media_items", JSON.stringify(mediaDatabase));
         }
 
@@ -1017,10 +1062,14 @@
         document.getElementById("fileNoticeText").innerText = "Click or drag & drop movie/music file here";
         closeUserUploadModal();
         renderMediaCatalog();
-        showToast(supabaseClient ? `"${newItem.title}" saved to Supabase Cloud!` : `"${newItem.title}" published locally!`);
+        if (savedToCloudDb) {
+          showToast(`"${newItem.title}" published to Cloud!`);
+        } else {
+          showToast(`"${newItem.title}" published!`);
+        }
       } catch (err) {
         console.error("Upload failed:", err);
-        showToast("Upload error: " + (err.message || "Check Supabase bucket/table permissions"));
+        showToast("Upload error: " + (err.message || "Please try again"));
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
@@ -1361,7 +1410,7 @@
       }
       toast.innerText = message;
       toast.classList.remove("opacity-0", "translate-y-2", "pointer-events-none");
-      setTimeout(() => toast.classList.add("opacity-0", "translate-y-2", "pointer-events-none"), 3000);
+      setTimeout(() => toast.classList.add("opacity-0", "translate-y-2", "pointer-events-none"), 5000);
     }
 
     function switchCategory(cat) {
