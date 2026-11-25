@@ -333,7 +333,7 @@
         </div>
         <div id="adminPasscodeField" class="hidden">
           <label class="block text-xs font-semibold text-amber-400 mb-1">Master Passcode *</label>
-          <input type="password" id="signUpAdminPasscode" placeholder="Enter passcode (1986)" class="w-full bg-dark-900 border border-amber-500/50 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400" />
+          <input type="password" id="signUpAdminPasscode" placeholder="Enter secret passcode" class="w-full bg-dark-900 border border-amber-500/50 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400" />
         </div>
         <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-brand-600 to-brand-accent hover:opacity-90 text-white font-bold text-xs shadow-lg shadow-brand-500/30 transition-all">
           Create Account
@@ -362,16 +362,16 @@
       <!-- LOGIN VIEW (Shown when not authenticated as Admin) -->
       <div id="adminLoginSection">
         <div class="bg-amber-500/10 border border-amber-500/30 text-amber-300 p-3.5 rounded-xl text-xs mb-4">
-          <i class="fa-solid fa-lock mr-1"></i> Log in with your Admin credentials (Default Username: <strong>ADMIN</strong> | Passcode: <strong>1986</strong>) to unlock all website controls.
+          <i class="fa-solid fa-lock mr-1"></i> Log in with your private Owner / Admin credentials to unlock all website controls.
         </div>
         <form onsubmit="handleAdminKeyLogin(event)" class="space-y-4">
           <div>
             <label class="block text-xs font-semibold text-slate-400 mb-1">Admin Username *</label>
-            <input type="text" id="adminPortalUser" required value="ADMIN" class="w-full bg-dark-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400" />
+            <input type="text" id="adminPortalUser" required placeholder="Enter admin username" class="w-full bg-dark-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400" />
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-400 mb-1">Admin Password / Passcode *</label>
-            <input type="password" id="adminPortalPass" required placeholder="Enter 1986 or your custom password" class="w-full bg-dark-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400" />
+            <input type="password" id="adminPortalPass" required placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" class="w-full bg-dark-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400" />
           </div>
           <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:opacity-90 text-dark-900 font-extrabold text-xs shadow-lg shadow-amber-500/20 transition-all">
             Unlock Admin Dashboard
@@ -471,7 +471,12 @@
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-400 mb-1">Your New Admin Password</label>
-              <input type="text" id="myAdminPassword" required class="w-full bg-dark-900 border border-slate-700 rounded-xl px-4 py-2 text-xs text-white focus:border-amber-400 focus:outline-none" />
+              <div class="relative">
+                <input type="password" id="myAdminPassword" required class="w-full bg-dark-900 border border-slate-700 rounded-xl px-4 py-2 pr-10 text-xs text-white focus:border-amber-400 focus:outline-none" />
+                <button type="button" onclick="toggleAdminPassVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs" title="Show/Hide Password">
+                  <i id="adminPassEyeIcon" class="fa-solid fa-eye"></i>
+                </button>
+              </div>
             </div>
           </div>
           <div class="flex items-center justify-between pt-2">
@@ -815,6 +820,19 @@
       if (tab === 'movies') renderAdminMediaManager();
     }
 
+    function toggleAdminPassVisibility() {
+      const inp = document.getElementById("myAdminPassword");
+      const icon = document.getElementById("adminPassEyeIcon");
+      if (!inp) return;
+      if (inp.type === "password") {
+        inp.type = "text";
+        if (icon) icon.className = "fa-solid fa-eye-slash";
+      } else {
+        inp.type = "password";
+        if (icon) icon.className = "fa-solid fa-eye";
+      }
+    }
+
     function populateAdminDashboardData() {
       document.getElementById("settingSiteName").value = siteSettings.siteName;
       document.getElementById("settingBannerText").value = siteSettings.bannerText;
@@ -828,7 +846,7 @@
       if (adminAcc) {
         document.getElementById("myAdminDisplayName").value = adminAcc.name;
         document.getElementById("myAdminUsername").value = adminAcc.username;
-        document.getElementById("myAdminPassword").value = adminAcc.password;
+        const passEl = document.getElementById("myAdminPassword"); passEl.type = "password"; passEl.value = adminAcc.password; const eyeEl = document.getElementById("adminPassEyeIcon"); if (eyeEl) eyeEl.className = "fa-solid fa-eye";
       }
     }
 
