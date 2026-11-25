@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CineWave - Stream Movies & Series</title>
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- FontAwesome Icons -->
@@ -260,7 +262,7 @@
             <input type="file" id="userUploadFileInput" accept="video/*,audio/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="handleFileSelectNotice(this)" />
             <i class="fa-solid fa-cloud-arrow-up text-2xl text-brand-400 mb-1"></i>
             <p id="fileNoticeText" class="text-xs text-slate-300 font-medium">Click or drag & drop movie/music file here</p>
-            <p class="text-[10px] text-amber-400/90 mt-1">Note: Device files play in your current browser session. Use Web URL for permanent public streaming.</p>
+            <p id="uploadStorageHint" class="text-[10px] text-emerald-400/90 mt-1">Connect Supabase in Admin Panel to upload device files permanently to the cloud!</p>
           </div>
         </div>
 
@@ -281,7 +283,7 @@
           <textarea id="userUploadDesc" rows="2" required placeholder="Movie summary or details..." class="w-full bg-dark-900 border border-slate-700 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-brand-500"></textarea>
         </div>
 
-        <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-brand-600 to-brand-accent hover:opacity-90 text-white font-semibold text-sm shadow-lg shadow-brand-600/30 transition-all">
+        <button type="submit" id="publishSubmitBtn" class="w-full py-3 rounded-xl bg-gradient-to-r from-brand-600 to-brand-accent hover:opacity-90 text-white font-semibold text-sm shadow-lg shadow-brand-600/30 transition-all">
           Publish to CineWave
         </button>
       </form>
@@ -441,8 +443,34 @@
             </label>
           </div>
 
+          <!-- SUPABASE CLOUD DATABASE & STORAGE CONFIG -->
+          <div class="bg-dark-900/90 border border-emerald-500/30 rounded-xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <i class="fa-solid fa-database text-emerald-400"></i>
+                <span class="text-xs font-bold text-white">Supabase Cloud Connection (Real Device File Uploads)</span>
+              </div>
+              <span id="supabaseStatusBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 font-bold">Not Connected</span>
+            </div>
+            <p class="text-[11px] text-slate-400">Connect your Supabase project so movies & music uploaded from your device are stored in the cloud for all visitors.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-400 mb-1">Supabase Project URL</label>
+                <input type="url" id="settingSupabaseUrl" placeholder="https://xyzcompany.supabase.co" class="w-full bg-dark-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:border-emerald-400 focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-400 mb-1">Supabase Anon Public Key</label>
+                <input type="password" id="settingSupabaseKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI..." class="w-full bg-dark-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:border-emerald-400 focus:outline-none" />
+              </div>
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-400 mb-1">Storage Bucket Name</label>
+              <input type="text" id="settingSupabaseBucket" placeholder="media" value="media" class="w-full bg-dark-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:border-emerald-400 focus:outline-none" />
+            </div>
+          </div>
+
           <button type="submit" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg transition-all">
-            <i class="fa-solid fa-floppy-disk mr-1"></i> Save Website Settings
+            <i class="fa-solid fa-floppy-disk mr-1"></i> Save Website & Supabase Settings
           </button>
         </form>
 
@@ -494,6 +522,11 @@
 
   <!-- ================= JAVASCRIPT APPLICATION LOGIC ================= -->
   <script>
+    // --- SUPABASE DEFAULT CONFIG (OPTIONAL: PASTE YOUR KEYS HERE FOR ALL VISITORS) ---
+    const HARDCODED_SUPABASE_URL = ""; 
+    const HARDCODED_SUPABASE_ANON_KEY = "";
+    const HARDCODED_SUPABASE_BUCKET = "media";
+
     // --- SITE SETTINGS (SAVED IN LOCALSTORAGE) ---
     const defaultSiteSettings = {
       siteName: "CineWave",
@@ -501,9 +534,77 @@
       showBanner: false,
       adminOnlyUpload: false,
       allowDownloads: true,
-      allowComments: true
+      allowComments: true,
+      supabaseUrl: HARDCODED_SUPABASE_URL,
+      supabaseKey: HARDCODED_SUPABASE_ANON_KEY,
+      supabaseBucket: HARDCODED_SUPABASE_BUCKET
     };
-    let siteSettings = JSON.parse(localStorage.getItem("cinewave_site_settings")) || defaultSiteSettings;
+    let siteSettings = { ...defaultSiteSettings, ...(JSON.parse(localStorage.getItem("cinewave_site_settings")) || {}) };
+    if (HARDCODED_SUPABASE_URL && !siteSettings.supabaseUrl) siteSettings.supabaseUrl = HARDCODED_SUPABASE_URL;
+    if (HARDCODED_SUPABASE_ANON_KEY && !siteSettings.supabaseKey) siteSettings.supabaseKey = HARDCODED_SUPABASE_ANON_KEY;
+
+    let supabaseClient = null;
+    function initSupabase() {
+      const url = (siteSettings.supabaseUrl || "").trim();
+      const key = (siteSettings.supabaseKey || "").trim();
+      const badge = document.getElementById("supabaseStatusBadge");
+      if (url && key && window.supabase) {
+        try {
+          supabaseClient = window.supabase.createClient(url, key);
+          if (badge) {
+            badge.innerText = "Connected";
+            badge.className = "text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold";
+          }
+          return true;
+        } catch (err) {
+          console.error("Supabase init error:", err);
+        }
+      }
+      supabaseClient = null;
+      if (badge) {
+        badge.innerText = "Not Connected";
+        badge.className = "text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 font-bold";
+      }
+      return false;
+    }
+
+    async function loadMediaFromSupabase() {
+      if (!supabaseClient) return;
+      try {
+        const { data, error } = await supabaseClient
+          .from("media_items")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          console.warn("Supabase fetch warning:", error.message);
+          return;
+        }
+        if (data && data.length > 0) {
+          const mapped = data.map(row => ({
+            id: row.id,
+            title: row.title,
+            category: row.category || "Movies",
+            genre: row.genre || "General",
+            rating: row.rating || 9.0,
+            year: row.year || new Date().getFullYear(),
+            uploader: row.uploader || "Site Owner",
+            views: row.views || 0,
+            downloads: row.downloads || 0,
+            comments: Array.isArray(row.comments) ? row.comments : [],
+            description: row.description || "",
+            poster: row.poster_url || "https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=600&q=80",
+            streamUrl: row.stream_url,
+            isCloud: true
+          }));
+          mediaDatabase = mapped;
+          localStorage.setItem("cinewave_media_items", JSON.stringify(mediaDatabase));
+          renderMediaCatalog();
+        }
+      } catch (e) {
+        console.error("Error loading from Supabase:", e);
+      }
+    }
 
     // --- MEDIA DATABASE ---
     const initialMediaDatabase = [
@@ -581,7 +682,8 @@
     }
 
     // --- INITIALIZATION ---
-    window.addEventListener("DOMContentLoaded", () => {
+    window.addEventListener("DOMContentLoaded", async () => {
+      initSupabase();
       applySiteSettingsToUI();
       renderUserNav();
       renderGenrePills();
@@ -589,6 +691,7 @@
       updateWatchlistBadge();
       setupAdminCheckListener();
       toggleUploadSourceInput('file');
+      await loadMediaFromSupabase();
     });
 
     function applySiteSettingsToUI() {
@@ -691,71 +794,131 @@
       document.getElementById("userUploadModal").classList.add("hidden");
     }
 
-    function handleUserUploadSubmit(e) {
-      e.preventDefault();
-      
-      const sourceType = document.querySelector('input[name="uploadSourceType"]:checked')?.value || 'file';
-      let mediaStreamUrl = "";
-      
-      if (sourceType === 'file') {
-        const fileInput = document.getElementById("userUploadFileInput");
-        if (!fileInput || !fileInput.files || !fileInput.files[0]) {
-          showToast("Please select a video or music file from your device!");
-          return;
-        }
-        mediaStreamUrl = URL.createObjectURL(fileInput.files[0]);
-      } else {
-        const urlInput = document.getElementById("userUploadStreamUrl");
-        mediaStreamUrl = urlInput ? urlInput.value.trim() : "";
-        if (!mediaStreamUrl) {
-          showToast("Please paste a valid video or audio URL!");
-          return;
-        }
-      }
+    async function uploadFileToSupabaseStorage(file, folder) {
+      const bucket = (siteSettings.supabaseBucket || "media").trim();
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const filePath = `${folder}/${Date.now()}_${safeName}`;
+      const { error } = await supabaseClient.storage
+        .from(bucket)
+        .upload(filePath, file, { cacheControl: "3600", upsert: false });
+      if (error) throw error;
+      const { data } = supabaseClient.storage.from(bucket).getPublicUrl(filePath);
+      return data.publicUrl;
+    }
 
-      // Poster Image (checks file first, then URL, then fallback image)
+    async function handleUserUploadSubmit(e) {
+      e.preventDefault();
+      const submitBtn = document.getElementById("publishSubmitBtn");
+      const sourceType = document.querySelector('input[name="uploadSourceType"]:checked')?.value || 'file';
       const posterFileInput = document.getElementById("userUploadPosterFile");
       const posterUrlInput = document.getElementById("userUploadPosterUrl");
-      let posterUrl = "https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=600&q=80";
-      
+
       if (posterFileInput && posterFileInput.files && posterFileInput.files[0]) {
         if (!posterFileInput.files[0].type.startsWith("image/")) {
           showToast("Poster must be an image file (JPG/PNG), not a video!");
           return;
         }
-        posterUrl = URL.createObjectURL(posterFileInput.files[0]);
-      } else if (posterUrlInput && posterUrlInput.value.trim()) {
-        posterUrl = posterUrlInput.value.trim();
       }
 
-      const categoryVal = document.getElementById("userUploadCategory")?.value || "Movies";
-      const newItem = {
-        id: Date.now(),
-        title: document.getElementById("userUploadTitle")?.value.trim() || "Untitled Media",
-        category: categoryVal,
-        genre: document.getElementById("userUploadGenre")?.value.trim() || "General",
-        rating: 9.0,
-        year: new Date().getFullYear(),
-        uploader: currentUser ? currentUser.name : "Site Owner",
-        views: 1,
-        downloads: 0,
-        comments: [],
-        description: document.getElementById("userUploadDesc")?.value.trim() || "",
-        poster: posterUrl,
-        streamUrl: mediaStreamUrl
-      };
-
-      mediaDatabase.unshift(newItem);
-      // Note: blob URLs are session-only, while web URLs persist across reloads
-      if (sourceType === 'url') {
-        localStorage.setItem("cinewave_media_items", JSON.stringify(mediaDatabase));
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Uploading & Publishing...`;
       }
-      
-      e.target.reset();
-      document.getElementById("fileNoticeText").innerText = "Click or drag & drop movie/music file here";
-      closeUserUploadModal();
-      renderMediaCatalog();
-      showToast(`"${newItem.title}" published successfully!`);
+
+      try {
+        let mediaStreamUrl = "";
+        if (sourceType === 'file') {
+          const fileInput = document.getElementById("userUploadFileInput");
+          if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+            showToast("Please select a video or music file from your device!");
+            return;
+          }
+          if (supabaseClient) {
+            showToast("Uploading file to Supabase Storage...");
+            mediaStreamUrl = await uploadFileToSupabaseStorage(fileInput.files[0], "videos");
+          } else {
+            mediaStreamUrl = URL.createObjectURL(fileInput.files[0]);
+          }
+        } else {
+          const urlInput = document.getElementById("userUploadStreamUrl");
+          mediaStreamUrl = urlInput ? urlInput.value.trim() : "";
+          if (!mediaStreamUrl) {
+            showToast("Please paste a valid video or audio URL!");
+            return;
+          }
+        }
+
+        let posterUrl = "https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=600&q=80";
+        if (posterFileInput && posterFileInput.files && posterFileInput.files[0]) {
+          if (supabaseClient) {
+            posterUrl = await uploadFileToSupabaseStorage(posterFileInput.files[0], "posters");
+          } else {
+            posterUrl = URL.createObjectURL(posterFileInput.files[0]);
+          }
+        } else if (posterUrlInput && posterUrlInput.value.trim()) {
+          posterUrl = posterUrlInput.value.trim();
+        }
+
+        const categoryVal = document.getElementById("userUploadCategory")?.value || "Movies";
+        const newItem = {
+          id: Date.now(),
+          title: document.getElementById("userUploadTitle")?.value.trim() || "Untitled Media",
+          category: categoryVal,
+          genre: document.getElementById("userUploadGenre")?.value.trim() || "General",
+          rating: 9.0,
+          year: new Date().getFullYear(),
+          uploader: currentUser ? currentUser.name : "Site Owner",
+          views: 1,
+          downloads: 0,
+          comments: [],
+          description: document.getElementById("userUploadDesc")?.value.trim() || "",
+          poster: posterUrl,
+          streamUrl: mediaStreamUrl
+        };
+
+        if (supabaseClient) {
+          const { data, error } = await supabaseClient
+            .from("media_items")
+            .insert([{
+              title: newItem.title,
+              category: newItem.category,
+              genre: newItem.genre,
+              rating: newItem.rating,
+              year: newItem.year,
+              uploader: newItem.uploader,
+              views: 1,
+              downloads: 0,
+              comments: [],
+              description: newItem.description,
+              poster_url: newItem.poster,
+              stream_url: newItem.streamUrl
+            }])
+            .select();
+
+          if (error) throw error;
+          if (data && data[0]) newItem.id = data[0].id;
+          newItem.isCloud = true;
+        }
+
+        mediaDatabase.unshift(newItem);
+        if (sourceType === 'url' || supabaseClient) {
+          localStorage.setItem("cinewave_media_items", JSON.stringify(mediaDatabase));
+        }
+
+        e.target.reset();
+        document.getElementById("fileNoticeText").innerText = "Click or drag & drop movie/music file here";
+        closeUserUploadModal();
+        renderMediaCatalog();
+        showToast(supabaseClient ? `"${newItem.title}" saved to Supabase Cloud!` : `"${newItem.title}" published locally!`);
+      } catch (err) {
+        console.error("Upload failed:", err);
+        showToast("Upload error: " + (err.message || "Check Supabase bucket/table permissions"));
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerText = "Publish to CineWave";
+        }
+      }
     }
 
     // --- ADMIN CONTROL PANEL LOGIC ---
@@ -840,6 +1003,10 @@
       document.getElementById("settingAdminOnlyUpload").checked = siteSettings.adminOnlyUpload;
       document.getElementById("settingAllowDownloads").checked = siteSettings.allowDownloads;
       document.getElementById("settingAllowComments").checked = siteSettings.allowComments;
+      document.getElementById("settingSupabaseUrl").value = siteSettings.supabaseUrl || "";
+      document.getElementById("settingSupabaseKey").value = siteSettings.supabaseKey || "";
+      document.getElementById("settingSupabaseBucket").value = siteSettings.supabaseBucket || "media";
+      initSupabase();
       document.getElementById("adminTotalMediaCount").innerText = mediaDatabase.length;
 
       const adminAcc = usersList.find(u => u.isAdmin) || currentUser;
@@ -850,7 +1017,7 @@
       }
     }
 
-    function saveSiteSettings(e) {
+    async function saveSiteSettings(e) {
       e.preventDefault();
       siteSettings = {
         siteName: document.getElementById("settingSiteName").value.trim() || "CineWave",
@@ -858,11 +1025,20 @@
         showBanner: document.getElementById("settingShowBanner").checked,
         adminOnlyUpload: document.getElementById("settingAdminOnlyUpload").checked,
         allowDownloads: document.getElementById("settingAllowDownloads").checked,
-        allowComments: document.getElementById("settingAllowComments").checked
+        allowComments: document.getElementById("settingAllowComments").checked,
+        supabaseUrl: document.getElementById("settingSupabaseUrl").value.trim(),
+        supabaseKey: document.getElementById("settingSupabaseKey").value.trim(),
+        supabaseBucket: document.getElementById("settingSupabaseBucket").value.trim() || "media"
       };
       localStorage.setItem("cinewave_site_settings", JSON.stringify(siteSettings));
+      const connected = initSupabase();
       applySiteSettingsToUI();
-      showToast("Website settings saved & applied!");
+      if (connected) {
+        await loadMediaFromSupabase();
+        showToast("Settings saved & Supabase Connected!");
+      } else {
+        showToast("Website settings saved!");
+      }
     }
 
     function renderAdminMediaManager() {
@@ -886,7 +1062,10 @@
       `).join('');
     }
 
-    function adminDeleteMedia(id) {
+    async function adminDeleteMedia(id) {
+      if (supabaseClient) {
+        await supabaseClient.from("media_items").delete().eq("id", id);
+      }
       mediaDatabase = mediaDatabase.filter(m => m.id !== id);
       localStorage.setItem("cinewave_media_items", JSON.stringify(mediaDatabase));
       renderAdminMediaManager();
