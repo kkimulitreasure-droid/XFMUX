@@ -823,12 +823,8 @@
         </span>
       </div>
 
-      <!-- Download as App & Owner Portal Shortcut -->
-      <div class="flex flex-col items-center gap-2.5 pt-1">
-        <button type="button" onclick="downloadCineWaveApp()" class="w-full py-2.5 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 hover:border-sky-500/60 text-zinc-100 font-bold text-xs flex items-center justify-center gap-2 shadow-lg transition-all">
-          <i class="fa-solid fa-download text-sky-400"></i>
-          <span>Download as App (CineWave_App.html)</span>
-        </button>
+      <!-- Owner Portal Shortcut -->
+      <div class="text-center">
         <button type="button" onclick="openAdminPortalModal()" class="text-[11px] text-amber-400/80 hover:text-amber-300 font-semibold inline-flex items-center gap-1.5 transition-colors">
           <i class="fa-solid fa-crown"></i> Owner Panel Login
         </button>
@@ -3513,48 +3509,6 @@
           </div>
         `;
       }).join("");
-    }
-
-  
-    // ================= DOWNLOAD AS STANDALONE APP (CineWave_App.html) =================
-    function downloadCineWaveApp() {
-      try {
-        // Clone the live document so we produce a clean standalone HTML snapshot
-        const docClone = document.documentElement.cloneNode(true);
-
-        // Reset transient modal/runtime states in the cloned DOM so the downloaded app starts cleanly
-        const authModalClone = docClone.querySelector("#authModal");
-        if (authModalClone) authModalClone.classList.add("hidden");
-
-        const toastClone = docClone.querySelector("#toastNotification");
-        if (toastClone) toastClone.remove();
-
-        // Pause/clear active video sources in clone if needed while keeping structural attributes intact
-        const fullHtml = "<!DOCTYPE html>\n" + docClone.outerHTML;
-        const blob = new Blob([fullHtml], { type: "text/html;charset=utf-8" });
-        const blobUrl = URL.createObjectURL(blob);
-
-        const a = document.createElement("a");
-        a.href = blobUrl;
-        a.download = "CineWave_App.html";
-        a.style.display = "none";
-        document.body.appendChild(a);
-        a.click();
-
-        setTimeout(() => {
-          document.body.removeChild(a);
-          URL.revokeObjectURL(blobUrl);
-        }, 1000);
-
-        if (typeof showToast === "function") {
-          showToast("Downloading CineWave_App.html...");
-        }
-      } catch (err) {
-        console.error("Failed to generate standalone CineWave_App.html:", err);
-        if (typeof showToast === "function") {
-          showToast("Could not generate app file: " + (err.message || "Error"));
-        }
-      }
     }
 
   </script>
