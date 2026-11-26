@@ -275,7 +275,7 @@
                   <button type="button" onclick="appendToComposer(' #CineWave')" class="hover:bg-sky-500/10 px-2 py-1 rounded-lg"><i class="fa-solid fa-hashtag mr-1"></i>Tag</button>
                   <button type="button" onclick="appendToComposer(' ðŸ”¥')" class="hover:bg-sky-500/10 px-2 py-1 rounded-lg">ðŸ”¥</button>
                 </div>
-                <button type="submit" class="px-5 py-1.5 rounded-full x-btn text-white font-extrabold text-xs shadow transition-all">
+                <button type="submit" id="socialPostSubmitBtn" class="px-5 py-1.5 rounded-full x-btn text-white font-extrabold text-xs shadow transition-all">
                   Post
                 </button>
               </div>
@@ -1327,6 +1327,78 @@
     let isReelMuted = false;
     let tempSocialFileUrl = null;
     let tempSocialFileType = null;
+    let tempSocialFileObj = null;
+
+    // --- PERMANENT INDEXEDDB MEDIA STORE (KEEPS UPLOADED VIDEOS WORKING ACROSS PAGE REFRESHES) ---
+    function openCineWaveMediaDB() {
+      return new Promise((resolve, reject) => {
+        if (!window.indexedDB) return reject(new Error("IndexedDB unavailable"));
+        const req = indexedDB.open("cinewave_local_media_db", 1);
+        req.onupgradeneeded = () => {
+          const db = req.result;
+          if (!db.objectStoreNames.contains("media_blobs")) {
+            db.createObjectStore("media_blobs");
+          }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function saveBlobToIndexedDB(key, fileOrBlob) {
+      const db = await openCineWaveMediaDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction("media_blobs", "readwrite");
+        tx.objectStore("media_blobs").put(fileOrBlob, key);
+        tx.oncomplete = () => resolve(`idb://${key}`);
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+
+    async function loadBlobUrlFromIndexedDB(idbRef) {
+      if (!idbRef || !idbRef.startsWith("idb://")) return idbRef;
+      const key = idbRef.slice(6);
+      try {
+        const db = await openCineWaveMediaDB();
+        return await new Promise((resolve) => {
+          const tx = db.transaction("media_blobs", "readonly");
+          const req = tx.objectStore("media_blobs").get(key);
+          req.onsuccess = () => {
+            if (req.result) {
+              resolve(URL.createObjectURL(req.result));
+            } else {
+              resolve("");
+            }
+          };
+          req.onerror = () => resolve("");
+        });
+      } catch (e) {
+        return "";
+      }
+    }
+
+    async function hydratePersistedSocialMedia() {
+      let updated = false;
+      for (const post of socialPosts) {
+        if (post.idbMediaKey) {
+          const freshBlobUrl = await loadBlobUrlFromIndexedDB(post.idbMediaKey);
+          if (freshBlobUrl) {
+            post.mediaUrl = freshBlobUrl;
+            updated = true;
+          }
+        } else if (post.mediaUrl && post.mediaUrl.startsWith("blob:")) {
+          // Clean up dead blob URLs from earlier sessions before persistence was added
+          post.mediaUrl = "";
+          post.mediaType = null;
+          updated = true;
+        }
+      }
+      if (updated) {
+        renderSocialAll();
+        if (primaryMode === "reels") renderReelStage();
+        if (primaryMode === "profile") renderIGProfileView();
+      }
+    }
 
     function saveSocialState() {
       localStorage.setItem("cinewave_social_posts", JSON.stringify(socialPosts));
@@ -1367,6 +1439,7 @@
       toggleUploadSourceInput('file');
       syncSocialComposerIdentity();
       renderSocialAll();
+      await hydratePersistedSocialMedia();
       await loadMediaFromSupabase();
       if (!currentUser && !isAdminAuthenticated) {
         openAuthModal("signin", true);
@@ -1707,8 +1780,9 @@
 
     function handleSocialFileChange(input) {
       if (input.files && input.files[0]) {
-        if (tempSocialFileUrl) URL.revokeObjectURL(tempSocialFileUrl);
+        if (tempSocialFileUrl && tempSocialFileUrl.startsWith("blob:")) URL.revokeObjectURL(tempSocialFileUrl);
         const f = input.files[0];
+        tempSocialFileObj = f;
         tempSocialFileUrl = URL.createObjectURL(f);
         tempSocialFileType = f.type.startsWith("video/") ? "video" : "image";
         document.getElementById("socialFileLabel").innerText = f.name;
@@ -1723,9 +1797,11 @@
         if (!tempSocialFileUrl) hideSocialAttachmentPreview();
         return;
       }
+      tempSocialFileObj = null;
       tempSocialFileUrl = null;
-      tempSocialFileType = /\.(mp4|webm|mov|m4v)(\?|$)/i.test(u) ? "video" : "image";
-      showSocialAttachmentPreview(u, tempSocialFileType);
+      const normalized = normalizeMediaUrl(u);
+      tempSocialFileType = /\.(mp4|webm|mov|m4v)(\?|$)/i.test(normalized) || /drive\.google\.com/i.test(u) ? "video" : "image";
+      showSocialAttachmentPreview(normalized, tempSocialFileType);
     }
 
     function showSocialAttachmentPreview(url, type) {
@@ -1752,6 +1828,7 @@
     }
 
     function clearSocialAttachment() {
+      tempSocialFileObj = null;
       tempSocialFileUrl = null;
       tempSocialFileType = null;
       document.getElementById("socialFileInput").value = "";
@@ -1767,41 +1844,88 @@
       ta.focus();
     }
 
-    function handleSocialPostCreate(e) {
+    async function handleSocialPostCreate(e) {
       e.preventDefault();
       if (!requireUserAccount("create a post")) return;
       const handle = dispHandle(document.getElementById("socialHandleInput").value);
       const text = document.getElementById("socialPostText").value.trim();
       const kind = document.getElementById("socialPostKind").value;
-      const urlVal = document.getElementById("socialUrlInput").value.trim();
+      const urlVal = normalizeMediaUrl(document.getElementById("socialUrlInput").value.trim());
       if (!text) return;
 
-      const mediaUrl = tempSocialFileUrl || urlVal || "";
-      const mediaType = mediaUrl ? (tempSocialFileType || (/\.(mp4|webm|mov|m4v)(\?|$)/i.test(mediaUrl) ? "video" : "image")) : null;
+      const submitBtn = document.getElementById("socialPostSubmitBtn");
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Posting...`;
+      }
 
-      socialPosts.unshift({
-        id: Date.now(),
-        name: currentUser ? currentUser.name : handle.replace(/^@/, ""),
-        handle,
-        verified: !!isAdminAuthenticated,
-        kind,
-        text,
-        mediaType,
-        mediaUrl,
-        likes: 1,
-        liked: true,
-        reposts: 0,
-        reposted: false,
-        bookmarked: false,
-        time: "Just now",
-        comments: []
-      });
+      try {
+        const postId = Date.now();
+        let mediaUrl = urlVal || "";
+        let idbMediaKey = null;
+        let mediaType = mediaUrl
+          ? (tempSocialFileType || (/\.(mp4|webm|mov|m4v)(\?|$)/i.test(mediaUrl) ? "video" : "image"))
+          : null;
 
-      saveSocialState();
-      document.getElementById("socialPostText").value = "";
-      clearSocialAttachment();
-      renderSocialAll();
-      showToast("Post published!");
+        if (tempSocialFileObj) {
+          const fileObj = tempSocialFileObj;
+          mediaType = fileObj.type.startsWith("video/") ? "video" : "image";
+          let uploadedToCloud = false;
+
+          // 1) Try uploading to Supabase Storage first so it persists across devices & refreshes
+          if (supabaseClient) {
+            try {
+              showToast(`Uploading ${mediaType} to cloud storage...`);
+              mediaUrl = await uploadFileToSupabaseStorage(fileObj, mediaType === "video" ? "social_videos" : "social_images");
+              uploadedToCloud = true;
+            } catch (cloudErr) {
+              console.warn("Supabase social upload failed, saving permanently in browser IndexedDB:", cloudErr);
+            }
+          }
+
+          // 2) Always save a copy in browser IndexedDB if not in Supabase so page reloads never lose the video!
+          if (!uploadedToCloud) {
+            try {
+              idbMediaKey = await saveBlobToIndexedDB(`post_${postId}`, fileObj);
+              mediaUrl = URL.createObjectURL(fileObj);
+            } catch (idbErr) {
+              console.warn("IndexedDB save failed:", idbErr);
+              mediaUrl = tempSocialFileUrl || URL.createObjectURL(fileObj);
+            }
+          }
+        }
+
+        socialPosts.unshift({
+          id: postId,
+          name: currentUser ? currentUser.name : handle.replace(/^@/, ""),
+          handle,
+          verified: !!isAdminAuthenticated,
+          kind,
+          text,
+          mediaType,
+          mediaUrl,
+          idbMediaKey,
+          likes: 1,
+          liked: true,
+          reposts: 0,
+          reposted: false,
+          bookmarked: false,
+          time: "Just now",
+          comments: []
+        });
+
+        saveSocialState();
+        document.getElementById("socialPostText").value = "";
+        clearSocialAttachment();
+        renderSocialAll();
+        if (primaryMode === "profile") renderIGProfileView();
+        showToast("Post published!");
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerText = "Post";
+        }
+      }
     }
 
     function toggleSocialLike(id) {
