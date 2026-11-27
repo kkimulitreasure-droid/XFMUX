@@ -4,15 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CineWave - Stream Movies & Series</title>
-  <!-- PWA Manifest & Mobile Web App Meta -->
-  <link id="pwaManifestLink" rel="manifest" href="/manifest.json" />
-  <meta name="theme-color" content="#000000" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="CineWave" />
-  <link id="appleTouchIconLink" rel="apple-touch-icon" href="/icon-192.png" />
-
   <!-- Supabase JS Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- Tailwind CSS -->
@@ -135,7 +126,7 @@
           </nav>
         </div>
 
-        <!-- Search & Actions -->
+        <!-- Search & Actions (Preserving Original Upload, Admin/Owner Panel, and User Nav) -->
         <div class="flex items-center gap-2">
           <!-- Search Bar -->
           <div class="relative w-32 sm:w-52">
@@ -143,19 +134,13 @@
             <input type="text" id="searchInput" onkeyup="handleSearch()" placeholder="Search posts & titles..." class="w-full bg-zinc-900 border border-zinc-800 rounded-full pl-9 pr-3.5 py-1.5 text-xs text-white placeholder-zinc-400 focus:outline-none focus:border-sky-500 transition-all" />
           </div>
 
-          <!-- PWA Install App Button -->
-          <button id="pwaInstallBtn" onclick="triggerPwaInstall()" class="hidden px-3 py-2 rounded-full bg-emerald-500/15 border border-emerald-500/40 hover:bg-emerald-500/25 text-emerald-300 text-xs font-bold flex items-center gap-1.5 transition-all" title="Install CineWave App">
-            <i class="fa-solid fa-download"></i>
-            <span class="hidden sm:inline">Install App</span>
-          </button>
-
-          <!-- Upload Button -->
+          <!-- Upload Button (Respects Admin Settings - Original Intact) -->
           <button id="topUploadBtn" onclick="openUserUploadModal()" class="px-3.5 py-2 rounded-full ig-btn hover:opacity-90 text-white text-xs font-bold flex items-center gap-1.5 shadow-lg transition-all">
             <i class="fa-solid fa-cloud-arrow-up"></i>
             <span class="hidden sm:inline">Upload</span>
           </button>
 
-          <!-- Owner Panel Button -->
+          <!-- Owner Panel Button (Visible to all; strictly locked so only owner kims_19 can log in) -->
           <button onclick="openAdminPortalModal()" id="adminToggleBtn" class="px-3 py-2 rounded-full bg-amber-500/15 border border-amber-500/40 hover:bg-amber-500/25 text-amber-300 text-xs font-bold flex items-center gap-1.5 transition-all">
             <i class="fa-solid fa-crown text-amber-400"></i>
             <span class="hidden md:inline" id="adminToggleText">Owner Panel</span>
@@ -180,4 +165,3469 @@
   </nav>
 
   <!-- ================= MAIN CONTENT ================= -->
-  <main id="userView" class="pt-20 sm:pt-24 max-w-7xl mx-auto px
+  <main id="userView" class="pt-20 sm:pt-24 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 w-full flex-1">
+    <!-- Announcement Banner (Controlled by Admin Settings - Original Intact) -->
+    <div id="siteBannerBox" class="hidden mb-5 bg-zinc-950 border border-sky-500/40 rounded-2xl px-5 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3 text-xs sm:text-sm text-zinc-200 font-medium">
+        <i class="fa-solid fa-bullhorn text-sky-400"></i>
+        <span id="siteBannerText">Welcome to CineWave!</span>
+      </div>
+    </div>
+
+    <!-- ==================== SECTION A: INSTAGRAM + X SOCIAL FEED ==================== -->
+    <section id="socialFeedView" class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-12">
+      <!-- Left Rail (X / Instagram Quick Menu on Desktop) -->
+      <aside class="hidden lg:block lg:col-span-3 space-y-3 sticky top-24 h-fit">
+        <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-3 space-y-1 text-xs font-bold">
+          <button onclick="setSocialFeedTab('for-you')" id="leftTabForYou" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-zinc-900 text-white">
+            <i class="fa-solid fa-fire text-sky-400 w-4 text-center"></i> For You Timeline
+          </button>
+          <button onclick="setSocialFeedTab('following')" id="leftTabFollowing" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-900 hover:text-white transition-all">
+            <span class="flex items-center gap-3"><i class="fa-solid fa-user-check text-emerald-400 w-4 text-center"></i> Following</span>
+            <span id="followingCountPill" class="px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 text-[10px]">0</span>
+          </button>
+          <button onclick="switchPrimaryMode('reels')" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-900 hover:text-white transition-all">
+            <i class="fa-solid fa-film text-rose-500 w-4 text-center"></i> Watch IG Reels
+          </button>
+          <button onclick="switchPrimaryMode('catalog'); switchCategory('All')" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-900 hover:text-white transition-all">
+            <i class="fa-solid fa-clapperboard text-amber-400 w-4 text-center"></i> Movies & Music Grid
+          </button>
+          <button onclick="openProfileView()" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:bg-zinc-900 hover:text-white transition-all">
+            <i class="fa-regular fa-id-badge text-pink-400 w-4 text-center"></i> My IG Profile & Videos
+          </button>
+          <button onclick="focusSocialComposer()" class="w-full mt-2 py-2.5 rounded-full x-btn text-white font-extrabold text-xs shadow">
+            <i class="fa-solid fa-feather-pointed mr-1"></i> Post Update
+          </button>
+          <button onclick="handleLogout()" class="w-full mt-2 flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-rose-600/15 border border-rose-500/30 text-rose-400 hover:bg-rose-600 hover:text-white transition-all">
+            <i class="fa-solid fa-right-from-bracket w-4 text-center"></i> Log Out
+          </button>
+        </div>
+
+        <!-- Trending Tags -->
+        <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4 space-y-2">
+          <h4 class="font-display font-extrabold text-xs uppercase tracking-wider text-zinc-400">Trending on CineWave</h4>
+          <div id="trendingTagsBox" class="space-y-1.5"></div>
+        </div>
+      </aside>
+
+      <!-- Center Column: For You / Following Sticky Bar + IG Stories + Post Composer + Feed -->
+      <div class="lg:col-span-6 max-w-[600px] w-full mx-auto space-y-4">
+        <!-- X-Style Sticky Feed Switcher -->
+        <div class="sticky top-16 sm:top-20 z-30 bg-black/90 backdrop-blur-md border border-zinc-800 rounded-2xl overflow-hidden grid grid-cols-2 text-center text-xs font-extrabold">
+          <button onclick="setSocialFeedTab('for-you')" id="topTabForYou" class="py-3 relative text-white hover:bg-zinc-900/70 transition-colors">
+            For You
+            <span id="barForYou" class="absolute bottom-0 inset-x-10 h-1 rounded-full bg-sky-500"></span>
+          </button>
+          <button onclick="setSocialFeedTab('following')" id="topTabFollowing" class="py-3 relative text-zinc-400 hover:bg-zinc-900/70 hover:text-white transition-colors">
+            Following (<span id="topFollowingCount">0</span>)
+            <span id="barFollowing" class="hidden absolute bottom-0 inset-x-10 h-1 rounded-full bg-sky-500"></span>
+          </button>
+        </div>
+
+        <!-- Instagram Stories Strip -->
+        <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-3">
+          <div class="flex items-center justify-between mb-2 px-1">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-zinc-400">Stories & Creators</span>
+            <button onclick="clearCreatorFilter()" id="clearCreatorFilterBtn" class="hidden text-[11px] font-bold text-sky-400 hover:underline">Show All</button>
+          </div>
+          <div id="igStoriesRow" class="flex items-center gap-3.5 overflow-x-auto no-scrollbar pb-1"></div>
+        </div>
+
+        <!-- X + Instagram Post Composer -->
+        <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4">
+          <form onsubmit="handleSocialPostCreate(event)" class="flex gap-3">
+            <div class="w-10 h-10 rounded-full ig-ring p-[2px] shrink-0 mt-0.5">
+              <div id="socialComposerAvatar" class="w-full h-full rounded-full bg-black flex items-center justify-center text-xs font-extrabold text-white">CW</div>
+            </div>
+            <div class="flex-1 space-y-2.5">
+              <div class="flex flex-wrap items-center gap-2">
+                <input type="text" id="socialHandleInput" required placeholder="@yourhandle" class="bg-zinc-900 border border-zinc-800 focus:border-sky-500 rounded-xl px-3 py-1 text-xs text-white font-semibold w-36 focus:outline-none" />
+                <select id="socialPostKind" class="bg-zinc-900 border border-zinc-800 focus:border-sky-500 rounded-xl px-2.5 py-1 text-xs text-zinc-300 focus:outline-none">
+                  <option value="post">X Post / IG Photo</option>
+                  <option value="reel">IG Reel / Clip</option>
+                </select>
+              </div>
+
+              <textarea id="socialPostText" rows="2" required placeholder="What's happening? Post an update, review, photo, or video clip..." class="w-full bg-transparent text-sm text-white placeholder-zinc-500 focus:outline-none resize-none leading-relaxed"></textarea>
+
+              <!-- Attach Photo / Video (File or URL) -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <label class="flex items-center gap-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl px-3 py-1.5 text-xs text-zinc-300 cursor-pointer truncate">
+                  <i class="fa-regular fa-image text-sky-400"></i>
+                  <span id="socialFileLabel" class="truncate">Attach Photo / Video</span>
+                  <input type="file" id="socialFileInput" accept="image/*,video/*" onchange="handleSocialFileChange(this)" class="hidden" />
+                </label>
+                <input type="url" id="socialUrlInput" oninput="handleSocialUrlChange(this.value)" placeholder="Or paste image/video URL..." class="bg-zinc-900 border border-zinc-800 focus:border-sky-500 rounded-xl px-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none" />
+              </div>
+
+              <!-- Preview -->
+              <div id="socialPreviewBox" class="hidden relative rounded-xl overflow-hidden border border-zinc-800 bg-black max-h-52">
+                <img id="socialPreviewImg" class="hidden w-full max-h-52 object-cover" />
+                <video id="socialPreviewVid" controls muted class="hidden w-full max-h-52 object-cover"></video>
+                <button type="button" onclick="clearSocialAttachment()" class="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/80 text-white hover:bg-rose-600 text-xs flex items-center justify-center">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+
+              <div class="flex items-center justify-between pt-2 border-t border-zinc-900">
+                <div class="flex items-center gap-2 text-sky-400 text-xs">
+                  <button type="button" onclick="document.getElementById('socialFileInput').click()" class="hover:bg-sky-500/10 px-2 py-1 rounded-lg"><i class="fa-regular fa-image mr-1"></i>Media</button>
+                  <button type="button" onclick="appendToComposer(' #CineWave')" class="hover:bg-sky-500/10 px-2 py-1 rounded-lg"><i class="fa-solid fa-hashtag mr-1"></i>Tag</button>
+                  <button type="button" onclick="appendToComposer(' 🔥')" class="hover:bg-sky-500/10 px-2 py-1 rounded-lg">🔥</button>
+                </div>
+                <button type="submit" id="socialPostSubmitBtn" class="px-5 py-1.5 rounded-full x-btn text-white font-extrabold text-xs shadow transition-all">
+                  Post
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Live Social Timeline -->
+        <div id="socialFeedContainer" class="space-y-4"></div>
+      </div>
+
+      <!-- Right Sidebar: Who to Follow + Quick Movie Picks -->
+      <aside class="hidden lg:block lg:col-span-3 space-y-4 sticky top-24 h-fit">
+        <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="font-display font-extrabold text-xs uppercase tracking-wider text-zinc-300">Who to follow</h4>
+            <button onclick="setSocialFeedTab('following')" class="text-[11px] font-bold text-sky-400 hover:underline">Following (<span id="sideFollowingCount">0</span>)</button>
+          </div>
+          <div id="whoToFollowContainer" class="space-y-3"></div>
+        </div>
+
+        <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="font-display font-extrabold text-xs uppercase tracking-wider text-zinc-300">Featured Movies & Music</h4>
+            <button onclick="switchPrimaryMode('catalog'); switchCategory('All')" class="text-[11px] font-bold text-rose-400 hover:underline">See All</button>
+          </div>
+          <div id="sidebarMediaPreview" class="space-y-2.5"></div>
+        </div>
+      </aside>
+    </section>
+
+    <!-- ==================== SECTION B: INSTAGRAM REELS VIEW ==================== -->
+    <section id="reelsView" class="hidden max-w-5xl mx-auto mb-12">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div class="lg:col-span-7 flex flex-col items-center">
+          <div class="relative w-full max-w-[390px] aspect-[9/16] max-h-[75vh] rounded-3xl overflow-hidden bg-zinc-950 border border-zinc-800 shadow-2xl">
+            <video id="reelPlayerVideo" playsinline loop onclick="toggleReelPlayPause()" class="w-full h-full object-cover cursor-pointer"></video>
+            <img id="reelPlayerImage" class="hidden w-full h-full object-cover" />
+
+            <div class="absolute top-0 inset-x-0 p-4 bg-gradient-to-b from-black/80 to-transparent flex items-center justify-between z-10">
+              <span class="px-2.5 py-0.5 rounded-md ig-btn text-white text-[10px] font-extrabold uppercase">REELS</span>
+              <span id="reelIndexLabel" class="text-xs font-bold text-white bg-black/50 px-2.5 py-0.5 rounded-full">1 / 1</span>
+              <button onclick="toggleReelMuteState()" class="w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center text-xs">
+                <i id="reelMuteGlyph" class="fa-solid fa-volume-high"></i>
+              </button>
+            </div>
+
+            <!-- Right Vertical Action Buttons -->
+            <div class="absolute right-3 bottom-24 z-20 flex flex-col items-center gap-4">
+              <button onclick="likeCurrentReel()" class="flex flex-col items-center gap-1">
+                <div id="reelHeartCircle" class="w-11 h-11 rounded-full bg-black/60 border border-white/15 flex items-center justify-center text-white">
+                  <i class="fa-solid fa-heart text-lg"></i>
+                </div>
+                <span id="reelLikeCount" class="text-[11px] font-bold text-white">0</span>
+              </button>
+              <button onclick="repostCurrentReel()" class="flex flex-col items-center gap-1">
+                <div class="w-11 h-11 rounded-full bg-black/60 border border-white/15 flex items-center justify-center text-white">
+                  <i class="fa-solid fa-retweet text-base"></i>
+                </div>
+                <span id="reelRepostCount" class="text-[11px] font-bold text-white">0</span>
+              </button>
+              <button onclick="document.getElementById('reelReplyInput').focus()" class="flex flex-col items-center gap-1">
+                <div class="w-11 h-11 rounded-full bg-black/60 border border-white/15 flex items-center justify-center text-white">
+                  <i class="fa-regular fa-comment text-lg"></i>
+                </div>
+                <span id="reelCommentCount" class="text-[11px] font-bold text-white">0</span>
+              </button>
+            </div>
+
+            <!-- Bottom Creator Info + Follow -->
+            <div class="absolute bottom-0 inset-x-0 p-4 pt-12 bg-gradient-to-t from-black/95 via-black/60 to-transparent z-10 pr-16 space-y-1.5">
+              <div class="flex items-center gap-2">
+                <span id="reelHandleLabel" class="text-xs font-extrabold text-white">@creator</span>
+                <button onclick="followCurrentReelCreator()" id="reelFollowBtn" class="px-3 py-0.5 rounded-full text-[11px] font-bold border border-white/70 text-white hover:bg-white hover:text-black transition-all">Follow</button>
+              </div>
+              <p id="reelTextLabel" class="text-xs text-zinc-200 line-clamp-2"></p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 mt-4">
+            <button onclick="stepReel(-1)" class="px-4 py-2 rounded-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-bold text-white"><i class="fa-solid fa-arrow-up mr-1"></i> Previous</button>
+            <button onclick="stepReel(1)" class="px-4 py-2 rounded-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-bold text-white">Next <i class="fa-solid fa-arrow-down ml-1"></i></button>
+          </div>
+        </div>
+
+        <!-- Reel Replies Panel -->
+        <div class="lg:col-span-5 bg-zinc-950 border border-zinc-800 rounded-2xl p-4 flex flex-col max-h-[75vh]">
+          <h3 class="font-display font-extrabold text-sm text-white border-b border-zinc-800 pb-3 mb-3">Reel Comments & Replies</h3>
+          <div id="reelCommentsBox" class="flex-1 overflow-y-auto space-y-2.5 mb-3 min-h-[200px]"></div>
+          <form onsubmit="submitReelReply(event)" class="flex gap-2 pt-2 border-t border-zinc-800">
+            <input type="text" id="reelReplyInput" required placeholder="Add a comment..." class="flex-1 bg-zinc-900 border border-zinc-700 rounded-full px-3.5 py-2 text-xs text-white focus:outline-none focus:border-sky-500" />
+            <button type="submit" class="px-4 py-2 rounded-full x-btn text-white text-xs font-bold">Reply</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SECTION C: ORIGINAL MOVIES & MUSIC CATALOG ==================== -->
+    <section id="catalogView" class="hidden">
+      <!-- Category Tabs on Mobile/Tablet -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-3 mb-3">
+        <button onclick="switchCategory('All')" class="px-3.5 py-1.5 rounded-full bg-zinc-900 hover:bg-zinc-800 text-xs font-bold text-white shrink-0">All Media</button>
+        <button onclick="switchCategory('Movies')" class="px-3.5 py-1.5 rounded-full bg-zinc-900 hover:bg-zinc-800 text-xs font-bold text-zinc-300 shrink-0">Movies</button>
+        <button onclick="switchCategory('TV Shows')" class="px-3.5 py-1.5 rounded-full bg-zinc-900 hover:bg-zinc-800 text-xs font-bold text-zinc-300 shrink-0">TV Series</button>
+        <button onclick="switchCategory('Music')" class="px-3.5 py-1.5 rounded-full bg-zinc-900 hover:bg-zinc-800 text-xs font-bold text-zinc-300 shrink-0">Music</button>
+        <button onclick="switchCategory('Watchlist')" class="px-3.5 py-1.5 rounded-full bg-zinc-900 hover:bg-zinc-800 text-xs font-bold text-zinc-300 shrink-0">My Watchlist</button>
+      </div>
+
+      <!-- Genre Filter Pills (Original Intact) -->
+      <div id="genrePillsContainer" class="flex items-center gap-2 overflow-x-auto pb-4 mb-6"></div>
+
+      <!-- Media Catalog Grid (Original Intact) -->
+      <div id="mediaGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-12"></div>
+    </section>
+  
+    <!-- ==================== SECTION D: INSTAGRAM PROFILE VIEW (AVATAR, BIO, EDIT PROFILE + POSTED VIDEOS) ==================== -->
+    <section id="profileView" class="hidden max-w-4xl mx-auto mb-12 space-y-6">
+      <!-- Profile Header Card -->
+      <div class="bg-zinc-950 border border-zinc-800 rounded-3xl p-5 sm:p-8">
+        <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+          <!-- IG Ring Avatar with Quick Camera Edit -->
+          <div class="relative shrink-0 group">
+            <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-full ig-ring p-[3px] shadow-xl">
+              <div id="igProfileAvatar" class="w-full h-full rounded-full bg-black overflow-hidden flex items-center justify-center text-2xl sm:text-3xl font-display font-extrabold text-white">
+                CW
+              </div>
+            </div>
+            <button id="quickAvatarCamBtn" type="button" onclick="triggerQuickAvatarUpload()" title="Change Profile Photo" class="hidden absolute bottom-0 right-0 w-8 h-8 rounded-full bg-sky-500 hover:bg-sky-400 border-2 border-black text-white flex items-center justify-center text-xs shadow-lg transition-all">
+              <i class="fa-solid fa-camera"></i>
+            </button>
+            <input type="file" id="quickAvatarFileInput" accept="image/*" onchange="handleQuickAvatarFileSelected(this)" class="hidden" />
+          </div>
+
+          <!-- Profile Info, Stats & Bio -->
+          <div class="flex-1 w-full text-center sm:text-left space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div class="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
+                  <h2 id="igProfileName" class="text-xl sm:text-2xl font-display font-extrabold text-white">CineWave Creator</h2>
+                  <span id="igProfileVerifiedBadge" class="hidden text-sky-400 text-sm" title="Owner / Verified"><i class="fa-solid fa-circle-check"></i></span>
+                  <span id="igProfileRoleBadge" class="hidden text-[10px] px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 font-bold uppercase">Creator</span>
+                </div>
+                <p id="igProfileHandle" class="text-xs sm:text-sm font-semibold text-zinc-400">@cinewave_fan</p>
+              </div>
+
+              <div class="flex items-center justify-center sm:justify-end gap-2 flex-wrap">
+                <select id="igProfileSwitcher" onchange="switchViewingProfile(this.value)" class="bg-zinc-900 border border-zinc-700 rounded-full px-3 py-1.5 text-xs font-semibold text-zinc-200 focus:outline-none focus:border-sky-500">
+                </select>
+                <button id="editOwnProfileBtn" onclick="toggleEditProfileBio()" class="px-4 py-1.5 rounded-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-white text-xs font-bold transition-all flex items-center gap-1.5">
+                  <i class="fa-solid fa-user-pen"></i> Edit Profile
+                </button>
+                <button id="profileFollowOtherBtn" onclick="toggleFollowViewedProfile()" class="hidden px-4 py-1.5 rounded-full bg-sky-500 hover:bg-sky-400 text-white text-xs font-bold transition-all">
+                  Follow
+                </button>
+                <button onclick="openQuickVideoPostModal()" class="px-4 py-1.5 rounded-full ig-btn hover:opacity-90 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow">
+                  <i class="fa-solid fa-video"></i> Post Video
+                </button>
+                <button onclick="handleLogout()" class="px-4 py-1.5 rounded-full bg-rose-600/20 border border-rose-500/40 hover:bg-rose-600 text-rose-300 hover:text-white text-xs font-bold transition-all flex items-center gap-1.5">
+                  <i class="fa-solid fa-right-from-bracket"></i> Log Out
+                </button>
+              </div>
+            </div>
+
+            <!-- IG Counts Row -->
+            <div class="flex items-center justify-center sm:justify-start gap-6 sm:gap-8 py-2 border-y border-zinc-900 text-xs sm:text-sm">
+              <div><span id="igStatPosts" class="font-extrabold text-white">0</span> <span class="text-zinc-400">posts</span></div>
+              <div><span id="igStatVideos" class="font-extrabold text-pink-400">0</span> <span class="text-zinc-400">videos</span></div>
+              <div><span id="igStatFollowing" class="font-extrabold text-white">0</span> <span class="text-zinc-400">following</span></div>
+              <div><span id="igStatFollowers" class="font-extrabold text-white">0</span> <span class="text-zinc-400">followers</span></div>
+            </div>
+
+            <!-- Bio Display -->
+            <div id="igBioDisplayBox" class="space-y-1">
+              <p id="igProfileBioText" class="text-xs sm:text-sm text-zinc-200 whitespace-pre-line leading-relaxed">
+                🎬 Movie & music lover on CineWave. Sharing clips, reels & reviews!
+              </p>
+              <div class="flex items-center justify-center sm:justify-start gap-4 flex-wrap text-xs">
+                <span id="igProfileLocationText" class="hidden text-zinc-400"></span>
+                <span id="igProfileWebsiteText" class="font-semibold text-sky-400"></span>
+              </div>
+            </div>
+
+            <!-- Inline Edit Full Profile Form (Avatar, Name, Bio, Location, Website) -->
+            <form id="igBioEditForm" onsubmit="saveProfileBio(event)" class="hidden bg-zinc-900/90 border border-zinc-800 rounded-2xl p-4 space-y-3 text-left">
+              <div class="flex items-center gap-3 pb-2 border-b border-zinc-800">
+                <img id="igEditAvatarPreview" src="" alt="Preview" class="hidden w-12 h-12 rounded-full object-cover border border-zinc-700" />
+                <div class="flex-1 space-y-1.5">
+                  <label class="block text-[11px] font-semibold text-zinc-300">Profile Picture (Upload Photo or Paste Image Link)</label>
+                  <div class="flex flex-col sm:flex-row gap-2">
+                    <label class="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs text-white font-semibold cursor-pointer inline-flex items-center gap-1.5 shrink-0">
+                      <i class="fa-solid fa-image text-sky-400"></i> Upload Photo
+                      <input type="file" id="igEditAvatarFile" accept="image/*" onchange="previewEditedAvatarFile(this)" class="hidden" />
+                    </label>
+                    <input type="url" id="igEditAvatarUrl" oninput="previewEditedAvatarUrl(this.value)" placeholder="Or paste profile photo URL..." class="flex-1 bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-sky-500" />
+                    <button type="button" onclick="clearEditedAvatar()" class="px-2.5 py-1.5 rounded-xl bg-zinc-800 hover:bg-rose-600/30 text-zinc-300 text-xs">Remove</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label class="block text-[11px] font-semibold text-zinc-400 mb-1">Display Name</label>
+                  <input type="text" id="igBioNameInput" required class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-sky-500" />
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-zinc-400 mb-1">Category / Role</label>
+                  <input type="text" id="igBioCategoryInput" placeholder="e.g. Video Creator, Artist" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-sky-500" />
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-zinc-400 mb-1">Location (Optional)</label>
+                  <input type="text" id="igBioLocationInput" placeholder="e.g. Kampala, UG" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-sky-500" />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-[11px] font-semibold text-zinc-400 mb-1">Website / Social Link (Optional)</label>
+                  <input type="text" id="igBioLinkInput" placeholder="https://..." class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-sky-500" />
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-zinc-400 mb-1">Account Handle</label>
+                  <input type="text" id="igBioHandleReadonly" disabled class="w-full bg-zinc-950/60 border border-zinc-800 rounded-xl px-3 py-1.5 text-xs text-zinc-400 cursor-not-allowed" />
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-[11px] font-semibold text-zinc-400 mb-1">Bio</label>
+                <textarea id="igBioTextarea" rows="3" maxlength="220" required placeholder="Write your Instagram-style bio..." class="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-sky-500 resize-none"></textarea>
+              </div>
+              <div class="flex items-center justify-end gap-2">
+                <button type="button" onclick="toggleEditProfileBio(false)" class="px-3.5 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold">Cancel</button>
+                <button type="submit" class="px-4 py-1.5 rounded-xl x-btn text-white text-xs font-bold">Save Profile</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- IG Profile Tabs: Videos (Default), All Posts, Saved -->
+      <div class="border-b border-zinc-800 flex items-center justify-center gap-8 text-xs font-extrabold uppercase tracking-wider">
+        <button onclick="switchProfileTab('videos')" id="igTabVideos" class="py-3 border-b-2 border-white text-white flex items-center gap-2 transition-colors">
+          <i class="fa-solid fa-clapperboard text-pink-400"></i> Videos (<span id="igTabVideosCount">0</span>)
+        </button>
+        <button onclick="switchProfileTab('posts')" id="igTabPosts" class="py-3 border-b-2 border-transparent text-zinc-400 hover:text-white flex items-center gap-2 transition-colors">
+          <i class="fa-solid fa-table-cells"></i> Posts (<span id="igTabPostsCount">0</span>)
+        </button>
+        <button onclick="switchProfileTab('saved')" id="igTabSaved" class="py-3 border-b-2 border-transparent text-zinc-400 hover:text-white flex items-center gap-2 transition-colors">
+          <i class="fa-regular fa-bookmark"></i> Saved
+        </button>
+      </div>
+
+      <!-- IG Media Grid -->
+      <div id="igProfileMediaGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4"></div>
+    </section>
+
+  </main>
+
+  <!-- ================= THREAD / REPLIES MODAL (X / IG COMMENTS) ================= -->
+  <div id="socialThreadModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="relative w-full max-w-xl bg-zinc-950 border border-zinc-800 rounded-2xl p-5 shadow-2xl my-8 max-h-[88vh] flex flex-col">
+      <button onclick="closeSocialThreadModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-zinc-900 hover:bg-zinc-800 text-zinc-300 flex items-center justify-center text-sm">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <h3 class="font-display font-extrabold text-base text-white border-b border-zinc-800 pb-3 mb-3">Post & Replies</h3>
+      <div id="threadOriginPost" class="bg-zinc-900/70 border border-zinc-800 rounded-xl p-3.5 mb-3 text-xs"></div>
+      <div id="threadCommentsContainer" class="flex-1 overflow-y-auto space-y-2.5 mb-3 pr-1"></div>
+      <form onsubmit="submitModalThreadReply(event)" class="flex gap-2 pt-3 border-t border-zinc-800">
+        <input type="text" id="modalThreadReplyInput" required placeholder="Post your reply..." class="flex-1 bg-zinc-900 border border-zinc-700 rounded-full px-4 py-2 text-xs text-white focus:outline-none focus:border-sky-500" />
+        <button type="submit" class="px-5 py-2 rounded-full x-btn text-white text-xs font-bold">Reply</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= VIDEO PLAYER & COMMENTS MODAL (100% ORIGINAL INTACT) ================= -->
+  <div id="playerModal" class="fixed inset-0 z-50 hidden bg-black/90 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+    <div class="relative w-full max-w-4xl bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl my-8">
+      <button onclick="closePlayerModal()" class="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-black/60 text-white hover:bg-rose-600 transition-all flex items-center justify-center text-lg">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="relative aspect-video bg-black flex items-center justify-center">
+        <video id="playerVideoSource" controls class="w-full h-full object-contain"></video>
+      </div>
+
+      <div class="p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 pb-4">
+          <div>
+            <h2 id="playerTitle" class="text-2xl font-display font-extrabold text-white">Movie Title</h2>
+            <div class="flex items-center gap-3 text-xs text-zinc-400 mt-1">
+              <span id="playerMeta">Category • Genre</span>
+              <span class="flex items-center gap-1 text-zinc-300"><i class="fa-solid fa-eye text-sky-400"></i> <span id="playerViews">0</span> views</span>
+              <span class="flex items-center gap-1 text-zinc-300"><i class="fa-solid fa-download text-emerald-400"></i> <span id="playerDownloads">0</span> downloads</span>
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-3">
+            <button id="downloadMediaBtn" onclick="triggerDownloadCurrentMedia()" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center gap-2 shadow-lg shadow-emerald-600/30 transition-all">
+              <i class="fa-solid fa-download"></i> Download File
+            </button>
+          </div>
+        </div>
+
+        <p id="playerDesc" class="text-sm text-zinc-300 mt-4 leading-relaxed"></p>
+        
+        <div class="mt-4 text-xs text-zinc-400 flex items-center gap-2">
+          <span>Uploaded by:</span>
+          <span id="playerUploader" class="font-bold text-sky-400 bg-sky-500/10 px-2.5 py-0.5 rounded-full border border-sky-500/20">Admin</span>
+        </div>
+
+        <!-- Comments Section -->
+        <div id="commentsSectionWrapper" class="mt-8 pt-6 border-t border-zinc-800">
+          <h3 class="text-lg font-display font-bold text-white flex items-center gap-2 mb-4">
+            <i class="fa-solid fa-comments text-sky-500"></i> Community Comments & Reviews (<span id="commentsCount">0</span>)
+          </h3>
+
+          <form onsubmit="handlePostComment(event)" class="mb-6 bg-zinc-900 p-4 rounded-xl border border-zinc-800">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="text-xs font-semibold text-zinc-400">Rating:</span>
+              <select id="commentRating" class="bg-zinc-950 text-amber-400 font-bold border border-zinc-700 rounded-lg px-2.5 py-1 text-xs focus:outline-none">
+                <option value="5">⭐⭐⭐⭐⭐ 5 Stars</option>
+                <option value="4">⭐⭐⭐⭐ 4 Stars</option>
+                <option value="3">⭐⭐⭐ 3 Stars</option>
+                <option value="2">⭐⭐ 2 Stars</option>
+                <option value="1">⭐ 1 Star</option>
+              </select>
+            </div>
+            <textarea id="commentText" rows="2" required placeholder="Write your review..." class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-sky-500 mb-3"></textarea>
+            <div class="flex justify-end">
+              <button type="submit" class="px-4 py-2 rounded-xl x-btn text-white font-semibold text-xs shadow-md transition-all flex items-center gap-1.5">
+                <i class="fa-solid fa-paper-plane"></i> Post Comment
+              </button>
+            </div>
+          </form>
+
+          <div id="commentsList" class="space-y-3 max-h-60 overflow-y-auto pr-1"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= UPLOAD MOVIE / MUSIC MODAL (100% ORIGINAL INTACT WITH GOOGLE DRIVE GATE) ================= -->
+  <div id="userUploadModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="relative w-full max-w-lg bg-zinc-950 border border-zinc-800 rounded-2xl p-6 sm:p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <button onclick="closeUserUploadModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-white text-lg">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="mb-5">
+        <h3 class="text-2xl font-display font-extrabold text-white">Upload Movie or Music</h3>
+        <p class="text-xs text-zinc-400 mt-1">Connect your Google Drive storage first so your uploaded files have a storage destination.</p>
+      </div>
+
+      <!-- REQUIRED GOOGLE DRIVE STORAGE CONNECTION BOX -->
+      <div id="driveStorageGateBox" class="mb-5 bg-zinc-900/95 border border-amber-500/40 rounded-2xl p-4 space-y-3">
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-blue-500/15 border border-blue-400/30 flex items-center justify-center text-blue-400 text-sm">
+              <i class="fa-brands fa-google-drive"></i>
+            </div>
+            <div>
+              <p class="text-xs font-bold text-white">Google Drive Storage <span class="text-rose-400">*Required</span></p>
+              <p id="driveStatusSubtext" class="text-[11px] text-amber-300/90">Not connected — connect your Google Drive before uploading</p>
+            </div>
+          </div>
+          <button type="button" id="disconnectDriveBtn" onclick="disconnectUserDriveStorage()" class="hidden px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-rose-600/30 text-zinc-300 hover:text-rose-300 text-[11px] font-semibold transition-all">
+            Disconnect
+          </button>
+        </div>
+
+        <div id="driveConnectFormFields" class="space-y-2.5 pt-1">
+          <div>
+            <label class="block text-[11px] font-semibold text-zinc-400 mb-1">Your Google Drive Folder / File Link or Storage ID *</label>
+            <input type="text" id="userDriveInput" placeholder="https://drive.google.com/drive/folders/... or Drive ID" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-400" />
+          </div>
+          <button type="button" onclick="connectUserDriveStorage()" class="w-full py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow">
+            <i class="fa-brands fa-google-drive"></i> Connect My Google Drive for Storage
+          </button>
+        </div>
+      </div>
+
+      <form onsubmit="handleUserUploadSubmit(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-zinc-400 mb-1">Title *</label>
+          <input type="text" id="userUploadTitle" required placeholder="e.g. Onslaught (VJ Junior)" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-sky-500" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">Category</label>
+            <select id="userUploadCategory" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500">
+              <option value="Movies">Movies</option>
+              <option value="Music">Music</option>
+              <option value="TV Shows">TV Shows</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">Genre</label>
+            <input type="text" id="userUploadGenre" required placeholder="Action / Sci-Fi / Afrobeat" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500" />
+          </div>
+        </div>
+
+        <!-- Local Device File vs Web URL Toggle -->
+        <div>
+          <label class="block text-xs font-semibold text-zinc-400 mb-1">Upload Source</label>
+          <div class="flex items-center gap-4 bg-zinc-900 p-1.5 rounded-xl border border-zinc-800 mb-2">
+            <label class="flex-1 text-center text-xs py-1.5 rounded-lg cursor-pointer transition-all font-semibold" id="lblSourceFile">
+              <input type="radio" name="uploadSourceType" value="file" checked onchange="toggleUploadSourceInput('file')" class="hidden" />
+              <i class="fa-solid fa-hard-drive mr-1"></i> Device File
+            </label>
+            <label class="flex-1 text-center text-xs py-1.5 rounded-lg cursor-pointer transition-all font-semibold text-zinc-400" id="lblSourceUrl">
+              <input type="radio" name="uploadSourceType" value="url" onchange="toggleUploadSourceInput('url')" class="hidden" />
+              <i class="fa-solid fa-link mr-1"></i> Web URL (Best for Live Site)
+            </label>
+          </div>
+        </div>
+
+        <!-- File Input (Device) -->
+        <div id="fileInputBox">
+          <label class="block text-xs font-semibold text-zinc-400 mb-1">Choose Video or Music File from Device *</label>
+          <div class="relative border-2 border-dashed border-zinc-700 hover:border-sky-500 rounded-xl p-4 text-center cursor-pointer bg-zinc-900/60 transition-colors">
+            <input type="file" id="userUploadFileInput" accept="video/*,audio/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="handleFileSelectNotice(this)" />
+            <i class="fa-solid fa-cloud-arrow-up text-2xl text-sky-400 mb-1"></i>
+            <p id="fileNoticeText" class="text-xs text-zinc-300 font-medium">Click or drag & drop movie/music file here</p>
+            <p id="uploadStorageHint" class="text-[10px] text-emerald-400/90 mt-1">Connect Supabase in Admin Panel to upload device files permanently to the cloud!</p>
+          </div>
+        </div>
+
+        <!-- Web URL Input -->
+        <div id="urlInputBox" class="hidden">
+          <label class="block text-xs font-semibold text-zinc-400 mb-1">Direct Video / Audio URL *</label>
+          <input type="url" id="userUploadStreamUrl" placeholder="https://example.com/movie.mp4" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-sky-500" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-zinc-400 mb-1">Poster Image (Optional - Image File or Image URL)</label>
+          <input type="file" id="userUploadPosterFile" accept="image/*" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-sky-500 mb-2" />
+          <input type="url" id="userUploadPosterUrl" placeholder="Or paste image link: https://..." class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-sky-500" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-zinc-400 mb-1">Description</label>
+          <textarea id="userUploadDesc" rows="2" required placeholder="Movie summary or details..." class="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-sky-500"></textarea>
+        </div>
+
+        <button type="submit" id="publishSubmitBtn" class="w-full py-3 rounded-xl ig-btn hover:opacity-90 text-white font-semibold text-sm shadow-lg transition-all">
+          Publish to CineWave
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= INSTAGRAM-STYLE AUTH WALL (GOOGLE + EMAIL LOGIN / SIGN UP) ================= -->
+  <div id="authModal" class="fixed inset-0 z-50 hidden bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 overflow-y-auto">
+    <div class="relative w-full max-w-sm my-auto space-y-3">
+      <!-- Main IG-Style Card -->
+      <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 sm:p-8 shadow-2xl relative">
+        <button id="closeAuthModalBtn" onclick="closeAuthModal()" class="hidden absolute top-4 right-4 text-zinc-400 hover:text-white text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+
+        <!-- Brand Header -->
+        <div class="text-center mb-5">
+          <div class="w-12 h-12 rounded-2xl ig-ring p-[2.5px] mx-auto mb-3 shadow-lg">
+            <div class="w-full h-full rounded-[13px] bg-black flex items-center justify-center">
+              <i class="fa-solid fa-play text-white text-base ml-0.5"></i>
+            </div>
+          </div>
+          <h3 class="text-2xl font-display font-extrabold tracking-tight text-white">Cine<span class="text-gradient">Wave</span></h3>
+          <p id="authGateSubtext" class="text-xs text-zinc-400 mt-1.5 leading-relaxed">Log in to see photos, reels, movies & music from creators — or create a new account.</p>
+        </div>
+
+        <!-- Continue with Google Button -->
+        <button type="button" onclick="openGoogleAccountPicker()" class="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-zinc-100 text-zinc-900 font-bold text-xs flex items-center justify-center gap-2.5 shadow transition-all">
+          <svg class="w-4 h-4" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24z"/>
+            <path fill="#FBBC05" d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14z"/>
+            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96z"/>
+          </svg>
+          <span>Continue with Google</span>
+        </button>
+
+        <!-- Inline Google Quick Account Prompt -->
+        <form id="googleQuickForm" onsubmit="handleGoogleSignInSubmit(event)" class="hidden mt-3 bg-zinc-900 border border-zinc-700 rounded-xl p-3.5 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-white flex items-center gap-1.5"><i class="fa-brands fa-google text-sky-400"></i> Sign in with Google</span>
+            <button type="button" onclick="document.getElementById('googleQuickForm').classList.add('hidden')" class="text-zinc-400 hover:text-white text-xs"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+          <input type="email" id="googleEmailInput" required placeholder="yourname@gmail.com" class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500" />
+          <input type="text" id="googleNameInput" required placeholder="Your Full Name" class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500" />
+          <button type="submit" class="w-full py-2 rounded-lg bg-sky-500 hover:bg-sky-400 text-white font-bold text-xs transition-all">
+            Continue as Google User
+          </button>
+        </form>
+
+        <!-- OR Divider -->
+        <div class="flex items-center gap-3 my-4">
+          <div class="h-px bg-zinc-800 flex-1"></div>
+          <span class="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider">OR</span>
+          <div class="h-px bg-zinc-800 flex-1"></div>
+        </div>
+
+        <!-- SIGN IN FORM (DEFAULT INSTAGRAM STYLE) -->
+        <form id="signInForm" onsubmit="handleSignInSubmit(event)" class="space-y-3">
+          <div>
+            <input type="text" id="signInUsername" required placeholder="Email address or username" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-sky-500" />
+          </div>
+          <div>
+            <input type="password" id="signInPassword" required placeholder="Password" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-sky-500" />
+          </div>
+          <button type="submit" class="w-full py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-white font-bold text-xs shadow-lg transition-all">
+            Log In
+          </button>
+        </form>
+
+        <!-- SIGN UP FORM (EMAIL + USERNAME + PASSWORD) -->
+        <form id="signUpForm" onsubmit="handleSignUpSubmit(event)" class="space-y-3 hidden">
+          <div>
+            <input type="email" id="signUpEmail" required placeholder="Email address (e.g. you@example.com)" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-sky-500" />
+          </div>
+          <div>
+            <input type="text" id="signUpFullName" required placeholder="Full Name" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-sky-500" />
+          </div>
+          <div>
+            <input type="text" id="signUpUsername" required placeholder="Username" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-sky-500" />
+          </div>
+          <div>
+            <input type="password" id="signUpPassword" required placeholder="Create Password" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-sky-500" />
+          </div>
+          <button type="submit" class="w-full py-2.5 rounded-xl ig-btn text-white font-bold text-xs shadow-lg transition-all">
+            Sign Up with Email
+          </button>
+        </form>
+      </div>
+
+      <!-- Bottom Switch Card (Like Instagram: "Don't have an account? Sign up" / "Have an account? Log in") -->
+      <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4 text-center text-xs text-zinc-300">
+        <span id="authSwitchPromptSignIn">
+          Don't have an account?
+          <button type="button" onclick="switchAuthTab('signup')" class="text-sky-400 hover:text-sky-300 font-extrabold ml-1">Sign up</button>
+        </span>
+        <span id="authSwitchPromptSignUp" class="hidden">
+          Have an account?
+          <button type="button" onclick="switchAuthTab('signin')" class="text-sky-400 hover:text-sky-300 font-extrabold ml-1">Log in</button>
+        </span>
+      </div>
+
+      <!-- Owner Portal Shortcut -->
+      <div class="text-center">
+        <button type="button" onclick="openAdminPortalModal()" class="text-[11px] text-amber-400/80 hover:text-amber-300 font-semibold inline-flex items-center gap-1.5 transition-colors">
+          <i class="fa-solid fa-crown"></i> Owner Panel Login
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= FULL ADMIN CONTROL PANEL & OWNER PANEL MODAL (100% ORIGINAL INTACT) ================= -->
+  <div id="adminPortalModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+    <div class="relative w-full max-w-3xl bg-zinc-950 border border-zinc-800 rounded-2xl p-6 sm:p-8 shadow-2xl my-8 max-h-[90vh] overflow-y-auto">
+      <button onclick="closeAdminPortalModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-white text-lg">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-11 h-11 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center text-xl">
+          <i class="fa-solid fa-crown"></i>
+        </div>
+        <div>
+          <h3 class="text-xl font-display font-bold text-white">Website Owner & Admin Control Center</h3>
+          <p class="text-xs text-zinc-400">Customize your website settings, manage movies, and control your admin account</p>
+        </div>
+      </div>
+
+      <!-- LOGIN VIEW (Shown when not authenticated as Admin) -->
+      <div id="adminLoginSection">
+        <div class="bg-amber-500/10 border border-amber-500/30 text-amber-300 p-3.5 rounded-xl text-xs mb-4">
+          <i class="fa-solid fa-lock mr-1"></i> Log in with your private Owner / Admin credentials to unlock all website controls.
+        </div>
+        <form onsubmit="handleAdminKeyLogin(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">Admin Username *</label>
+            <input type="text" id="adminPortalUser" required placeholder="Enter admin username" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">Admin Password / Passcode *</label>
+            <input type="password" id="adminPortalPass" required placeholder="••••••••" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400" />
+          </div>
+          <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:opacity-90 text-black font-extrabold text-xs shadow-lg shadow-amber-500/20 transition-all">
+            Unlock Admin Dashboard
+          </button>
+        </form>
+      </div>
+
+      <!-- AUTHENTICATED ADMIN DASHBOARD (Shown when logged in as Admin) -->
+      <div id="adminDashboardSection" class="hidden space-y-6">
+        <!-- Admin Tabs -->
+        <div class="flex flex-wrap gap-2 border-b border-zinc-800 pb-3">
+          <button onclick="switchAdminTab('settings')" id="admTab-settings" class="px-4 py-2 rounded-xl bg-amber-500 text-black font-bold text-xs transition-all">
+            <i class="fa-solid fa-gear mr-1"></i> Website Settings
+          </button>
+          <button onclick="switchAdminTab('movies')" id="admTab-movies" class="px-4 py-2 rounded-xl bg-zinc-900 text-zinc-300 hover:text-white font-semibold text-xs transition-all">
+            <i class="fa-solid fa-film mr-1"></i> Manage Movies & Music (<span id="adminTotalMediaCount">0</span>)
+          </button>
+          <button onclick="switchAdminTab('account')" id="admTab-account" class="px-4 py-2 rounded-xl bg-zinc-900 text-zinc-300 hover:text-white font-semibold text-xs transition-all">
+            <i class="fa-solid fa-user-lock mr-1"></i> My Admin Account
+          </button>
+        </div>
+
+        <!-- TAB 1: WEBSITE SETTINGS -->
+        <form id="admPanel-settings" onsubmit="saveSiteSettings(event)" class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-zinc-400 mb-1">Website Name</label>
+              <input type="text" id="settingSiteName" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3.5 py-2 text-xs text-white focus:border-amber-400 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-zinc-400 mb-1">Announcement Banner Text</label>
+              <input type="text" id="settingBannerText" placeholder="e.g. New VJ Junior Movies Added Daily!" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3.5 py-2 text-xs text-white focus:border-amber-400 focus:outline-none" />
+            </div>
+          </div>
+
+          <div class="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4 space-y-3">
+            <label class="flex items-center justify-between cursor-pointer">
+              <div>
+                <span class="text-xs font-bold text-white block">Show Announcement Banner</span>
+                <span class="text-[11px] text-zinc-400">Display a top banner message to all visitors</span>
+              </div>
+              <input type="checkbox" id="settingShowBanner" class="w-4 h-4 accent-amber-500" />
+            </label>
+
+            <label class="flex items-center justify-between cursor-pointer pt-2 border-t border-zinc-800">
+              <div>
+                <span class="text-xs font-bold text-white block">Admin-Only Uploads</span>
+                <span class="text-[11px] text-zinc-400">Only allow YOU (Admin) to upload movies & music (hide upload from regular visitors)</span>
+              </div>
+              <input type="checkbox" id="settingAdminOnlyUpload" class="w-4 h-4 accent-amber-500" />
+            </label>
+
+            <label class="flex items-center justify-between cursor-pointer pt-2 border-t border-zinc-800">
+              <div>
+                <span class="text-xs font-bold text-white block">Allow File Downloads</span>
+                <span class="text-[11px] text-zinc-400">Show the Download File button inside the video player</span>
+              </div>
+              <input type="checkbox" id="settingAllowDownloads" class="w-4 h-4 accent-amber-500" />
+            </label>
+
+            <label class="flex items-center justify-between cursor-pointer pt-2 border-t border-zinc-800">
+              <div>
+                <span class="text-xs font-bold text-white block">Enable Visitor Comments</span>
+                <span class="text-[11px] text-zinc-400">Allow users to post reviews and star ratings on movies</span>
+              </div>
+              <input type="checkbox" id="settingAllowComments" class="w-4 h-4 accent-amber-500" />
+            </label>
+          </div>
+
+          <!-- SUPABASE CLOUD DATABASE & STORAGE CONFIG -->
+          <div class="bg-zinc-900/90 border border-emerald-500/30 rounded-xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <i class="fa-solid fa-database text-emerald-400"></i>
+                <span class="text-xs font-bold text-white">Supabase Cloud Connection (Real Device File Uploads)</span>
+              </div>
+              <span id="supabaseStatusBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 font-bold">Not Connected</span>
+            </div>
+            <p class="text-[11px] text-zinc-400">Connect your Supabase project so movies & music uploaded from your device are stored in the cloud for all visitors.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] font-semibold text-zinc-400 mb-1">Supabase Project URL</label>
+                <input type="url" id="settingSupabaseUrl" placeholder="https://xyzcompany.supabase.co" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white focus:border-emerald-400 focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-zinc-400 mb-1">Supabase Anon Public Key</label>
+                <input type="password" id="settingSupabaseKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI..." class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white focus:border-emerald-400 focus:outline-none" />
+              </div>
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-zinc-400 mb-1">Storage Bucket Name</label>
+              <input type="text" id="settingSupabaseBucket" placeholder="1986" value="1986" class="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white focus:border-emerald-400 focus:outline-none" />
+            </div>
+          </div>
+
+          <button type="submit" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg transition-all">
+            <i class="fa-solid fa-floppy-disk mr-1"></i> Save Website & Supabase Settings
+          </button>
+        </form>
+
+        <!-- TAB 2: MANAGE MOVIES & MUSIC -->
+        <div id="admPanel-movies" class="hidden space-y-4">
+          <div class="flex items-center justify-between">
+            <p class="text-xs text-zinc-400">Upload new content or delete any movie/song from your website.</p>
+            <button onclick="closeAdminPortalModal(); openUserUploadModal();" class="px-3.5 py-2 rounded-xl x-btn text-white font-bold text-xs flex items-center gap-1.5">
+              <i class="fa-solid fa-plus"></i> Upload Movie / Song
+            </button>
+          </div>
+          <div id="adminMediaListContainer" class="space-y-2.5 max-h-72 overflow-y-auto pr-1"></div>
+        </div>
+
+        <!-- TAB 3: MY ADMIN ACCOUNT CREDENTIALS -->
+        <form id="admPanel-account" onsubmit="updateMyAdminCredentials(event)" class="hidden space-y-4">
+          <p class="text-xs text-zinc-400">Make this Admin account yours by setting your own Display Name, Username, and private Password.</p>
+          <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">Your Display Name (Shown as Uploader)</label>
+            <input type="text" id="myAdminDisplayName" required class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-2 text-xs text-white focus:border-amber-400 focus:outline-none" />
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-zinc-400 mb-1">Your Admin Username</label>
+              <input type="text" id="myAdminUsername" required class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-2 text-xs text-white focus:border-amber-400 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-zinc-400 mb-1">Your New Admin Password</label>
+              <div class="relative">
+                <input type="password" id="myAdminPassword" required class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-2 pr-10 text-xs text-white focus:border-amber-400 focus:outline-none" />
+                <button type="button" onclick="toggleAdminPassVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white text-xs" title="Show/Hide Password">
+                  <i id="adminPassEyeIcon" class="fa-solid fa-eye"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center justify-between pt-2">
+            <button type="button" onclick="handleLogoutAdminOnly()" class="px-4 py-2.5 rounded-xl bg-rose-600/20 border border-rose-500/40 text-rose-400 hover:bg-rose-600 hover:text-white font-bold text-xs transition-all">
+              Lock Admin Panel
+            </button>
+            <button type="submit" class="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs transition-all">
+              Update My Admin Account
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= JAVASCRIPT APPLICATION LOGIC ================= -->
+  <script>
+    // --- GOOGLE DRIVE STORAGE CONNECTION REQUIREMENT FOR UPLOADS (100% INTACT) ---
+    let userDriveStorage = JSON.parse(localStorage.getItem("cinewave_user_drive_storage") || "null");
+
+    function parseDriveLinkOrId(raw) {
+      const val = (raw || "").trim();
+      if (!val) return null;
+      const folderMatch = val.match(/folders\/([a-zA-Z0-9_-]+)/);
+      const fileMatch = val.match(/\/d\/([a-zA-Z0-9_-]+)/);
+      const idParamMatch = val.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+      const folderId = (folderMatch && folderMatch[1]) || (fileMatch && fileMatch[1]) || (idParamMatch && idParamMatch[1]) || val;
+      return {
+        rawInput: val,
+        folderId,
+        connectedAt: new Date().toISOString()
+      };
+    }
+
+    function refreshDriveStorageUI() {
+      const gateBox = document.getElementById("driveStorageGateBox");
+      const statusSub = document.getElementById("driveStatusSubtext");
+      const formFields = document.getElementById("driveConnectFormFields");
+      const discBtn = document.getElementById("disconnectDriveBtn");
+      const driveInp = document.getElementById("userDriveInput");
+
+      if (!gateBox) return;
+
+      if (userDriveStorage && userDriveStorage.folderId) {
+        gateBox.className = "mb-5 bg-emerald-950/30 border border-emerald-500/40 rounded-2xl p-4 space-y-2";
+        if (statusSub) {
+          statusSub.className = "text-[11px] text-emerald-400 font-medium truncate max-w-[230px] sm:max-w-[320px]";
+          statusSub.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> Connected: ${userDriveStorage.folderId}`;
+        }
+        if (formFields) formFields.classList.add("hidden");
+        if (discBtn) discBtn.classList.remove("hidden");
+      } else {
+        gateBox.className = "mb-5 bg-zinc-900/95 border border-amber-500/40 rounded-2xl p-4 space-y-3";
+        if (statusSub) {
+          statusSub.className = "text-[11px] text-amber-300/90";
+          statusSub.innerText = "Not connected — connect your Google Drive before uploading";
+        }
+        if (formFields) formFields.classList.remove("hidden");
+        if (discBtn) discBtn.classList.add("hidden");
+        if (driveInp && !driveInp.value && userDriveStorage && userDriveStorage.rawInput) {
+          driveInp.value = userDriveStorage.rawInput;
+        }
+      }
+    }
+
+    function connectUserDriveStorage() {
+      const inp = document.getElementById("userDriveInput");
+      const parsed = parseDriveLinkOrId(inp ? inp.value : "");
+      if (!parsed || parsed.folderId.length < 4) {
+        showToast("Please enter a valid Google Drive folder/file link or ID first!");
+        if (inp) inp.focus();
+        return;
+      }
+      userDriveStorage = parsed;
+      localStorage.setItem("cinewave_user_drive_storage", JSON.stringify(userDriveStorage));
+      refreshDriveStorageUI();
+      showToast("Google Drive connected as your upload storage!");
+    }
+
+    function disconnectUserDriveStorage() {
+      userDriveStorage = null;
+      localStorage.removeItem("cinewave_user_drive_storage");
+      const inp = document.getElementById("userDriveInput");
+      if (inp) inp.value = "";
+      refreshDriveStorageUI();
+      showToast("Google Drive disconnected.");
+    }
+
+    // --- SUPABASE DEFAULT CONFIG (100% INTACT) ---
+    const HARDCODED_SUPABASE_URL = "https://lggdzryghrfpjxsypjtc.supabase.co"; 
+    const HARDCODED_SUPABASE_ANON_KEY = "sb_publishable_NXu7MdwBQrC1ok34HG9N6g_v7qChF1c";
+    const HARDCODED_SUPABASE_BUCKET = "1986";
+
+    // --- SITE SETTINGS (SAVED IN LOCALSTORAGE - 100% INTACT) ---
+    const defaultSiteSettings = {
+      siteName: "CineWave",
+      bannerText: "Welcome to CineWave! Stream & Download Movies and Music.",
+      showBanner: false,
+      adminOnlyUpload: false,
+      allowDownloads: true,
+      allowComments: true,
+      supabaseUrl: HARDCODED_SUPABASE_URL,
+      supabaseKey: HARDCODED_SUPABASE_ANON_KEY,
+      supabaseBucket: HARDCODED_SUPABASE_BUCKET
+    };
+    let siteSettings = { ...defaultSiteSettings, ...(JSON.parse(localStorage.getItem("cinewave_site_settings")) || {}) };
+    if (HARDCODED_SUPABASE_URL && !siteSettings.supabaseUrl) siteSettings.supabaseUrl = HARDCODED_SUPABASE_URL;
+    if (HARDCODED_SUPABASE_ANON_KEY && !siteSettings.supabaseKey) siteSettings.supabaseKey = HARDCODED_SUPABASE_ANON_KEY;
+    if (!siteSettings.supabaseBucket || siteSettings.supabaseBucket === "media") siteSettings.supabaseBucket = HARDCODED_SUPABASE_BUCKET;
+
+    let supabaseClient = null;
+    function initSupabase() {
+      const url = (siteSettings.supabaseUrl || "").trim().replace(/\/rest\/v1\/?$/i, "");
+      const key = (siteSettings.supabaseKey || "").trim();
+      const badge = document.getElementById("supabaseStatusBadge");
+      if (url && key && window.supabase) {
+        try {
+          supabaseClient = window.supabase.createClient(url, key);
+          if (badge) {
+            badge.innerText = "Connected";
+            badge.className = "text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold";
+          }
+          return true;
+        } catch (err) {
+          console.error("Supabase init error:", err);
+        }
+      }
+      supabaseClient = null;
+      if (badge) {
+        badge.innerText = "Not Connected";
+        badge.className = "text-[10px] px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 font-bold";
+      }
+      return false;
+    }
+
+    async function loadMediaFromSupabase() {
+      if (!supabaseClient) return;
+      try {
+        const { data, error } = await supabaseClient
+          .from("media_items")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          console.warn("Supabase fetch warning:", error.message);
+          return;
+        }
+        if (data && data.length > 0) {
+          const mapped = data.map(row => ({
+            id: row.id,
+            title: row.title,
+            category: row.category || "Movies",
+            genre: row.genre || "General",
+            rating: row.rating || 9.0,
+            year: row.year || new Date().getFullYear(),
+            uploader: row.uploader || "Site Owner",
+            views: row.views || 0,
+            downloads: row.downloads || 0,
+            comments: Array.isArray(row.comments) ? row.comments : [],
+            description: row.description || "",
+            poster: row.poster_url || "https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=600&q=80",
+            streamUrl: row.stream_url,
+            isCloud: true
+          }));
+          mediaDatabase = mapped;
+          localStorage.setItem("cinewave_media_items", JSON.stringify(mediaDatabase));
+          renderMediaCatalog();
+          renderSidebarMediaPreview();
+        }
+      } catch (e) {
+        console.error("Error loading from Supabase:", e);
+      }
+    }
+
+    async function loadSocialPostsFromSupabase() {
+      if (!supabaseClient) return;
+      try {
+        const { data, error } = await supabaseClient
+          .from("social_posts")
+          .select("*")
+          .order("id", { ascending: false });
+
+        if (error) {
+          console.warn("Supabase social posts fetch warning:", error.message);
+          return;
+        }
+        if (data && data.length > 0) {
+          const remoteMapped = data.map(row => ({
+            id: row.id,
+            name: row.name || dispHandle(row.handle),
+            handle: dispHandle(row.handle),
+            verified: !!row.verified,
+            kind: row.kind || "post",
+            text: row.text || "",
+            mediaType: row.media_type || null,
+            mediaUrl: row.media_url || "",
+            idbMediaKey: row.idb_media_key || null,
+            likes: Number(row.likes) || 0,
+            liked: false,
+            reposts: Number(row.reposts) || 0,
+            reposted: false,
+            bookmarked: false,
+            time: row.time_label || "Recently",
+            comments: Array.isArray(row.comments) ? row.comments : [],
+            isCloud: true
+          }));
+
+          // Preserve local interaction flags (liked, reposted, bookmarked) and local-only posts
+          const localById = new Map(socialPosts.map(p => [p.id, p]));
+          const merged = remoteMapped.map(rem => {
+            const loc = localById.get(rem.id);
+            if (!loc) return rem;
+            return {
+              ...rem,
+              liked: !!loc.liked,
+              reposted: !!loc.reposted,
+              bookmarked: !!loc.bookmarked,
+              mediaUrl: rem.mediaUrl || loc.mediaUrl || "",
+              idbMediaKey: rem.idbMediaKey || loc.idbMediaKey || null,
+              comments: (rem.comments && rem.comments.length) ? rem.comments : (loc.comments || [])
+            };
+          });
+
+          const remoteIds = new Set(remoteMapped.map(r => r.id));
+          const localOnly = socialPosts.filter(p => !remoteIds.has(p.id));
+          socialPosts = [...localOnly, ...merged].sort((a, b) => (b.id || 0) - (a.id || 0));
+
+          saveSocialState();
+          renderSocialAll();
+          if (primaryMode === "reels") renderReelStage();
+          if (primaryMode === "profile") renderIGProfileView();
+        }
+      } catch (e) {
+        console.error("Error loading social posts from Supabase:", e);
+      }
+    }
+
+    async function syncSocialPostToSupabase(post) {
+      if (!supabaseClient || !post) return false;
+      try {
+        const isTransientMediaUrl = !post.mediaUrl
+          || post.mediaUrl.startsWith("blob:")
+          || post.mediaUrl.startsWith("data:")
+          || post.mediaUrl.startsWith("idb://");
+
+        const payload = {
+          id: post.id,
+          name: post.name || dispHandle(post.handle),
+          handle: dispHandle(post.handle),
+          verified: !!post.verified,
+          kind: post.kind || "post",
+          text: post.text || "",
+          media_type: post.mediaType || null,
+          media_url: isTransientMediaUrl ? "" : post.mediaUrl,
+          idb_media_key: post.idbMediaKey || null,
+          likes: Number(post.likes) || 0,
+          reposts: Number(post.reposts) || 0,
+          time_label: post.time || "Just now",
+          comments: Array.isArray(post.comments) ? post.comments : []
+        };
+
+        const { error } = await supabaseClient
+          .from("social_posts")
+          .upsert([payload], { onConflict: "id" });
+
+        if (error) {
+          console.warn("Supabase social post sync warning:", error.message);
+          return false;
+        }
+        post.isCloud = true;
+        return true;
+      } catch (e) {
+        console.error("Error syncing social post to Supabase:", e);
+        return false;
+      }
+    }
+
+    // --- MEDIA DATABASE (100% ORIGINAL INTACT) ---
+    const initialMediaDatabase = [
+      {
+        id: 1,
+        title: "Interstellar Odyssey",
+        category: "Movies",
+        genre: "Sci-Fi",
+        rating: 9.2,
+        year: 2024,
+        uploader: "Admin",
+        views: 14200,
+        downloads: 3820,
+        comments: [
+          { user: "Sarah K.", text: "Mind blowing visuals and sound design!", rating: 5, date: "2 days ago" }
+        ],
+        description: "A team of explorers travel through a newly discovered wormhole in space to ensure humanity's survival across distant star systems.",
+        poster: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=600&q=80",
+        streamUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"
+      },
+      {
+        id: 2,
+        title: "Cyberpunk Echoes",
+        category: "Music",
+        genre: "Music",
+        rating: 8.9,
+        year: 2025,
+        uploader: "Admin",
+        views: 9800,
+        downloads: 2450,
+        comments: [],
+        description: "High-energy synthwave beat with heavy bass, retro synthesizers, and energetic cyberpunk rhythms.",
+        poster: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=600&q=80",
+        streamUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
+      },
+      {
+        id: 3,
+        title: "The Silent Shadow",
+        category: "Movies",
+        genre: "Action",
+        rating: 8.7,
+        year: 2023,
+        uploader: "Admin",
+        views: 21300,
+        downloads: 6200,
+        comments: [],
+        description: "A retired assassin is forced back into action when an old rival resurfaces with a global conspiracy.",
+        poster: "https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=600&q=80",
+        streamUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"
+      }
+    ];
+
+    let mediaDatabase = JSON.parse(localStorage.getItem("cinewave_media_items")) || initialMediaDatabase;
+    const genresList = ["All Genres", "Sci-Fi", "Action", "Fantasy", "Thriller", "Drama", "Music", "Documentary"];
+
+    // --- ORIGINAL APPLICATION STATE ---
+    let currentCategory = "All";
+    let selectedGenre = "All Genres";
+    let searchQuery = "";
+    let watchlist = JSON.parse(localStorage.getItem("cinewave_watchlist") || "[]");
+    let usersList = JSON.parse(localStorage.getItem("cinewave_registered_users") || "[]");
+    let currentUser = JSON.parse(localStorage.getItem("cinewave_user") || "null");
+    let isAdminAuthenticated = sessionStorage.getItem("cinewave_admin_auth") === "true";
+    let activePlayingId = null;
+
+    // Enforce exclusive Owner account (kims_19 / 1986) — never displayed publicly
+    const OWNER_USERNAME = "kims_19";
+    const OWNER_PASSWORD = "1986";
+    usersList = usersList.filter(u => !u.isAdmin || u.username.toLowerCase() === OWNER_USERNAME);
+    let ownerRecord = usersList.find(u => u.username.toLowerCase() === OWNER_USERNAME);
+    if (!ownerRecord) {
+      ownerRecord = {
+        name: "Site Owner",
+        username: OWNER_USERNAME,
+        password: OWNER_PASSWORD,
+        isAdmin: true
+      };
+      usersList.push(ownerRecord);
+    } else {
+      ownerRecord.username = OWNER_USERNAME;
+      ownerRecord.password = OWNER_PASSWORD;
+      ownerRecord.isAdmin = true;
+    }
+    localStorage.setItem("cinewave_registered_users", JSON.stringify(usersList));
+
+    if (currentUser && currentUser.isAdmin && currentUser.username.toLowerCase() !== OWNER_USERNAME) {
+      currentUser = null;
+      isAdminAuthenticated = false;
+      localStorage.removeItem("cinewave_user");
+      sessionStorage.removeItem("cinewave_admin_auth");
+    }
+
+    // --- INSTAGRAM + X SOCIAL STATE ---
+    const initialSocialPosts = [
+      {
+        id: 5001,
+        name: "Site Owner",
+        handle: "@cinewave_official",
+        verified: true,
+        kind: "reel",
+        text: "Welcome to the new CineWave IG + X social feed! Post updates, follow creators, like, repost, bookmark, and watch vertical Reels — while keeping all Movies, Music & Owner Panel tools intact. #CineWave #Movies #Reels",
+        mediaType: "video",
+        mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+        likes: 342,
+        liked: false,
+        reposts: 78,
+        reposted: false,
+        bookmarked: false,
+        time: "1h ago",
+        comments: [
+          { id: 1, author: "@sarah_k", text: "Love having the Instagram + X feed right alongside our movies!", time: "40m ago" }
+        ]
+      },
+      {
+        id: 5002,
+        name: "Sci-Fi Vault",
+        handle: "@scifi_vault",
+        verified: true,
+        kind: "reel",
+        text: "Wormhole sequence from Interstellar Odyssey is pure cinema. Drop your rating below 👇🚀 #SciFi #Cinema",
+        mediaType: "video",
+        mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
+        likes: 619,
+        liked: false,
+        reposts: 121,
+        reposted: false,
+        bookmarked: false,
+        time: "3h ago",
+        comments: [
+          { id: 2, author: "@alex_vfx", text: "10/10 visuals every single time 🔥", time: "2h ago" }
+        ]
+      },
+      {
+        id: 5003,
+        name: "Synthwave Beats",
+        handle: "@synth_beats",
+        verified: false,
+        kind: "post",
+        text: "Streaming Cyberpunk Echoes tonight on CineWave Music. What track are you playing right now? 🎧✨ #Music #Synthwave",
+        mediaType: "image",
+        mediaUrl: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=900&q=80",
+        likes: 215,
+        liked: false,
+        reposts: 34,
+        reposted: false,
+        bookmarked: false,
+        time: "5h ago",
+        comments: []
+      }
+    ];
+
+    let socialPosts = JSON.parse(localStorage.getItem("cinewave_social_posts") || "null") || initialSocialPosts;
+    let socialFollowing = JSON.parse(localStorage.getItem("cinewave_social_following") || '["@cinewave_official"]');
+    let primaryMode = "feed"; // 'feed' | 'reels' | 'catalog'
+    let socialFeedTab = "for-you"; // 'for-you' | 'following'
+    let selectedCreatorHandle = null;
+    let activeThreadId = null;
+    let activeReelIdx = 0;
+    let isReelMuted = false;
+    let tempSocialFileUrl = null;
+    let tempSocialFileType = null;
+    let tempSocialFileObj = null;
+
+    // --- PERMANENT INDEXEDDB MEDIA STORE (KEEPS UPLOADED VIDEOS WORKING ACROSS PAGE REFRESHES) ---
+    function openCineWaveMediaDB() {
+      return new Promise((resolve, reject) => {
+        if (!window.indexedDB) return reject(new Error("IndexedDB unavailable"));
+        const req = indexedDB.open("cinewave_local_media_db", 1);
+        req.onupgradeneeded = () => {
+          const db = req.result;
+          if (!db.objectStoreNames.contains("media_blobs")) {
+            db.createObjectStore("media_blobs");
+          }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function saveBlobToIndexedDB(key, fileOrBlob) {
+      const db = await openCineWaveMediaDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction("media_blobs", "readwrite");
+        tx.objectStore("media_blobs").put(fileOrBlob, key);
+        tx.oncomplete = () => resolve(`idb://${key}`);
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+
+    async function loadBlobUrlFromIndexedDB(idbRef) {
+      if (!idbRef || !idbRef.startsWith("idb://")) return idbRef;
+      const key = idbRef.slice(6);
+      try {
+        const db = await openCineWaveMediaDB();
+        return await new Promise((resolve) => {
+          const tx = db.transaction("media_blobs", "readonly");
+          const req = tx.objectStore("media_blobs").get(key);
+          req.onsuccess = () => {
+            if (req.result) {
+              resolve(URL.createObjectURL(req.result));
+            } else {
+              resolve("");
+            }
+          };
+          req.onerror = () => resolve("");
+        });
+      } catch (e) {
+        return "";
+      }
+    }
+
+    async function hydratePersistedSocialMedia() {
+      let updated = false;
+      for (const post of socialPosts) {
+        if (post.idbMediaKey) {
+          const freshBlobUrl = await loadBlobUrlFromIndexedDB(post.idbMediaKey);
+          if (freshBlobUrl) {
+            post.mediaUrl = freshBlobUrl;
+            updated = true;
+          }
+        } else if (post.mediaUrl && post.mediaUrl.startsWith("blob:")) {
+          // Clean up dead blob URLs from earlier sessions before persistence was added
+          post.mediaUrl = "";
+          post.mediaType = null;
+          updated = true;
+        }
+      }
+      if (updated) {
+        renderSocialAll();
+        if (primaryMode === "reels") renderReelStage();
+        if (primaryMode === "profile") renderIGProfileView();
+      }
+    }
+
+    function saveSocialState() {
+      localStorage.setItem("cinewave_social_posts", JSON.stringify(socialPosts));
+      localStorage.setItem("cinewave_social_following", JSON.stringify(socialFollowing));
+    }
+
+    function normHandle(h) {
+      const s = (h || "@user").trim();
+      return s.startsWith("@") ? s.toLowerCase() : `@${s.toLowerCase()}`;
+    }
+
+    function dispHandle(h) {
+      const s = (h || "@user").trim();
+      return s.startsWith("@") ? s : `@${s}`;
+    }
+
+    function isFollowingHandle(h) {
+      return socialFollowing.includes(normHandle(h));
+    }
+
+    // --- MANDATORY INSTAGRAM-STYLE LOGIN / SIGN-UP GATE FOR ALL ACTIONS ---
+    function requireUserAccount(actionLabel = "continue") {
+      if (currentUser || isAdminAuthenticated) return true;
+      showToast(`Log in or create an account to ${actionLabel}`);
+      openAuthModal("signin", true);
+      return false;
+    }
+
+    // --- INITIALIZATION ---
+    window.addEventListener("DOMContentLoaded", async () => {
+      initSupabase();
+      applySiteSettingsToUI();
+      renderUserNav();
+      renderGenrePills();
+      renderMediaCatalog();
+      renderSidebarMediaPreview();
+      updateWatchlistBadge();
+      toggleUploadSourceInput('file');
+      syncSocialComposerIdentity();
+      renderSocialAll();
+      await hydratePersistedSocialMedia();
+      await loadMediaFromSupabase();
+      await loadSocialPostsFromSupabase();
+      await hydratePersistedSocialMedia();
+      if (!currentUser && !isAdminAuthenticated) {
+        openAuthModal("signin", true);
+      }
+    });
+
+    function switchPrimaryMode(mode) {
+      primaryMode = mode;
+      document.getElementById("socialFeedView")?.classList.toggle("hidden", mode !== "feed");
+      document.getElementById("reelsView")?.classList.toggle("hidden", mode !== "reels");
+      document.getElementById("catalogView")?.classList.toggle("hidden", mode !== "catalog");
+      document.getElementById("profileView")?.classList.toggle("hidden", mode !== "profile");
+
+      const rVid = document.getElementById("reelPlayerVideo");
+      if (rVid && mode !== "reels") rVid.pause();
+
+      const feedBtn = document.getElementById("mode-feed");
+      const reelsBtn = document.getElementById("mode-reels");
+      if (feedBtn) {
+        feedBtn.className = mode === "feed"
+          ? "px-3.5 py-2 rounded-full bg-zinc-900 text-white font-bold transition-all flex items-center gap-1.5"
+          : "px-3.5 py-2 rounded-full hover:text-white hover:bg-zinc-900 transition-all flex items-center gap-1.5";
+      }
+      if (reelsBtn) {
+        reelsBtn.className = mode === "reels"
+          ? "px-3.5 py-2 rounded-full bg-zinc-900 text-white font-bold transition-all flex items-center gap-1.5"
+          : "px-3.5 py-2 rounded-full hover:text-white hover:bg-zinc-900 transition-all flex items-center gap-1.5";
+      }
+
+      const profBtn = document.getElementById("mode-profile");
+      if (profBtn) {
+        profBtn.className = mode === "profile"
+          ? "px-3.5 py-2 rounded-full bg-zinc-900 text-white font-bold transition-all flex items-center gap-1.5"
+          : "px-3.5 py-2 rounded-full hover:text-white hover:bg-zinc-900 transition-all flex items-center gap-1.5";
+      }
+
+      if (mode === "feed") renderSocialAll();
+      if (mode === "reels") renderReelStage();
+      if (mode === "catalog") renderMediaCatalog();
+      if (mode === "profile") renderIGProfileView();
+    }
+
+    function setSocialFeedTab(tab) {
+      socialFeedTab = tab;
+      if (primaryMode !== "feed") switchPrimaryMode("feed");
+      const isF = tab === "following";
+      document.getElementById("topTabForYou")?.classList.toggle("text-white", !isF);
+      document.getElementById("topTabForYou")?.classList.toggle("text-zinc-400", isF);
+      document.getElementById("barForYou")?.classList.toggle("hidden", isF);
+
+      document.getElementById("topTabFollowing")?.classList.toggle("text-white", isF);
+      document.getElementById("topTabFollowing")?.classList.toggle("text-zinc-400", !isF);
+      document.getElementById("barFollowing")?.classList.toggle("hidden", !isF);
+
+      document.getElementById("leftTabForYou")?.classList.toggle("bg-zinc-900", !isF);
+      document.getElementById("leftTabForYou")?.classList.toggle("text-white", !isF);
+      document.getElementById("leftTabFollowing")?.classList.toggle("bg-zinc-900", isF);
+      document.getElementById("leftTabFollowing")?.classList.toggle("text-white", isF);
+      renderSocialTimeline();
+    }
+
+    function focusSocialComposer() {
+      if (!requireUserAccount("create a post")) return;
+      switchPrimaryMode("feed");
+      setTimeout(() => {
+        const ta = document.getElementById("socialPostText");
+        if (ta) {
+          ta.scrollIntoView({ behavior: "smooth", block: "center" });
+          ta.focus();
+        }
+      }, 60);
+    }
+
+    function syncSocialComposerIdentity() {
+      const inp = document.getElementById("socialHandleInput");
+      const av = document.getElementById("socialComposerAvatar");
+      if (inp) {
+        inp.value = currentUser ? dispHandle(currentUser.username) : "@guest";
+        inp.readOnly = true;
+      }
+      if (av) {
+        const prof = currentUser ? getProfileData(dispHandle(currentUser.username)) : null;
+        if (prof && prof.avatarUrl) {
+          av.innerHTML = `<img src="${prof.avatarUrl}" class="w-full h-full rounded-full object-cover" />`;
+        } else {
+          av.innerText = (currentUser ? currentUser.name : "CW").slice(0, 2).toUpperCase();
+        }
+      }
+    }
+
+    function renderSocialAll() {
+      const c = socialFollowing.length;
+      ["followingCountPill", "topFollowingCount", "sideFollowingCount"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = c;
+      });
+      renderIGStories();
+      renderWhoToFollow();
+      renderTrendingTags();
+      renderSocialTimeline();
+    }
+
+    function getUniqueCreators() {
+      const map = new Map();
+      socialPosts.forEach(p => {
+        const key = normHandle(p.handle);
+        if (!map.has(key)) {
+          map.set(key, {
+            name: p.name || dispHandle(p.handle),
+            handle: dispHandle(p.handle),
+            verified: !!p.verified
+          });
+        }
+      });
+      return Array.from(map.values());
+    }
+
+    function renderIGStories() {
+      const row = document.getElementById("igStoriesRow");
+      const clr = document.getElementById("clearCreatorFilterBtn");
+      if (!row) return;
+      if (clr) clr.classList.toggle("hidden", !selectedCreatorHandle);
+
+      row.innerHTML = getUniqueCreators().map(c => {
+        const initials = c.handle.replace(/^@/, "").slice(0, 2).toUpperCase();
+        const active = selectedCreatorHandle && normHandle(selectedCreatorHandle) === normHandle(c.handle);
+        const f = isFollowingHandle(c.handle);
+        return `
+          <button onclick="toggleCreatorStoryFilter('${c.handle}')" class="flex flex-col items-center gap-1 shrink-0 group">
+            <div class="w-14 h-14 rounded-full ${active ? 'bg-sky-400' : 'ig-ring'} p-[2.5px] transition-transform group-hover:scale-105">
+              <div class="w-full h-full rounded-full bg-black flex items-center justify-center text-xs font-extrabold text-white relative">
+                ${initials}
+                ${f ? '<span class="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-sky-500 border-2 border-black flex items-center justify-center text-[8px] text-white"><i class="fa-solid fa-check"></i></span>' : ''}
+              </div>
+            </div>
+            <span class="text-[11px] max-w-[74px] truncate ${active ? 'text-sky-400 font-bold' : 'text-zinc-300'}">${c.handle}</span>
+          </button>
+        `;
+      }).join("");
+    }
+
+    function toggleCreatorStoryFilter(h) {
+      selectedCreatorHandle = (selectedCreatorHandle && normHandle(selectedCreatorHandle) === normHandle(h)) ? null : h;
+      renderSocialAll();
+    }
+
+    function clearCreatorFilter() {
+      selectedCreatorHandle = null;
+      renderSocialAll();
+    }
+
+    function renderWhoToFollow() {
+      const box = document.getElementById("whoToFollowContainer");
+      if (!box) return;
+      box.innerHTML = getUniqueCreators().map(c => {
+        const f = isFollowingHandle(c.handle);
+        return `
+          <div class="flex items-center justify-between gap-2">
+            <div class="min-w-0">
+              <p class="text-xs font-bold text-white truncate flex items-center gap-1">
+                ${c.name}
+                ${c.verified ? '<i class="fa-solid fa-circle-check text-sky-400 text-[11px]"></i>' : ''}
+              </p>
+              <p class="text-[11px] text-zinc-400 truncate">${c.handle}</p>
+            </div>
+            <button onclick="toggleFollowCreator('${c.handle}')" class="px-3.5 py-1 rounded-full text-xs font-extrabold transition-all shrink-0 ${f ? 'bg-zinc-900 text-white border border-zinc-700 hover:border-rose-500 hover:text-rose-400' : 'bg-white text-black hover:bg-zinc-200'}">
+              ${f ? 'Following' : 'Follow'}
+            </button>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderTrendingTags() {
+      const box = document.getElementById("trendingTagsBox");
+      if (!box) return;
+      const tags = ["#CineWave", "#Reels", "#SciFi", "#Movies", "#Music"];
+      box.innerHTML = tags.map(tag => `
+        <button onclick="searchByTag('${tag}')" class="w-full text-left px-2 py-1.5 rounded-xl hover:bg-zinc-900 transition-colors flex items-center justify-between">
+          <span class="text-xs font-bold text-sky-400">${tag}</span>
+          <span class="text-[10px] text-zinc-500">Trending</span>
+        </button>
+      `).join("");
+    }
+
+    function searchByTag(tag) {
+      const inp = document.getElementById("searchInput");
+      if (inp) {
+        inp.value = tag;
+        handleSearch();
+      }
+    }
+
+    function toggleFollowCreator(handle) {
+      if (!requireUserAccount("follow creators")) return;
+      const key = normHandle(handle);
+      const idx = socialFollowing.indexOf(key);
+      if (idx > -1) {
+        socialFollowing.splice(idx, 1);
+        showToast(`Unfollowed ${dispHandle(handle)}`);
+      } else {
+        socialFollowing.push(key);
+        showToast(`Following ${dispHandle(handle)}`);
+      }
+      saveSocialState();
+      renderSocialAll();
+      if (primaryMode === "reels") renderReelStage();
+    }
+
+    function formatPostRichText(txt) {
+      const esc = (txt || "").replace(/&/g, "&").replace(/</g, "<").replace(/>/g, ">");
+      return esc
+        .replace(/(#[a-zA-Z0-9_]+)/g, `<button onclick="searchByTag('$1')" class="text-sky-400 hover:underline font-semibold">$1</button>`)
+        .replace(/(@[a-zA-Z0-9_]+)/g, `<button onclick="toggleCreatorStoryFilter('$1')" class="text-sky-400 hover:underline font-semibold">$1</button>`);
+    }
+
+    function renderSocialTimeline() {
+      const container = document.getElementById("socialFeedContainer");
+      if (!container) return;
+
+      let list = [...socialPosts];
+      if (socialFeedTab === "following") {
+        list = list.filter(p => isFollowingHandle(p.handle));
+      }
+      if (selectedCreatorHandle) {
+        list = list.filter(p => normHandle(p.handle) === normHandle(selectedCreatorHandle));
+      }
+      if (searchQuery) {
+        list = list.filter(p =>
+          (p.text || "").toLowerCase().includes(searchQuery) ||
+          (p.handle || "").toLowerCase().includes(searchQuery) ||
+          (p.name || "").toLowerCase().includes(searchQuery)
+        );
+      }
+
+      if (!list.length) {
+        container.innerHTML = `
+          <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-10 text-center space-y-2.5">
+            <p class="text-sm font-bold text-white">No posts found</p>
+            <p class="text-xs text-zinc-400">Follow more creators, clear search filters, or share a new post above.</p>
+            <button onclick="selectedCreatorHandle=null; searchQuery=''; document.getElementById('searchInput').value=''; setSocialFeedTab('for-you');" class="px-4 py-2 rounded-full x-btn text-white text-xs font-bold">Reset Feed</button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = list.map(post => {
+        const f = isFollowingHandle(post.handle);
+        const initials = (post.handle || "CW").replace(/^@/, "").slice(0, 2).toUpperCase();
+        const replies = post.comments || [];
+
+        return `
+          <article class="bg-zinc-950 border border-zinc-800 hover:border-zinc-700 rounded-2xl p-4 transition-colors space-y-3">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-10 h-10 rounded-full ig-ring p-[2px] shrink-0">
+                  <div class="w-full h-full rounded-full bg-black flex items-center justify-center text-xs font-extrabold text-white">${initials}</div>
+                </div>
+                <div class="min-w-0">
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="text-xs sm:text-sm font-bold text-white truncate">${post.name || dispHandle(post.handle)}</span>
+                    ${post.verified ? '<i class="fa-solid fa-circle-check text-sky-400 text-xs"></i>' : ''}
+                    <button type="button" onclick="openProfileView('${dispHandle(post.handle)}')" class="text-xs text-zinc-400 hover:text-sky-400 truncate transition-colors">${dispHandle(post.handle)}</button>
+                    <span class="text-zinc-600 text-xs">•</span>
+                    <span class="text-[11px] text-zinc-500">${post.time || "Just now"}</span>
+                  </div>
+                </div>
+              </div>
+
+              <button onclick="toggleFollowCreator('${post.handle}')" class="px-3.5 py-1 rounded-full text-xs font-extrabold transition-all shrink-0 ${f ? 'bg-zinc-900 text-zinc-200 border border-zinc-700 hover:border-rose-500 hover:text-rose-400' : 'bg-sky-500 hover:bg-sky-400 text-white'}">
+                ${f ? 'Following' : 'Follow'}
+              </button>
+            </div>
+
+            <p class="text-sm text-zinc-100 leading-relaxed whitespace-pre-line sm:pl-12">${formatPostRichText(post.text)}</p>
+
+            ${post.mediaUrl ? `
+              <div ondblclick="doubleTapLikePost(${post.id})" class="relative sm:ml-12 rounded-2xl overflow-hidden border border-zinc-800 bg-black cursor-pointer select-none">
+                ${post.mediaType === "image"
+                  ? `<img src="${post.mediaUrl}" alt="Post attachment" class="w-full max-h-[460px] object-cover" />`
+                  : `<video src="${post.mediaUrl}" controls playsinline loop class="w-full max-h-[460px] object-cover"></video>`
+                }
+                <div id="heart-burst-${post.id}" class="hidden pointer-events-none absolute inset-0 flex items-center justify-center">
+                  <i class="fa-solid fa-heart text-7xl text-white drop-shadow-2xl"></i>
+                </div>
+              </div>
+            ` : ''}
+
+            <div class="sm:pl-12 pt-1 flex items-center justify-between text-zinc-400 text-xs">
+              <div class="flex items-center gap-5">
+                <button onclick="openSocialThreadModal(${post.id})" class="flex items-center gap-1.5 hover:text-sky-400 transition-colors" title="Comment / Reply">
+                  <i class="fa-regular fa-comment text-sm"></i>
+                  <span>${replies.length}</span>
+                </button>
+
+                <button onclick="toggleSocialRepost(${post.id})" class="flex items-center gap-1.5 transition-colors ${post.reposted ? 'text-emerald-400 font-bold' : 'hover:text-emerald-400'}" title="Repost">
+                  <i class="fa-solid fa-retweet text-sm"></i>
+                  <span>${post.reposts || 0}</span>
+                </button>
+
+                <button onclick="toggleSocialLike(${post.id})" class="flex items-center gap-1.5 transition-colors ${post.liked ? 'text-rose-500 font-bold' : 'hover:text-rose-500'}" title="Like">
+                  <i class="fa-${post.liked ? 'solid' : 'regular'} fa-heart text-sm"></i>
+                  <span>${post.likes || 0}</span>
+                </button>
+
+                ${post.mediaType === "video" ? `
+                  <button onclick="jumpToReel(${post.id})" class="flex items-center gap-1 hover:text-pink-400 transition-colors" title="Open in Reels">
+                    <i class="fa-solid fa-film text-sm"></i>
+                    <span class="hidden sm:inline">Reel</span>
+                  </button>
+                ` : ''}
+              </div>
+
+              <button onclick="toggleSocialBookmark(${post.id})" class="transition-colors ${post.bookmarked ? 'text-amber-400' : 'hover:text-amber-400'}" title="Bookmark">
+                <i class="fa-${post.bookmarked ? 'solid' : 'regular'} fa-bookmark text-sm"></i>
+              </button>
+            </div>
+
+            <!-- Inline Quick Comment Form -->
+            <div class="sm:pl-12 pt-2 border-t border-zinc-900 space-y-2">
+              ${replies.slice(-2).map(r => `
+                <div class="text-xs text-zinc-300 flex items-baseline justify-between gap-2">
+                  <p><span class="font-bold text-white mr-1.5">${dispHandle(r.author)}</span>${r.text}</p>
+                  <span class="text-[10px] text-zinc-500 shrink-0">${r.time || "now"}</span>
+                </div>
+              `).join("")}
+              ${replies.length > 2 ? `<button onclick="openSocialThreadModal(${post.id})" class="text-[11px] font-bold text-sky-400 hover:underline">View all ${replies.length} replies</button>` : ''}
+
+              <form onsubmit="submitInlineComment(event, ${post.id})" class="flex items-center gap-2 pt-1">
+                <input type="text" id="quick-comment-${post.id}" required placeholder="Write a comment..." class="flex-1 bg-zinc-900 border border-zinc-800 focus:border-sky-500 rounded-full px-3.5 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none" />
+                <button type="submit" class="text-xs font-extrabold text-sky-400 hover:text-sky-300 px-2">Reply</button>
+              </form>
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function handleSocialFileChange(input) {
+      if (input.files && input.files[0]) {
+        if (tempSocialFileUrl && tempSocialFileUrl.startsWith("blob:")) URL.revokeObjectURL(tempSocialFileUrl);
+        const f = input.files[0];
+        tempSocialFileObj = f;
+        tempSocialFileUrl = URL.createObjectURL(f);
+        tempSocialFileType = f.type.startsWith("video/") ? "video" : "image";
+        document.getElementById("socialFileLabel").innerText = f.name;
+        document.getElementById("socialUrlInput").value = "";
+        showSocialAttachmentPreview(tempSocialFileUrl, tempSocialFileType);
+      }
+    }
+
+    function handleSocialUrlChange(val) {
+      const u = (val || "").trim();
+      if (!u) {
+        if (!tempSocialFileUrl) hideSocialAttachmentPreview();
+        return;
+      }
+      tempSocialFileObj = null;
+      tempSocialFileUrl = null;
+      const normalized = normalizeMediaUrl(u);
+      tempSocialFileType = /\.(mp4|webm|mov|m4v)(\?|$)/i.test(normalized) || /drive\.google\.com/i.test(u) ? "video" : "image";
+      showSocialAttachmentPreview(normalized, tempSocialFileType);
+    }
+
+    function showSocialAttachmentPreview(url, type) {
+      const box = document.getElementById("socialPreviewBox");
+      const img = document.getElementById("socialPreviewImg");
+      const vid = document.getElementById("socialPreviewVid");
+      box.classList.remove("hidden");
+      if (type === "video") {
+        img.classList.add("hidden");
+        vid.classList.remove("hidden");
+        vid.src = url;
+      } else {
+        vid.pause();
+        vid.classList.add("hidden");
+        img.classList.remove("hidden");
+        img.src = url;
+      }
+    }
+
+    function hideSocialAttachmentPreview() {
+      document.getElementById("socialPreviewBox")?.classList.add("hidden");
+      document.getElementById("socialPreviewImg")?.classList.add("hidden");
+      document.getElementById("socialPreviewVid")?.classList.add("hidden");
+    }
+
+    function clearSocialAttachment() {
+      tempSocialFileObj = null;
+      tempSocialFileUrl = null;
+      tempSocialFileType = null;
+      document.getElementById("socialFileInput").value = "";
+      document.getElementById("socialUrlInput").value = "";
+      document.getElementById("socialFileLabel").innerText = "Attach Photo / Video";
+      hideSocialAttachmentPreview();
+    }
+
+    function appendToComposer(str) {
+      const ta = document.getElementById("socialPostText");
+      if (!ta) return;
+      ta.value = `${ta.value}${str}`;
+      ta.focus();
+    }
+
+    async function handleSocialPostCreate(e) {
+      e.preventDefault();
+      if (!requireUserAccount("create a post")) return;
+      const handle = dispHandle(document.getElementById("socialHandleInput").value);
+      const text = document.getElementById("socialPostText").value.trim();
+      const kind = document.getElementById("socialPostKind").value;
+      const urlVal = normalizeMediaUrl(document.getElementById("socialUrlInput").value.trim());
+      if (!text) return;
+
+      const submitBtn = document.getElementById("socialPostSubmitBtn");
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Posting...`;
+      }
+
+      try {
+        const postId = Date.now();
+        let mediaUrl = urlVal || "";
+        let idbMediaKey = null;
+        let mediaType = mediaUrl
+          ? (tempSocialFileType || (/\.(mp4|webm|mov|m4v)(\?|$)/i.test(mediaUrl) ? "video" : "image"))
+          : null;
+
+        if (tempSocialFileObj) {
+          const fileObj = tempSocialFileObj;
+          mediaType = fileObj.type.startsWith("video/") ? "video" : "image";
+          let uploadedToCloud = false;
+
+          // 1) Try uploading to Supabase Storage first so it persists across devices & refreshes
+          if (supabaseClient) {
+            try {
+              showToast(`Uploading ${mediaType} to cloud storage...`);
+              mediaUrl = await uploadFileToSupabaseStorage(fileObj, mediaType === "video" ? "social_videos" : "social_images");
+              uploadedToCloud = true;
+            } catch (cloudErr) {
+              console.warn("Supabase social upload failed, saving permanently in browser IndexedDB:", cloudErr);
+            }
+          }
+
+          // 2) Always save a copy in browser IndexedDB if not in Supabase so page reloads never lose the video!
+          if (!uploadedToCloud) {
+            try {
+              idbMediaKey = await saveBlobToIndexedDB(`post_${postId}`, fileObj);
+              mediaUrl = URL.createObjectURL(fileObj);
+            } catch (idbErr) {
+              console.warn("IndexedDB save failed:", idbErr);
+              mediaUrl = tempSocialFileUrl || URL.createObjectURL(fileObj);
+            }
+          }
+        }
+
+        const newPost = {
+          id: postId,
+          name: currentUser ? currentUser.name : handle.replace(/^@/, ""),
+          handle,
+          verified: !!isAdminAuthenticated,
+          kind,
+          text,
+          mediaType,
+          mediaUrl,
+          idbMediaKey,
+          likes: 1,
+          liked: true,
+          reposts: 0,
+          reposted: false,
+          bookmarked: false,
+          time: "Just now",
+          comments: []
+        };
+
+        socialPosts.unshift(newPost);
+        saveSocialState();
+        await syncSocialPostToSupabase(newPost);
+        document.getElementById("socialPostText").value = "";
+        clearSocialAttachment();
+        renderSocialAll();
+        if (primaryMode === "profile") renderIGProfileView();
+        showToast("Post published!");
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerText = "Post";
+        }
+      }
+    }
+
+    function toggleSocialLike(id) {
+      if (!requireUserAccount("like posts")) return;
+      const p = socialPosts.find(x => x.id === id);
+      if (!p) return;
+      p.liked = !p.liked;
+      p.likes = Math.max(0, (p.likes || 0) + (p.liked ? 1 : -1));
+      saveSocialState();
+      syncSocialPostToSupabase(p);
+      renderSocialTimeline();
+      if (primaryMode === "reels") renderReelStage();
+    }
+
+    function doubleTapLikePost(id) {
+      if (!requireUserAccount("like posts")) return;
+      const p = socialPosts.find(x => x.id === id);
+      if (!p) return;
+      if (!p.liked) {
+        p.liked = true;
+        p.likes = (p.likes || 0) + 1;
+        saveSocialState();
+        syncSocialPostToSupabase(p);
+        renderSocialTimeline();
+      }
+      const el = document.getElementById(`heart-burst-${id}`);
+      if (el) {
+        el.classList.remove("hidden");
+        el.classList.add("heart-pop-anim");
+        setTimeout(() => { el.classList.add("hidden"); el.classList.remove("heart-pop-anim"); }, 700);
+      }
+    }
+
+    function toggleSocialRepost(id) {
+      if (!requireUserAccount("repost")) return;
+      const p = socialPosts.find(x => x.id === id);
+      if (!p) return;
+      p.reposted = !p.reposted;
+      p.reposts = Math.max(0, (p.reposts || 0) + (p.reposted ? 1 : -1));
+      saveSocialState();
+      syncSocialPostToSupabase(p);
+      renderSocialTimeline();
+      if (primaryMode === "reels") renderReelStage();
+      showToast(p.reposted ? "Reposted!" : "Removed repost");
+    }
+
+    function toggleSocialBookmark(id) {
+      if (!requireUserAccount("bookmark posts")) return;
+      const p = socialPosts.find(x => x.id === id);
+      if (!p) return;
+      p.bookmarked = !p.bookmarked;
+      saveSocialState();
+      renderSocialTimeline();
+      showToast(p.bookmarked ? "Saved to bookmarks" : "Removed bookmark");
+    }
+
+    function submitInlineComment(e, postId) {
+      e.preventDefault();
+      if (!requireUserAccount("comment")) return;
+      const inp = document.getElementById(`quick-comment-${postId}`);
+      const txt = inp ? inp.value.trim() : "";
+      if (!txt) return;
+      const p = socialPosts.find(x => x.id === postId);
+      if (!p) return;
+      const author = currentUser ? dispHandle(currentUser.username) : dispHandle(document.getElementById("socialHandleInput")?.value || "@fan");
+      p.comments = p.comments || [];
+      p.comments.push({ id: Date.now(), author, text: txt, time: "Just now" });
+      inp.value = "";
+      saveSocialState();
+      syncSocialPostToSupabase(p);
+      renderSocialTimeline();
+      showToast("Reply posted!");
+    }
+
+    // --- THREAD MODAL ---
+    function openSocialThreadModal(postId) {
+      activeThreadId = postId;
+      renderSocialThreadModal();
+      document.getElementById("socialThreadModal").classList.remove("hidden");
+    }
+
+    function closeSocialThreadModal() {
+      activeThreadId = null;
+      document.getElementById("socialThreadModal").classList.add("hidden");
+    }
+
+    function renderSocialThreadModal() {
+      const p = socialPosts.find(x => x.id === activeThreadId);
+      if (!p) return;
+      document.getElementById("threadOriginPost").innerHTML = `
+        <p class="font-bold text-white mb-1">${p.name} <span class="text-zinc-400 font-normal">${dispHandle(p.handle)}</span></p>
+        <p class="text-zinc-200 leading-relaxed">${p.text}</p>
+      `;
+      const box = document.getElementById("threadCommentsContainer");
+      const replies = p.comments || [];
+      box.innerHTML = replies.length
+        ? replies.map(r => `
+            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-xs">
+              <div class="flex justify-between mb-1">
+                <span class="font-bold text-sky-400">${dispHandle(r.author)}</span>
+                <span class="text-[10px] text-zinc-500">${r.time || "now"}</span>
+              </div>
+              <p class="text-zinc-200">${r.text}</p>
+            </div>
+          `).join("")
+        : `<p class="text-xs text-zinc-500 text-center py-6">No replies yet. Be the first to reply!</p>`;
+    }
+
+    function submitModalThreadReply(e) {
+      e.preventDefault();
+      if (!requireUserAccount("reply")) return;
+      const inp = document.getElementById("modalThreadReplyInput");
+      const txt = inp.value.trim();
+      if (!txt || !activeThreadId) return;
+      const p = socialPosts.find(x => x.id === activeThreadId);
+      if (!p) return;
+      const author = currentUser ? dispHandle(currentUser.username) : dispHandle(document.getElementById("socialHandleInput")?.value || "@fan");
+      p.comments = p.comments || [];
+      p.comments.push({ id: Date.now(), author, text: txt, time: "Just now" });
+      inp.value = "";
+      saveSocialState();
+      syncSocialPostToSupabase(p);
+      renderSocialThreadModal();
+      renderSocialTimeline();
+      showToast("Reply posted!");
+    }
+
+    // --- REELS STAGE ---
+    function getVideoReels() {
+      const vids = socialPosts.filter(p => p.mediaType === "video");
+      return vids.length ? vids : socialPosts;
+    }
+
+    function jumpToReel(postId) {
+      const list = getVideoReels();
+      const idx = list.findIndex(p => p.id === postId);
+      activeReelIdx = idx >= 0 ? idx : 0;
+      switchPrimaryMode("reels");
+    }
+
+    function renderReelStage() {
+      const list = getVideoReels();
+      if (!list.length) return;
+      if (activeReelIdx >= list.length) activeReelIdx = 0;
+      if (activeReelIdx < 0) activeReelIdx = list.length - 1;
+
+      const post = list[activeReelIdx];
+      const f = isFollowingHandle(post.handle);
+
+      document.getElementById("reelIndexLabel").innerText = `${activeReelIdx + 1} / ${list.length}`;
+      document.getElementById("reelHandleLabel").innerText = dispHandle(post.handle);
+      document.getElementById("reelTextLabel").innerText = post.text;
+      document.getElementById("reelLikeCount").innerText = post.likes || 0;
+      document.getElementById("reelRepostCount").innerText = post.reposts || 0;
+      document.getElementById("reelCommentCount").innerText = (post.comments || []).length;
+      document.getElementById("reelHeartCircle").classList.toggle("text-rose-500", !!post.liked);
+
+      const fBtn = document.getElementById("reelFollowBtn");
+      fBtn.innerText = f ? "Following" : "Follow";
+      fBtn.className = f
+        ? "px-3 py-0.5 rounded-full text-[11px] font-bold bg-sky-500 text-white"
+        : "px-3 py-0.5 rounded-full text-[11px] font-bold border border-white/70 text-white hover:bg-white hover:text-black";
+
+      const vid = document.getElementById("reelPlayerVideo");
+      const img = document.getElementById("reelPlayerImage");
+      if (post.mediaType === "video") {
+        img.classList.add("hidden");
+        vid.classList.remove("hidden");
+        vid.src = post.mediaUrl;
+        vid.muted = isReelMuted;
+        vid.play().catch(() => {});
+      } else {
+        vid.pause();
+        vid.classList.add("hidden");
+        img.classList.remove("hidden");
+        img.src = post.mediaUrl || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80";
+      }
+
+      const cBox = document.getElementById("reelCommentsBox");
+      const replies = post.comments || [];
+      cBox.innerHTML = replies.length
+        ? replies.map(c => `
+            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-2.5 text-xs">
+              <div class="flex justify-between mb-0.5">
+                <span class="font-bold text-sky-400">${dispHandle(c.author)}</span>
+                <span class="text-[10px] text-zinc-500">${c.time || "now"}</span>
+              </div>
+              <p class="text-zinc-200">${c.text}</p>
+            </div>
+          `).join("")
+        : `<p class="text-xs text-zinc-500 text-center py-8">No comments on this reel yet.</p>`;
+    }
+
+    function stepReel(dir) { activeReelIdx += dir; renderReelStage(); }
+    function toggleReelPlayPause() {
+      const v = document.getElementById("reelPlayerVideo");
+      if (v && !v.classList.contains("hidden")) v.paused ? v.play().catch(() => {}) : v.pause();
+    }
+    function toggleReelMuteState() {
+      isReelMuted = !isReelMuted;
+      const v = document.getElementById("reelPlayerVideo");
+      if (v) v.muted = isReelMuted;
+      document.getElementById("reelMuteGlyph").className = isReelMuted ? "fa-solid fa-volume-xmark" : "fa-solid fa-volume-high";
+    }
+    function likeCurrentReel() { const p = getVideoReels()[activeReelIdx]; if (p) toggleSocialLike(p.id); }
+    function repostCurrentReel() { const p = getVideoReels()[activeReelIdx]; if (p) toggleSocialRepost(p.id); }
+    function followCurrentReelCreator() { const p = getVideoReels()[activeReelIdx]; if (p) toggleFollowCreator(p.handle); }
+    function submitReelReply(e) {
+      e.preventDefault();
+      if (!requireUserAccount("comment on reels")) return;
+      const p = getVideoReels()[activeReelIdx];
+      const inp = document.getElementById("reelReplyInput");
+      const txt = inp.value.trim();
+      if (!p || !txt) return;
+      const author = currentUser ? dispHandle(currentUser.username) : "@fan";
+      p.comments = p.comments || [];
+      p.comments.push({ id: Date.now(), author, text: txt, time: "Just now" });
+      inp.value = "";
+      saveSocialState();
+      syncSocialPostToSupabase(p);
+      renderReelStage();
+      renderSocialTimeline();
+    }
+
+    function renderSidebarMediaPreview() {
+      const box = document.getElementById("sidebarMediaPreview");
+      if (!box) return;
+      box.innerHTML = mediaDatabase.slice(0, 3).map(m => `
+        <button onclick="openPlayerModal(${m.id})" class="w-full flex items-center gap-2.5 text-left hover:bg-zinc-900 p-1.5 rounded-xl transition-colors">
+          <img src="${m.poster}" class="w-10 h-12 object-cover rounded-lg bg-zinc-800 shrink-0" />
+          <div class="min-w-0">
+            <p class="text-xs font-bold text-white truncate">${m.title}</p>
+            <p class="text-[10px] text-zinc-400">${m.category} • ⭐ ${m.rating}</p>
+          </div>
+        </button>
+      `).join("");
+    }
+
+    // ================= ORIGINAL CINEWAVE FUNCTIONS (100% UNCHANGED IN LOGIC) =================
+    function applySiteSettingsToUI() {
+      const logoEl = document.getElementById("siteLogoText");
+      if (logoEl && siteSettings.siteName) {
+        const half = Math.ceil(siteSettings.siteName.length / 2);
+        logoEl.innerHTML = `${siteSettings.siteName.slice(0, half)}<span class="text-gradient">${siteSettings.siteName.slice(half)}</span>`;
+        document.title = `${siteSettings.siteName} - Stream Movies & Series`;
+      }
+
+      const bannerBox = document.getElementById("siteBannerBox");
+      const bannerText = document.getElementById("siteBannerText");
+      if (bannerBox && bannerText) {
+        if (siteSettings.showBanner && siteSettings.bannerText) {
+          bannerText.innerText = siteSettings.bannerText;
+          bannerBox.classList.remove("hidden");
+        } else {
+          bannerBox.classList.add("hidden");
+        }
+      }
+
+      const uploadBtn = document.getElementById("topUploadBtn");
+      if (uploadBtn) {
+        if (siteSettings.adminOnlyUpload && !isAdminAuthenticated) {
+          uploadBtn.classList.add("hidden");
+        } else {
+          uploadBtn.classList.remove("hidden");
+        }
+      }
+
+      const dlBtn = document.getElementById("downloadMediaBtn");
+      if (dlBtn) {
+        dlBtn.classList.toggle("hidden", !siteSettings.allowDownloads);
+      }
+      const commentsWrap = document.getElementById("commentsSectionWrapper");
+      if (commentsWrap) {
+        commentsWrap.classList.toggle("hidden", !siteSettings.allowComments);
+      }
+    }
+
+    function setupAdminCheckListener() {
+      const check = document.getElementById("signUpIsAdminCheck");
+      const field = document.getElementById("adminPasscodeField");
+      if (check && field) {
+        check.addEventListener("change", (e) => {
+          field.classList.toggle("hidden", !e.target.checked);
+        });
+      }
+    }
+
+    function toggleUploadSourceInput(type) {
+      const fileBox = document.getElementById("fileInputBox");
+      const urlBox = document.getElementById("urlInputBox");
+      const lblFile = document.getElementById("lblSourceFile");
+      const lblUrl = document.getElementById("lblSourceUrl");
+
+      if (type === 'file') {
+        fileBox.classList.remove("hidden");
+        urlBox.classList.add("hidden");
+        lblFile.className = "flex-1 text-center text-xs py-1.5 rounded-lg cursor-pointer transition-all font-semibold bg-sky-500 text-white shadow";
+        lblUrl.className = "flex-1 text-center text-xs py-1.5 rounded-lg cursor-pointer transition-all font-semibold text-zinc-400";
+      } else {
+        fileBox.classList.add("hidden");
+        urlBox.classList.remove("hidden");
+        lblUrl.className = "flex-1 text-center text-xs py-1.5 rounded-lg cursor-pointer transition-all font-semibold bg-sky-500 text-white shadow";
+        lblFile.className = "flex-1 text-center text-xs py-1.5 rounded-lg cursor-pointer transition-all font-semibold text-zinc-400";
+      }
+    }
+
+    function handleFileSelectNotice(input) {
+      const notice = document.getElementById("fileNoticeText");
+      if (input.files && input.files[0]) {
+        notice.innerHTML = `<span class="text-emerald-400 font-bold"><i class="fa-solid fa-check-circle"></i> Selected: ${input.files[0].name}</span>`;
+      } else {
+        notice.innerText = "Click or drag & drop movie/music file here";
+      }
+    }
+
+    function openUserUploadModal() {
+      if (siteSettings.adminOnlyUpload && !isAdminAuthenticated) {
+        showToast("Only the Website Admin can upload media right now.");
+        openAdminPortalModal();
+        return;
+      }
+      if (!currentUser && !isAdminAuthenticated) {
+        showToast("Please sign in to upload media!");
+        openAuthModal('signin');
+        return;
+      }
+      toggleUploadSourceInput('file');
+      refreshDriveStorageUI();
+      document.getElementById("userUploadModal").classList.remove("hidden");
+    }
+
+    function closeUserUploadModal() {
+      document.getElementById("userUploadModal").classList.add("hidden");
+    }
+
+    function normalizeMediaUrl(rawUrl) {
+      const url = (rawUrl || "").trim();
+      const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/) || url.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/);
+      if (driveMatch && driveMatch[1]) {
+        return `https://drive.google.com/uc?export=download&id=${driveMatch[1]}`;
+      }
+      return url;
+    }
+
+    async function uploadFileToSupabaseStorage(file, folder) {
+      const bucket = (siteSettings.supabaseBucket || "1986").trim();
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const filePath = `${folder}/${Date.now()}_${safeName}`;
+      const { error } = await supabaseClient.storage
+        .from(bucket)
+        .upload(filePath, file, { cacheControl: "3600", upsert: true, contentType: file.type || undefined });
+      if (error) throw error;
+      const { data } = supabaseClient.storage.from(bucket).getPublicUrl(filePath);
+      return data.publicUrl;
+    }
+
+    async function handleUserUploadSubmit(e) {
+      e.preventDefault();
+
+      if (!userDriveStorage || !userDriveStorage.folderId) {
+        const inp = document.getElementById("userDriveInput");
+        const parsed = parseDriveLinkOrId(inp ? inp.value : "");
+        if (parsed && parsed.folderId.length >= 4) {
+          userDriveStorage = parsed;
+          localStorage.setItem("cinewave_user_drive_storage", JSON.stringify(userDriveStorage));
+          refreshDriveStorageUI();
+        } else {
+          refreshDriveStorageUI();
+          showToast("Please paste your Google Drive link or ID at the top first!");
+          if (inp) inp.focus();
+          return;
+        }
+      }
+
+      const submitBtn = document.getElementById("publishSubmitBtn");
+      const sourceType = document.querySelector('input[name="uploadSourceType"]:checked')?.value || 'file';
+      const posterFileInput = document.getElementById("userUploadPosterFile");
+      const posterUrlInput = document.getElementById("userUploadPosterUrl");
+
+      if (posterFileInput && posterFileInput.files && posterFileInput.files[0]) {
+        if (!posterFileInput.files[0].type.startsWith("image/")) {
+          showToast("Poster must be an image file (JPG/PNG), not a video!");
+          return;
+        }
+      }
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Uploading & Publishing...`;
+      }
+
+      try {
+        let mediaStreamUrl = "";
+        let uploadedToCloudStorage = false;
+
+        if (sourceType === 'file') {
+          const fileInput = document.getElementById("userUploadFileInput");
+          if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+            showToast("Please select a video or music file from your device!");
+            return;
+          }
+          const mediaFile = fileInput.files[0];
+          const sizeMB = (mediaFile.size / (1024 * 1024)).toFixed(1);
+
+          if (supabaseClient) {
+            try {
+              showToast(`Uploading (${sizeMB} MB) to Supabase Storage...`);
+              mediaStreamUrl = await uploadFileToSupabaseStorage(mediaFile, "videos");
+              uploadedToCloudStorage = true;
+            } catch (storageErr) {
+              console.warn("Supabase Storage upload failed, falling back to local session URL:", storageErr);
+              showToast(`Cloud storage rejected (${storageErr.message || "file > 50MB or bucket policy"}). Publishing locally!`);
+              mediaStreamUrl = URL.createObjectURL(mediaFile);
+            }
+          } else {
+            mediaStreamUrl = URL.createObjectURL(mediaFile);
+          }
+        } else {
+          const urlInput = document.getElementById("userUploadStreamUrl");
+          mediaStreamUrl = normalizeMediaUrl(urlInput ? urlInput.value : "");
+          if (!mediaStreamUrl) {
+            showToast("Please paste a valid video or audio URL!");
+            return;
+          }
+          uploadedToCloudStorage = true;
+        }
+
+        let posterUrl = "https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=600&q=80";
+        if (posterFileInput && posterFileInput.files && posterFileInput.files[0]) {
+          if (supabaseClient) {
+            try {
+              posterUrl = await uploadFileToSupabaseStorage(posterFileInput.files[0], "posters");
+            } catch (posterErr) {
+              console.warn("Poster cloud upload failed, using local preview:", posterErr);
+              posterUrl = URL.createObjectURL(posterFileInput.files[0]);
+            }
+          } else {
+            posterUrl = URL.createObjectURL(posterFileInput.files[0]);
+          }
+        } else if (posterUrlInput && posterUrlInput.value.trim()) {
+          posterUrl = normalizeMediaUrl(posterUrlInput.value);
+        }
+
+        const categoryVal = document.getElementById("userUploadCategory")?.value || "Movies";
+        const newItem = {
+          id: Date.now(),
+          title: document.getElementById("userUploadTitle")?.value.trim() || "Untitled Media",
+          category: categoryVal,
+          genre: document.getElementById("userUploadGenre")?.value.trim() || "General",
+          rating: 9.0,
+          year: new Date().getFullYear(),
+          uploader: currentUser ? currentUser.name : "Site Owner",
+          views: 1,
+          downloads: 0,
+          comments: [],
+          description: document.getElementById("userUploadDesc")?.value.trim() || "",
+          poster: posterUrl,
+          streamUrl: mediaStreamUrl,
+          driveStorageId: userDriveStorage.folderId
+        };
+
+        let savedToCloudDb = false;
+        if (supabaseClient && uploadedToCloudStorage) {
+          const { data, error } = await supabaseClient
+            .from("media_items")
+            .insert([{
+              title: newItem.title,
+              category: newItem.category,
+              genre: newItem.genre,
+              rating: newItem.rating,
+              year: newItem.year,
+              uploader: newItem.uploader,
+              views: 1,
+              downloads: 0,
+              comments: [],
+              description: newItem.description,
+              poster_url: newItem.poster,
+              stream_url: newItem.streamUrl
+            }])
+            .select();
+
+          if (error) {
+            console.warn("Supabase DB insert warning:", error);
+            showToast("Published on screen (DB note: " + error.message + ")");
+          } else {
+            if (data && data[0]) newItem.id = data[0].id;
+            newItem.isCloud = true;
+            savedToCloudDb = true;
+          }
+        }
+
+        mediaDatabase.unshift(newItem);
+        if (uploadedToCloudStorage) {
+          localStorage.setItem("cinewave_media_items", JSON.stringify(mediaDatabase));
+        }
+
+        e.target.reset();
+        document.getElementById("fileNoticeText").innerText = "Click or drag & drop movie/music file here";
+        closeUserUploadModal();
+        renderMediaCatalog();
+        renderSidebarMediaPreview();
+        if (savedToCloudDb) {
+          showToast(`"${newItem.title}" published to Cloud!`);
+        } else {
+          showToast(`"${newItem.title}" published!`);
+        }
+      } catch (err) {
+        console.error("Upload failed:", err);
+        showToast("Upload error: " + (err.message || "Please try again"));
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerText = "Publish to CineWave";
+        }
+      }
+    }
+
+    // --- ADMIN / OWNER CONTROL PANEL LOGIC (100% ORIGINAL INTACT) ---
+    function openAdminPortalModal() {
+      const loginSec = document.getElementById("adminLoginSection");
+      const dashSec = document.getElementById("adminDashboardSection");
+
+      if (isAdminAuthenticated) {
+        loginSec.classList.add("hidden");
+        dashSec.classList.remove("hidden");
+        populateAdminDashboardData();
+        switchAdminTab('settings');
+      } else {
+        loginSec.classList.remove("hidden");
+        dashSec.classList.add("hidden");
+      }
+      document.getElementById("adminPortalModal").classList.remove("hidden");
+    }
+
+    function closeAdminPortalModal() {
+      document.getElementById("adminPortalModal").classList.add("hidden");
+    }
+
+    function handleAdminKeyLogin(e) {
+      e.preventDefault();
+      const u = document.getElementById("adminPortalUser").value.trim().toLowerCase();
+      const p = document.getElementById("adminPortalPass").value.trim();
+
+      if (u === OWNER_USERNAME && p === OWNER_PASSWORD) {
+        isAdminAuthenticated = true;
+        sessionStorage.setItem("cinewave_admin_auth", "true");
+        currentUser = usersList.find(user => user.username.toLowerCase() === OWNER_USERNAME) || {
+          name: "Site Owner",
+          username: OWNER_USERNAME,
+          password: OWNER_PASSWORD,
+          isAdmin: true
+        };
+        localStorage.setItem("cinewave_user", JSON.stringify(currentUser));
+        closeAuthModal();
+        renderUserNav();
+        applySiteSettingsToUI();
+        openAdminPortalModal();
+        showToast(`Welcome, ${currentUser.name}! Owner Panel Unlocked.`);
+      } else {
+        showToast("Access Denied: Invalid Owner credentials.");
+      }
+    }
+
+    function switchAdminTab(tab) {
+      ['settings', 'movies', 'account'].forEach(t => {
+        const btn = document.getElementById(`admTab-${t}`);
+        const panel = document.getElementById(`admPanel-${t}`);
+        if (btn && panel) {
+          if (t === tab) {
+            btn.className = "px-4 py-2 rounded-xl bg-amber-500 text-black font-bold text-xs transition-all";
+            panel.classList.remove("hidden");
+          } else {
+            btn.className = "px-4 py-2 rounded-xl bg-zinc-900 text-zinc-300 hover:text-white font-semibold text-xs transition-all";
+            panel.classList.add("hidden");
+          }
+        }
+      });
+      if (tab === 'movies') renderAdminMediaManager();
+    }
+
+    function toggleAdminPassVisibility() {
+      const inp = document.getElementById("myAdminPassword");
+      const icon = document.getElementById("adminPassEyeIcon");
+      if (!inp) return;
+      if (inp.type === "password") {
+        inp.type = "text";
+        if (icon) icon.className = "fa-solid fa-eye-slash";
+      } else {
+        inp.type = "password";
+        if (icon) icon.className = "fa-solid fa-eye";
+      }
+    }
+
+    function populateAdminDashboardData() {
+      document.getElementById("settingSiteName").value = siteSettings.siteName;
+      document.getElementById("settingBannerText").value = siteSettings.bannerText;
+      document.getElementById("settingShowBanner").checked = siteSettings.showBanner;
+      document.getElementById("settingAdminOnlyUpload").checked = siteSettings.adminOnlyUpload;
+      document.getElementById("settingAllowDownloads").checked = siteSettings.allowDownloads;
+      document.getElementById("settingAllowComments").checked = siteSettings.allowComments;
+      document.getElementById("settingSupabaseUrl").value = siteSettings.supabaseUrl || "";
+      document.getElementById("settingSupabaseKey").value = siteSettings.supabaseKey || "";
+      document.getElementById("settingSupabaseBucket").value = siteSettings.supabaseBucket || "media";
+      initSupabase();
+      document.getElementById("adminTotalMediaCount").innerText = mediaDatabase.length;
+
+      const adminAcc = usersList.find(u => u.isAdmin) || currentUser;
+      if (adminAcc) {
+        document.getElementById("myAdminDisplayName").value = adminAcc.name;
+        document.getElementById("myAdminUsername").value = adminAcc.username;
+        const passEl = document.getElementById("myAdminPassword"); passEl.type = "password"; passEl.value = adminAcc.password; const eyeEl = document.getElementById("adminPassEyeIcon"); if (eyeEl) eyeEl.className = "fa-solid fa-eye";
+      }
+    }
+
+    async function saveSiteSettings(e) {
+      e.preventDefault();
+      siteSettings = {
+        siteName: document.getElementById("settingSiteName").value.trim() || "CineWave",
+        bannerText: document.getElementById("settingBannerText").value.trim(),
+        showBanner: document.getElementById("settingShowBanner").checked,
+        adminOnlyUpload: document.getElementById("settingAdminOnlyUpload").checked,
+        allowDownloads: document.getElementById("settingAllowDownloads").checked,
+        allowComments: document.getElementById("settingAllowComments").checked,
+        supabaseUrl: document.getElementById("settingSupabaseUrl").value.trim(),
+        supabaseKey: document.getElementById("settingSupabaseKey").value.trim(),
+        supabaseBucket: document.getElementById("settingSupabaseBucket").value.trim() || "media"
+      };
+      localStorage.setItem("cinewave_site_settings", JSON.stringify(siteSettings));
+      const connected = initSupabase();
+      applySiteSettingsToUI();
+      if (connected) {
+        await loadMediaFromSupabase();
+        await loadSocialPostsFromSupabase();
+        showToast("Settings saved & Supabase Connected!");
+      } else {
+        showToast("Website settings saved!");
+      }
+    }
+
+    function renderAdminMediaManager() {
+      const container = document.getElementById("adminMediaListContainer");
+      document.getElementById("adminTotalMediaCount").innerText = mediaDatabase.length;
+      if (!container) return;
+
+      container.innerHTML = mediaDatabase.map(item => `
+        <div class="flex items-center justify-between bg-zinc-900 border border-zinc-800 p-3 rounded-xl">
+          <div class="flex items-center gap-3 min-w-0">
+            <img src="${item.poster}" class="w-10 h-12 object-cover rounded-lg bg-zinc-800 shrink-0" />
+            <div class="truncate">
+              <p class="text-xs font-bold text-white truncate">${item.title}</p>
+              <p class="text-[11px] text-zinc-400">${item.category} • ${item.genre} • ${item.views || 0} views</p>
+            </div>
+          </div>
+          <button onclick="adminDeleteMedia(${item.id})" class="px-3 py-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600 text-rose-400 hover:text-white text-xs font-semibold transition-all shrink-0 ml-2">
+            <i class="fa-solid fa-trash"></i> Delete
+          </button>
+        </div>
+      `).join('');
+    }
+
+    async function adminDeleteMedia(id) {
+      if (supabaseClient) {
+        await supabaseClient.from("media_items").delete().eq("id", id);
+      }
+      mediaDatabase = mediaDatabase.filter(m => m.id !== id);
+      localStorage.setItem("cinewave_media_items", JSON.stringify(mediaDatabase));
+      renderAdminMediaManager();
+      renderMediaCatalog();
+      renderSidebarMediaPreview();
+      showToast("Item deleted from website.");
+    }
+
+    function updateMyAdminCredentials(e) {
+      e.preventDefault();
+      const newName = document.getElementById("myAdminDisplayName").value.trim() || "Site Owner";
+      const adminIndex = usersList.findIndex(u => u.isAdmin);
+      const updatedAdmin = { name: newName, username: OWNER_USERNAME, password: OWNER_PASSWORD, isAdmin: true };
+
+      if (adminIndex > -1) {
+        usersList[adminIndex] = updatedAdmin;
+      } else {
+        usersList.push(updatedAdmin);
+      }
+
+      localStorage.setItem("cinewave_registered_users", JSON.stringify(usersList));
+      currentUser = updatedAdmin;
+      localStorage.setItem("cinewave_user", JSON.stringify(currentUser));
+      renderUserNav();
+      syncSocialComposerIdentity();
+      showToast("Owner display name updated! (Owner login remains locked to your private credentials)");
+    }
+
+    function handleLogoutAdminOnly() {
+      isAdminAuthenticated = false;
+      sessionStorage.removeItem("cinewave_admin_auth");
+      renderUserNav();
+      applySiteSettingsToUI();
+      closeAdminPortalModal();
+      showToast("Admin session locked.");
+    }
+
+    // --- USER NAVIGATION & AUTH (100% ORIGINAL INTACT) ---
+    function renderUserNav() {
+      const container = document.getElementById("user-nav-container");
+      const adminBtn = document.getElementById("adminToggleBtn");
+      const adminText = document.getElementById("adminToggleText");
+      if (adminBtn) {
+        adminBtn.classList.remove("hidden");
+      }
+      if (adminText) adminText.innerText = "Owner Panel";
+      if (!container) return;
+
+      if (currentUser) {
+        container.innerHTML = `
+          <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-full">
+              <div class="w-6 h-6 rounded-full ig-btn overflow-hidden flex items-center justify-center text-white text-[10px] font-bold">
+                ${getProfileData(dispHandle(currentUser.username)).avatarUrl
+                  ? `<img src="${getProfileData(dispHandle(currentUser.username)).avatarUrl}" class="w-full h-full object-cover" />`
+                  : currentUser.name.charAt(0).toUpperCase()}
+              </div>
+              <span class="text-xs text-zinc-200 font-semibold hidden sm:inline">${currentUser.name}</span>
+              ${currentUser.isAdmin ? '<span class="text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded font-extrabold uppercase">Owner</span>' : ''}
+            </div>
+            <button onclick="handleLogout()" class="px-3 py-1.5 rounded-full bg-rose-600/20 border border-rose-500/40 hover:bg-rose-600 text-rose-300 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-all" title="Log Out">
+              <i class="fa-solid fa-right-from-bracket"></i>
+              <span>Log Out</span>
+            </button>
+          </div>
+        `;
+      } else {
+        container.innerHTML = `
+          <button onclick="openAuthModal('signin')" class="px-3.5 py-2 rounded-full bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-semibold flex items-center gap-1.5 transition-all border border-zinc-800">
+            <i class="fa-solid fa-user text-sky-400"></i>
+            <span class="hidden sm:inline">Sign In</span>
+          </button>
+        `;
+      }
+      syncSocialComposerIdentity();
+    }
+
+    let isAuthMandatory = false;
+    function openAuthModal(tab = 'signin', mandatory = false) {
+      isAuthMandatory = mandatory && !currentUser && !isAdminAuthenticated;
+      const closeBtn = document.getElementById("closeAuthModalBtn");
+      if (closeBtn) closeBtn.classList.toggle("hidden", isAuthMandatory);
+      switchAuthTab(tab);
+      document.getElementById("authModal").classList.remove("hidden");
+    }
+
+    function closeAuthModal() {
+      if (isAuthMandatory && !currentUser && !isAdminAuthenticated) return;
+      document.getElementById("authModal").classList.add("hidden");
+    }
+
+    function switchAuthTab(tab) {
+      const signInForm = document.getElementById("signInForm");
+      const signUpForm = document.getElementById("signUpForm");
+      const promptSignIn = document.getElementById("authSwitchPromptSignIn");
+      const promptSignUp = document.getElementById("authSwitchPromptSignUp");
+
+      if (tab === 'signin') {
+        signInForm.classList.remove("hidden");
+        signUpForm.classList.add("hidden");
+        promptSignIn?.classList.remove("hidden");
+        promptSignUp?.classList.add("hidden");
+      } else {
+        signUpForm.classList.remove("hidden");
+        signInForm.classList.add("hidden");
+        promptSignUp?.classList.remove("hidden");
+        promptSignIn?.classList.add("hidden");
+      }
+    }
+
+    function openGoogleAccountPicker() {
+      const box = document.getElementById("googleQuickForm");
+      if (!box) return;
+      box.classList.toggle("hidden");
+      if (!box.classList.contains("hidden")) {
+        document.getElementById("googleEmailInput")?.focus();
+      }
+    }
+
+    function handleGoogleSignInSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById("googleEmailInput").value.trim().toLowerCase();
+      const fullName = document.getElementById("googleNameInput").value.trim();
+      if (!email || !email.includes("@")) {
+        showToast("Please enter a valid Google email address!");
+        return;
+      }
+
+      let existingUser = usersList.find(u => !u.isAdmin && u.email && u.email.toLowerCase() === email);
+      if (!existingUser) {
+        let baseHandle = email.split("@")[0].replace(/[^a-zA-Z0-9._]/g, "_") || "user";
+        if (baseHandle.toLowerCase() === OWNER_USERNAME) baseHandle = `${baseHandle}_g`;
+        let candidate = baseHandle;
+        let counter = 1;
+        while (usersList.some(u => u.username.toLowerCase() === candidate.toLowerCase())) {
+          candidate = `${baseHandle}${counter++}`;
+        }
+
+        existingUser = {
+          name: fullName || candidate,
+          username: candidate,
+          email,
+          provider: "google",
+          password: "",
+          isAdmin: false
+        };
+        usersList.push(existingUser);
+        localStorage.setItem("cinewave_registered_users", JSON.stringify(usersList));
+
+        const key = normHandle(candidate);
+        profileBios[key] = {
+          name: existingUser.name,
+          bio: `👋 Hi, I'm ${existingUser.name}! Streaming & sharing videos on CineWave.`,
+          website: "",
+          location: "",
+          category: "Creator",
+          avatarUrl: ""
+        };
+        localStorage.setItem("cinewave_profile_bios", JSON.stringify(profileBios));
+      }
+
+      currentUser = existingUser;
+      isAdminAuthenticated = false;
+      localStorage.setItem("cinewave_user", JSON.stringify(currentUser));
+      sessionStorage.removeItem("cinewave_admin_auth");
+
+      document.getElementById("googleQuickForm")?.classList.add("hidden");
+      isAuthMandatory = false;
+      closeAuthModal();
+      renderUserNav();
+      applySiteSettingsToUI();
+      renderSocialAll();
+      showToast(`Signed in with Google as ${currentUser.name} (@${currentUser.username})!`);
+    }
+
+    function handleSignInSubmit(e) {
+      e.preventDefault();
+      const identifier = document.getElementById("signInUsername").value.trim();
+      const passVal = document.getElementById("signInPassword").value.trim();
+
+      const isOwnerLogin = identifier.toLowerCase() === OWNER_USERNAME && passVal === OWNER_PASSWORD;
+      const foundUser = isOwnerLogin
+        ? usersList.find(u => u.username.toLowerCase() === OWNER_USERNAME)
+        : usersList.find(u =>
+            !u.isAdmin &&
+            (u.username.toLowerCase() === identifier.toLowerCase() || (u.email && u.email.toLowerCase() === identifier.toLowerCase())) &&
+            u.password === passVal
+          );
+
+      if (!foundUser) {
+        showToast("Incorrect email/username or password. Need an account? Sign up below!");
+        return;
+      }
+
+      currentUser = foundUser;
+      localStorage.setItem("cinewave_user", JSON.stringify(currentUser));
+      if (isOwnerLogin) {
+        isAdminAuthenticated = true;
+        sessionStorage.setItem("cinewave_admin_auth", "true");
+      } else {
+        isAdminAuthenticated = false;
+        sessionStorage.removeItem("cinewave_admin_auth");
+      }
+
+      isAuthMandatory = false;
+      closeAuthModal();
+      renderUserNav();
+      applySiteSettingsToUI();
+      renderSocialAll();
+      showToast(isOwnerLogin ? `Welcome back, ${currentUser.name}! Owner Panel unlocked.` : `Welcome back, ${currentUser.name}!`);
+    }
+
+    function handleSignUpSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById("signUpEmail").value.trim().toLowerCase();
+      const name = document.getElementById("signUpFullName").value.trim();
+      const rawUsername = document.getElementById("signUpUsername").value.trim().replace(/^@+/, "");
+      const password = document.getElementById("signUpPassword").value.trim();
+
+      if (!email || !email.includes("@")) {
+        showToast("Please enter a valid email address!");
+        return;
+      }
+      if (usersList.some(u => u.email && u.email.toLowerCase() === email)) {
+        showToast("An account with this email already exists. Please log in!");
+        switchAuthTab("signin");
+        return;
+      }
+      if (!rawUsername || rawUsername.toLowerCase() === OWNER_USERNAME || usersList.some(u => u.username.toLowerCase() === rawUsername.toLowerCase())) {
+        showToast("Username is unavailable or already taken!");
+        return;
+      }
+
+      const newUser = { name, username: rawUsername, email, provider: "email", password, isAdmin: false };
+      usersList.push(newUser);
+      localStorage.setItem("cinewave_registered_users", JSON.stringify(usersList));
+
+      // Initialize personal IG profile for the new user
+      const key = normHandle(rawUsername);
+      profileBios[key] = {
+        name,
+        bio: `👋 Hi, I'm ${name}! Streaming & sharing videos on CineWave.`,
+        website: "",
+        location: "",
+        category: "Member",
+        avatarUrl: ""
+      };
+      localStorage.setItem("cinewave_profile_bios", JSON.stringify(profileBios));
+
+      currentUser = newUser;
+      isAdminAuthenticated = false;
+      localStorage.setItem("cinewave_user", JSON.stringify(currentUser));
+      sessionStorage.removeItem("cinewave_admin_auth");
+
+      isAuthMandatory = false;
+      closeAuthModal();
+      renderUserNav();
+      applySiteSettingsToUI();
+      renderSocialAll();
+      showToast(`Account & profile created for @${rawUsername}!`);
+    }
+
+    function handleLogout() {
+      currentUser = null;
+      isAdminAuthenticated = false;
+      localStorage.removeItem("cinewave_user");
+      sessionStorage.removeItem("cinewave_admin_auth");
+      renderUserNav();
+      applySiteSettingsToUI();
+      showToast("Signed out.");
+      openAuthModal("signin", true);
+    }
+
+    // --- CATALOG, SEARCH & PLAYER (100% ORIGINAL INTACT) ---
+    function showToast(message) {
+      let toast = document.getElementById("toastNotification");
+      if (!toast) {
+        toast = document.createElement("div");
+        toast.id = "toastNotification";
+        toast.className = "fixed bottom-16 md:bottom-5 right-5 z-50 bg-sky-500 text-white text-xs font-extrabold px-4 py-3 rounded-full shadow-2xl transition-all duration-300 opacity-0 translate-y-2 pointer-events-none";
+        document.body.appendChild(toast);
+      }
+      toast.innerText = message;
+      toast.classList.remove("opacity-0", "translate-y-2", "pointer-events-none");
+      setTimeout(() => toast.classList.add("opacity-0", "translate-y-2", "pointer-events-none"), 4000);
+    }
+
+    function switchCategory(cat) {
+      currentCategory = cat;
+      ['all', 'movies', 'tv', 'music', 'watchlist'].forEach(id => {
+        const btn = document.getElementById(`nav-${id}`);
+        if (btn) btn.className = "px-3.5 py-2 rounded-full hover:text-white hover:bg-zinc-900 transition-all";
+      });
+      const targetMap = { 'All': 'all', 'Movies': 'movies', 'TV Shows': 'tv', 'Music': 'music', 'Watchlist': 'watchlist' };
+      const activeBtn = document.getElementById(`nav-${targetMap[cat] || 'all'}`);
+      if (activeBtn) activeBtn.className = "px-3.5 py-2 rounded-full bg-zinc-900 text-white font-bold transition-all";
+      renderMediaCatalog();
+    }
+
+    function renderGenrePills() {
+      const container = document.getElementById("genrePillsContainer");
+      if (!container) return;
+      container.innerHTML = genresList.map(g => `
+        <button onclick="selectGenre('${g}')" class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 ${selectedGenre === g ? 'bg-sky-500 text-white' : 'bg-zinc-900 text-zinc-300 border border-zinc-800 hover:border-zinc-600'}">
+          ${g}
+        </button>
+      `).join('');
+    }
+
+    function selectGenre(g) {
+      selectedGenre = g;
+      renderGenrePills();
+      renderMediaCatalog();
+    }
+
+    function handleSearch() {
+      const input = document.getElementById("searchInput");
+      searchQuery = input ? input.value.toLowerCase().trim() : "";
+      renderSocialTimeline();
+      renderMediaCatalog();
+    }
+
+    function toggleWatchlist(id) {
+      if (!requireUserAccount("save to your watchlist")) return;
+      const idx = watchlist.indexOf(id);
+      if (idx > -1) {
+        watchlist.splice(idx, 1);
+        showToast("Removed from Watchlist");
+      } else {
+        watchlist.push(id);
+        showToast("Added to Watchlist!");
+      }
+      localStorage.setItem("cinewave_watchlist", JSON.stringify(watchlist));
+      updateWatchlistBadge();
+      renderMediaCatalog();
+    }
+
+    function updateWatchlistBadge() {
+      const badge = document.getElementById("watchlist-badge");
+      if (badge) badge.innerText = watchlist.length;
+    }
+
+    function renderMediaCatalog() {
+      const grid = document.getElementById("mediaGrid");
+      if (!grid) return;
+
+      let items = mediaDatabase.filter(item => {
+        const matchesCategory = currentCategory === "All" || 
+          (currentCategory === "Watchlist" ? watchlist.includes(item.id) : item.category === currentCategory);
+        const matchesGenre = selectedGenre === "All Genres" || item.genre.toLowerCase() === selectedGenre.toLowerCase();
+        const matchesSearch = !searchQuery || 
+          item.title.toLowerCase().includes(searchQuery) || 
+          item.genre.toLowerCase().includes(searchQuery);
+        return matchesCategory && matchesGenre && matchesSearch;
+      });
+
+      if (items.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full py-16 text-center text-zinc-400">
+            <i class="fa-solid fa-film text-4xl mb-3 text-zinc-600"></i>
+            <p class="text-base font-semibold">No media titles found.</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = items.map(item => {
+        const isWatchlisted = watchlist.includes(item.id);
+        return `
+          <div class="glass-card rounded-2xl overflow-hidden group transition-all duration-300 hover:-translate-y-1.5 flex flex-col justify-between">
+            <div class="relative aspect-[2/3] overflow-hidden bg-zinc-900">
+              <img src="${item.poster}" alt="${item.title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+              <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/20 opacity-80"></div>
+              
+              <div class="absolute top-3 left-3 flex items-center gap-1.5 bg-black/80 backdrop-blur-md px-2.5 py-1 rounded-lg text-xs font-bold text-amber-400 border border-zinc-800">
+                <i class="fa-solid fa-star"></i> ${item.rating}
+              </div>
+
+              <button onclick="toggleWatchlist(${item.id})" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/80 backdrop-blur-md border border-zinc-800 flex items-center justify-center text-xs transition-all ${isWatchlisted ? 'text-rose-500 bg-rose-500/20' : 'text-zinc-300 hover:text-white'}">
+                <i class="fa-${isWatchlisted ? 'solid' : 'regular'} fa-bookmark"></i>
+              </button>
+
+              <button onclick="openPlayerModal(${item.id})" class="absolute inset-0 m-auto w-12 h-12 rounded-full ig-btn text-white flex items-center justify-center text-lg shadow-xl opacity-0 group-hover:opacity-100 transition-all transform scale-75 group-hover:scale-100">
+                <i class="fa-solid fa-play ml-0.5"></i>
+              </button>
+            </div>
+
+            <div class="p-4 flex-1 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between text-[11px] text-zinc-400 mb-1">
+                  <span class="font-bold text-sky-400 uppercase tracking-wider">${item.category}</span>
+                  <span class="flex items-center gap-2"><i class="fa-solid fa-eye text-zinc-500"></i> ${item.views || 0}</span>
+                </div>
+                <h3 class="font-display font-bold text-base text-white group-hover:text-sky-400 transition-colors line-clamp-1">${item.title}</h3>
+                <p class="text-xs text-zinc-400 mt-1 line-clamp-2">${item.description}</p>
+              </div>
+
+              <div class="mt-4 pt-3 border-t border-zinc-900 flex items-center justify-between text-xs">
+                <span class="px-2 py-0.5 rounded-md bg-zinc-900 text-zinc-300 text-[10px] font-semibold">${item.genre}</span>
+                <button onclick="openPlayerModal(${item.id})" class="text-sky-400 hover:text-sky-300 font-semibold flex items-center gap-1 transition-colors">
+                  Watch <i class="fa-solid fa-angle-right text-[10px]"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openPlayerModal(id) {
+      if (!requireUserAccount("watch movies and music")) return;
+      const item = mediaDatabase.find(m => m.id === id);
+      if (!item) return;
+
+      activePlayingId = id;
+      item.views = (item.views || 0) + 1;
+      localStorage.setItem("cinewave_media_items", JSON.stringify(mediaDatabase));
+
+      document.getElementById("playerTitle").innerText = item.title;
+      document.getElementById("playerMeta").innerText = `${item.category} • ${item.genre} • ⭐ ${item.rating} • ${item.year}`;
+      document.getElementById("playerDesc").innerText = item.description;
+      document.getElementById("playerViews").innerText = item.views;
+      document.getElementById("playerDownloads").innerText = item.downloads || 0;
+      document.getElementById("playerUploader").innerText = item.uploader || "Admin";
+
+      const videoElem = document.getElementById("playerVideoSource");
+      if (videoElem) {
+        videoElem.src = item.streamUrl;
+        videoElem.play().catch(() => {});
+      }
+
+      renderCommentsList(item);
+      document.getElementById("playerModal").classList.remove("hidden");
+    }
+
+    function closePlayerModal() {
+      const videoElem = document.getElementById("playerVideoSource");
+      if (videoElem) videoElem.pause();
+      document.getElementById("playerModal").classList.add("hidden");
+      renderMediaCatalog();
+    }
+
+    function triggerDownloadCurrentMedia() {
+      if (!requireUserAccount("download files")) return;
+      const item = mediaDatabase.find(m => m.id === activePlayingId);
+      if (!item) return;
+
+      item.downloads = (item.downloads || 0) + 1;
+      localStorage.setItem("cinewave_media_items", JSON.stringify(mediaDatabase));
+      document.getElementById("playerDownloads").innerText = item.downloads;
+
+      const a = document.createElement('a');
+      a.href = item.streamUrl;
+      a.download = `${item.title.replace(/\s+/g, '_')}.mp4`;
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showToast(`Downloading "${item.title}"...`);
+    }
+
+    function renderCommentsList(item) {
+      const container = document.getElementById("commentsList");
+      const countEl = document.getElementById("commentsCount");
+      const comments = item.comments || [];
+      if (countEl) countEl.innerText = comments.length;
+      if (!container) return;
+
+      if (comments.length === 0) {
+        container.innerHTML = `<p class="text-xs text-zinc-500 italic py-2">No comments yet.</p>`;
+        return;
+      }
+
+      container.innerHTML = comments.map(c => `
+        <div class="bg-zinc-900 p-3 rounded-xl border border-zinc-800 flex flex-col gap-1">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold text-zinc-200">${c.user} <span class="text-amber-400 ml-1">${"⭐".repeat(c.rating)}</span></span>
+            <span class="text-[10px] text-zinc-500">${c.date}</span>
+          </div>
+          <p class="text-xs text-zinc-300 mt-1">${c.text}</p>
+        </div>
+      `).join('');
+    }
+
+    function handlePostComment(e) {
+      e.preventDefault();
+      if (!currentUser) {
+        showToast("Please sign in to post comments!");
+        openAuthModal('signin');
+        return;
+      }
+      const item = mediaDatabase.find(m => m.id === activePlayingId);
+      if (!item) return;
+
+      const commentText = document.getElementById("commentText").value.trim();
+      const rating = parseInt(document.getElementById("commentRating").value);
+      if (!commentText) return;
+
+      if (!item.comments) item.comments = [];
+      item.comments.unshift({ user: currentUser.name, text: commentText, rating, date: "Just now" });
+      localStorage.setItem("cinewave_media_items", JSON.stringify(mediaDatabase));
+      document.getElementById("commentText").value = "";
+      renderCommentsList(item);
+      showToast("Comment posted!");
+    }
+
+    // ================= INSTAGRAM PROFILE (AVATAR, BIO, EDIT PROFILE + POSTED VIDEOS) =================
+    let profileBios = JSON.parse(localStorage.getItem("cinewave_profile_bios") || "{}");
+    let activeProfileHandle = null;
+    let activeProfileTab = "videos"; // 'videos' | 'posts' | 'saved'
+    let stagedAvatarDataUrl = null;
+
+    function getDefaultProfileHandle() {
+      if (currentUser && currentUser.username) return dispHandle(currentUser.username);
+      return "@cinewave_fan";
+    }
+
+    function isOwnProfile(handle) {
+      if (!currentUser) return false;
+      return normHandle(handle) === normHandle(currentUser.username);
+    }
+
+    function getProfileData(handle) {
+      const key = normHandle(handle);
+      const saved = profileBios[key] || {};
+      const matchingPost = socialPosts.find(p => normHandle(p.handle) === key);
+      const defaultName = saved.name
+        || (currentUser && normHandle(currentUser.username) === key ? currentUser.name : null)
+        || (matchingPost ? matchingPost.name : dispHandle(handle).replace(/^@/, ""));
+
+      return {
+        handle: dispHandle(handle),
+        name: defaultName,
+        bio: saved.bio || "🎬 Movie & music lover on CineWave. Posting videos, reels & reviews!",
+        website: saved.website || "",
+        location: saved.location || "",
+        category: saved.category || "",
+        avatarUrl: saved.avatarUrl || "",
+        verified: !!(matchingPost && matchingPost.verified) || (normHandle(handle) === normHandle(OWNER_USERNAME))
+      };
+    }
+
+    function readImageAsDataURL(file, maxDim = 320) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+            canvas.width = Math.round(img.width * scale);
+            canvas.height = Math.round(img.height * scale);
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL("image/jpeg", 0.85));
+          };
+          img.onerror = () => resolve(reader.result);
+          img.src = reader.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function triggerQuickAvatarUpload() {
+      const target = dispHandle(activeProfileHandle || getDefaultProfileHandle());
+      if (!isOwnProfile(target)) {
+        showToast("You can only change your own profile picture!");
+        return;
+      }
+      document.getElementById("quickAvatarFileInput")?.click();
+    }
+
+    async function handleQuickAvatarFileSelected(input) {
+      if (!input.files || !input.files[0]) return;
+      const target = dispHandle(activeProfileHandle || getDefaultProfileHandle());
+      if (!isOwnProfile(target)) return;
+      const dataUrl = await readImageAsDataURL(input.files[0]);
+      const key = normHandle(target);
+      const existing = getProfileData(target);
+      profileBios[key] = { ...existing, avatarUrl: dataUrl };
+      localStorage.setItem("cinewave_profile_bios", JSON.stringify(profileBios));
+      renderIGProfileView();
+      renderUserNav();
+      renderSocialAll();
+      showToast("Profile picture updated!");
+    }
+
+    function previewEditedAvatarFile(input) {
+      if (!input.files || !input.files[0]) return;
+      readImageAsDataURL(input.files[0]).then(dataUrl => {
+        stagedAvatarDataUrl = dataUrl;
+        const prev = document.getElementById("igEditAvatarPreview");
+        if (prev) {
+          prev.src = dataUrl;
+          prev.classList.remove("hidden");
+        }
+        const urlInp = document.getElementById("igEditAvatarUrl");
+        if (urlInp) urlInp.value = "";
+      });
+    }
+
+    function previewEditedAvatarUrl(val) {
+      const u = (val || "").trim();
+      stagedAvatarDataUrl = null;
+      const prev = document.getElementById("igEditAvatarPreview");
+      if (!prev) return;
+      if (u) {
+        prev.src = u;
+        prev.classList.remove("hidden");
+      } else {
+        prev.classList.add("hidden");
+      }
+    }
+
+    function clearEditedAvatar() {
+      stagedAvatarDataUrl = "";
+      const prev = document.getElementById("igEditAvatarPreview");
+      const urlInp = document.getElementById("igEditAvatarUrl");
+      const fileInp = document.getElementById("igEditAvatarFile");
+      if (prev) prev.classList.add("hidden");
+      if (urlInp) urlInp.value = "";
+      if (fileInp) fileInp.value = "";
+    }
+
+    function openProfileView(handle = null) {
+      if (!requireUserAccount("access profiles")) return;
+      activeProfileHandle = handle ? dispHandle(handle) : getDefaultProfileHandle();
+      activeProfileTab = "videos";
+      switchPrimaryMode("profile");
+    }
+
+    function switchViewingProfile(handle) {
+      activeProfileHandle = dispHandle(handle);
+      toggleEditProfileBio(false);
+      renderIGProfileView();
+    }
+
+    function toggleFollowViewedProfile() {
+      const target = dispHandle(activeProfileHandle || getDefaultProfileHandle());
+      toggleFollowCreator(target);
+      renderIGProfileView();
+    }
+
+    function switchProfileTab(tab) {
+      activeProfileTab = tab;
+      const isVid = tab === "videos";
+      const isPost = tab === "posts";
+      const isSav = tab === "saved";
+
+      document.getElementById("igTabVideos")?.classList.toggle("border-white", isVid);
+      document.getElementById("igTabVideos")?.classList.toggle("text-white", isVid);
+      document.getElementById("igTabVideos")?.classList.toggle("border-transparent", !isVid);
+      document.getElementById("igTabVideos")?.classList.toggle("text-zinc-400", !isVid);
+
+      document.getElementById("igTabPosts")?.classList.toggle("border-white", isPost);
+      document.getElementById("igTabPosts")?.classList.toggle("text-white", isPost);
+      document.getElementById("igTabPosts")?.classList.toggle("border-transparent", !isPost);
+      document.getElementById("igTabPosts")?.classList.toggle("text-zinc-400", !isPost);
+
+      document.getElementById("igTabSaved")?.classList.toggle("border-white", isSav);
+      document.getElementById("igTabSaved")?.classList.toggle("text-white", isSav);
+      document.getElementById("igTabSaved")?.classList.toggle("border-transparent", !isSav);
+      document.getElementById("igTabSaved")?.classList.toggle("text-zinc-400", !isSav);
+
+      renderIGProfileGrid();
+    }
+
+    function toggleEditProfileBio(forceState = null) {
+      const form = document.getElementById("igBioEditForm");
+      if (!form) return;
+      const target = dispHandle(activeProfileHandle || getDefaultProfileHandle());
+      if (!isOwnProfile(target)) {
+        form.classList.add("hidden");
+        return;
+      }
+      const shouldOpen = forceState !== null ? forceState : form.classList.contains("hidden");
+      if (shouldOpen) {
+        const prof = getProfileData(target);
+        stagedAvatarDataUrl = null;
+        document.getElementById("igBioNameInput").value = prof.name;
+        document.getElementById("igBioCategoryInput").value = prof.category || "";
+        document.getElementById("igBioLocationInput").value = prof.location || "";
+        document.getElementById("igBioLinkInput").value = prof.website || "";
+        document.getElementById("igBioHandleReadonly").value = prof.handle;
+        document.getElementById("igBioTextarea").value = prof.bio || "";
+        const urlInp = document.getElementById("igEditAvatarUrl");
+        const prev = document.getElementById("igEditAvatarPreview");
+        if (urlInp) urlInp.value = prof.avatarUrl && !prof.avatarUrl.startsWith("data:") ? prof.avatarUrl : "";
+        if (prev) {
+          if (prof.avatarUrl) {
+            prev.src = prof.avatarUrl;
+            prev.classList.remove("hidden");
+          } else {
+            prev.classList.add("hidden");
+          }
+        }
+        form.classList.remove("hidden");
+      } else {
+        form.classList.add("hidden");
+      }
+    }
+
+    function saveProfileBio(e) {
+      e.preventDefault();
+      const handle = dispHandle(activeProfileHandle || getDefaultProfileHandle());
+      if (!isOwnProfile(handle)) {
+        showToast("You can only edit your own profile!");
+        return;
+      }
+      const key = normHandle(handle);
+      const existing = getProfileData(handle);
+      const name = document.getElementById("igBioNameInput").value.trim();
+      const category = document.getElementById("igBioCategoryInput").value.trim();
+      const location = document.getElementById("igBioLocationInput").value.trim();
+      const website = document.getElementById("igBioLinkInput").value.trim();
+      const bio = document.getElementById("igBioTextarea").value.trim();
+      const urlVal = document.getElementById("igEditAvatarUrl").value.trim();
+
+      let finalAvatar = existing.avatarUrl || "";
+      if (stagedAvatarDataUrl === "") {
+        finalAvatar = "";
+      } else if (stagedAvatarDataUrl) {
+        finalAvatar = stagedAvatarDataUrl;
+      } else if (urlVal) {
+        finalAvatar = urlVal;
+      }
+
+      profileBios[key] = { name, category, location, website, bio, avatarUrl: finalAvatar };
+      localStorage.setItem("cinewave_profile_bios", JSON.stringify(profileBios));
+
+      // Sync user display name across account, posts & navigation
+      if (currentUser && normHandle(currentUser.username) === key) {
+        currentUser.name = name;
+        localStorage.setItem("cinewave_user", JSON.stringify(currentUser));
+        const uIdx = usersList.findIndex(u => normHandle(u.username) === key);
+        if (uIdx > -1) {
+          usersList[uIdx].name = name;
+          localStorage.setItem("cinewave_registered_users", JSON.stringify(usersList));
+        }
+      }
+
+      socialPosts.forEach(p => {
+        if (normHandle(p.handle) === key) {
+          p.name = name;
+          syncSocialPostToSupabase(p);
+        }
+      });
+      saveSocialState();
+
+      toggleEditProfileBio(false);
+      renderUserNav();
+      renderIGProfileView();
+      renderSocialAll();
+      showToast("Profile updated!");
+    }
+
+    function openQuickVideoPostModal() {
+      if (!requireUserAccount("post a video")) return;
+      switchPrimaryMode("feed");
+      const kindSel = document.getElementById("socialPostKind");
+      if (kindSel) kindSel.value = "reel";
+      setTimeout(() => {
+        document.getElementById("socialFileInput")?.click();
+        const ta = document.getElementById("socialPostText");
+        if (ta) {
+          ta.scrollIntoView({ behavior: "smooth", block: "center" });
+          ta.placeholder = "Share a video clip or reel to your profile...";
+          ta.focus();
+        }
+      }, 80);
+    }
+
+    function getUserPostedVideos(handle) {
+      const key = normHandle(handle);
+      return socialPosts.filter(p => normHandle(p.handle) === key && p.mediaType === "video");
+    }
+
+    function getUserAllPosts(handle) {
+      const key = normHandle(handle);
+      return socialPosts.filter(p => normHandle(p.handle) === key);
+    }
+
+    function renderIGProfileView() {
+      const targetHandle = dispHandle(activeProfileHandle || getDefaultProfileHandle());
+      activeProfileHandle = targetHandle;
+      const prof = getProfileData(targetHandle);
+      const own = isOwnProfile(targetHandle);
+
+      const myHandle = getDefaultProfileHandle();
+      const creatorHandles = Array.from(new Set([
+        myHandle,
+        ...getUniqueCreators().map(c => c.handle)
+      ]));
+
+      const switcher = document.getElementById("igProfileSwitcher");
+      if (switcher) {
+        switcher.innerHTML = creatorHandles.map(h => `
+          <option value="${h}" ${normHandle(h) === normHandle(targetHandle) ? "selected" : ""}>${h}</option>
+        `).join("");
+      }
+
+      document.getElementById("editOwnProfileBtn")?.classList.toggle("hidden", !own);
+      document.getElementById("quickAvatarCamBtn")?.classList.toggle("hidden", !own);
+      const followOtherBtn = document.getElementById("profileFollowOtherBtn");
+      if (followOtherBtn) {
+        followOtherBtn.classList.toggle("hidden", own);
+        const f = isFollowingHandle(targetHandle);
+        followOtherBtn.innerText = f ? "Following" : "Follow";
+        followOtherBtn.className = f
+          ? "px-4 py-1.5 rounded-full bg-zinc-900 border border-zinc-700 text-white text-xs font-bold transition-all"
+          : "px-4 py-1.5 rounded-full bg-sky-500 hover:bg-sky-400 text-white text-xs font-bold transition-all";
+      }
+
+      const avatarBox = document.getElementById("igProfileAvatar");
+      const initials = targetHandle.replace(/^@/, "").slice(0, 2).toUpperCase();
+      if (prof.avatarUrl) {
+        avatarBox.innerHTML = `<img src="${prof.avatarUrl}" alt="${prof.name}" class="w-full h-full object-cover" />`;
+      } else {
+        avatarBox.innerHTML = `<span>${initials || "CW"}</span>`;
+      }
+
+      document.getElementById("igProfileName").innerText = prof.name;
+      document.getElementById("igProfileHandle").innerText = targetHandle;
+      document.getElementById("igProfileVerifiedBadge").classList.toggle("hidden", !prof.verified);
+
+      const roleBadge = document.getElementById("igProfileRoleBadge");
+      if (roleBadge) {
+        if (prof.category) {
+          roleBadge.innerText = prof.category;
+          roleBadge.classList.remove("hidden");
+        } else {
+          roleBadge.classList.add("hidden");
+        }
+      }
+
+      document.getElementById("igProfileBioText").innerText = prof.bio;
+
+      const locEl = document.getElementById("igProfileLocationText");
+      if (locEl) {
+        if (prof.location) {
+          locEl.innerHTML = `<i class="fa-solid fa-location-dot text-rose-400 mr-1"></i>${prof.location}`;
+          locEl.classList.remove("hidden");
+        } else {
+          locEl.classList.add("hidden");
+        }
+      }
+
+      const webEl = document.getElementById("igProfileWebsiteText");
+      if (webEl) {
+        if (prof.website) {
+          const href = /^https?:\/\//i.test(prof.website) ? prof.website : `https://${prof.website}`;
+          webEl.innerHTML = `<a href="${href}" target="_blank" rel="noopener" class="hover:underline"><i class="fa-solid fa-link mr-1"></i>${prof.website}</a>`;
+        } else {
+          webEl.innerHTML = "";
+        }
+      }
+
+      const userPosts = getUserAllPosts(targetHandle);
+      const userVideos = getUserPostedVideos(targetHandle);
+      const followerEst = userPosts.reduce((acc, p) => acc + (p.likes || 0), 0);
+
+      document.getElementById("igStatPosts").innerText = userPosts.length;
+      document.getElementById("igStatVideos").innerText = userVideos.length;
+      document.getElementById("igStatFollowing").innerText = socialFollowing.length;
+      document.getElementById("igStatFollowers").innerText = followerEst;
+
+      document.getElementById("igTabVideosCount").innerText = userVideos.length;
+      document.getElementById("igTabPostsCount").innerText = userPosts.length;
+
+      switchProfileTab(activeProfileTab);
+    }
+
+    function renderIGProfileGrid() {
+      const grid = document.getElementById("igProfileMediaGrid");
+      if (!grid) return;
+      const targetHandle = dispHandle(activeProfileHandle || getDefaultProfileHandle());
+      const key = normHandle(targetHandle);
+
+      let items = [];
+      if (activeProfileTab === "videos") {
+        items = getUserPostedVideos(targetHandle);
+      } else if (activeProfileTab === "posts") {
+        items = getUserAllPosts(targetHandle);
+      } else {
+        items = socialPosts.filter(p => p.bookmarked && (normHandle(p.handle) === key || p.mediaType === "video"));
+      }
+
+      if (!items.length) {
+        grid.innerHTML = `
+          <div class="col-span-full bg-zinc-950 border border-zinc-800 rounded-2xl p-10 text-center space-y-3">
+            <i class="fa-solid fa-video text-3xl text-zinc-600"></i>
+            <p class="text-sm font-bold text-white">${activeProfileTab === "videos" ? "No posted videos yet" : "Nothing here yet"}</p>
+            <p class="text-xs text-zinc-400">Post a video clip or reel to show it in your Instagram-style profile grid.</p>
+            <button onclick="openQuickVideoPostModal()" class="px-4 py-2 rounded-full ig-btn text-white text-xs font-bold shadow">
+              <i class="fa-solid fa-plus mr-1"></i> Post a Video
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = items.map(item => {
+        const isVid = item.mediaType === "video";
+        return `
+          <div onclick="${isVid ? `jumpToReel(${item.id})` : `openSocialThreadModal(${item.id})`}" class="group relative aspect-[4/5] rounded-2xl overflow-hidden bg-zinc-950 border border-zinc-800 hover:border-zinc-600 cursor-pointer transition-all">
+            ${isVid
+              ? `<video src="${item.mediaUrl}" muted playsinline preload="metadata" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"></video>`
+              : item.mediaUrl
+                ? `<img src="${item.mediaUrl}" alt="Post" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />`
+                : `<div class="w-full h-full p-4 flex items-center justify-center text-center text-xs text-zinc-300 bg-zinc-900">${item.text}</div>`
+            }
+
+            ${isVid ? `
+              <div class="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-black/75 text-white flex items-center justify-center text-xs">
+                <i class="fa-solid fa-play ml-0.5"></i>
+              </div>
+            ` : ''}
+
+            <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-3 text-center gap-2">
+              <div class="flex items-center gap-4 text-xs font-extrabold text-white">
+                <span><i class="fa-solid fa-heart text-rose-500 mr-1"></i>${item.likes || 0}</span>
+                <span><i class="fa-solid fa-comment text-sky-400 mr-1"></i>${(item.comments || []).length}</span>
+              </div>
+              <p class="text-[11px] text-zinc-200 line-clamp-2">${item.text}</p>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+  </script>
+</body>
+</html>
