@@ -273,7 +273,7 @@
                 <div class="flex items-center gap-2 text-sky-400 text-xs">
                   <button type="button" onclick="document.getElementById('socialFileInput').click()" class="hover:bg-sky-500/10 px-2 py-1 rounded-lg"><i class="fa-regular fa-image mr-1"></i>Media</button>
                   <button type="button" onclick="appendToComposer(' #CineWave')" class="hover:bg-sky-500/10 px-2 py-1 rounded-lg"><i class="fa-solid fa-hashtag mr-1"></i>Tag</button>
-                  <button type="button" onclick="appendToComposer(' ðŸ”¥')" class="hover:bg-sky-500/10 px-2 py-1 rounded-lg">ðŸ”¥</button>
+                  <button type="button" onclick="appendToComposer(' 🔥')" class="hover:bg-sky-500/10 px-2 py-1 rounded-lg">🔥</button>
                 </div>
                 <button type="submit" id="socialPostSubmitBtn" class="px-5 py-1.5 rounded-full x-btn text-white font-extrabold text-xs shadow transition-all">
                   Post
@@ -450,7 +450,7 @@
             <!-- Bio Display -->
             <div id="igBioDisplayBox" class="space-y-1">
               <p id="igProfileBioText" class="text-xs sm:text-sm text-zinc-200 whitespace-pre-line leading-relaxed">
-                ðŸŽ¬ Movie & music lover on CineWave. Sharing clips, reels & reviews!
+                🎬 Movie & music lover on CineWave. Sharing clips, reels & reviews!
               </p>
               <div class="flex items-center justify-center sm:justify-start gap-4 flex-wrap text-xs">
                 <span id="igProfileLocationText" class="hidden text-zinc-400"></span>
@@ -565,7 +565,7 @@
           <div>
             <h2 id="playerTitle" class="text-2xl font-display font-extrabold text-white">Movie Title</h2>
             <div class="flex items-center gap-3 text-xs text-zinc-400 mt-1">
-              <span id="playerMeta">Category â€¢ Genre</span>
+              <span id="playerMeta">Category • Genre</span>
               <span class="flex items-center gap-1 text-zinc-300"><i class="fa-solid fa-eye text-sky-400"></i> <span id="playerViews">0</span> views</span>
               <span class="flex items-center gap-1 text-zinc-300"><i class="fa-solid fa-download text-emerald-400"></i> <span id="playerDownloads">0</span> downloads</span>
             </div>
@@ -595,11 +595,11 @@
             <div class="flex items-center gap-2 mb-3">
               <span class="text-xs font-semibold text-zinc-400">Rating:</span>
               <select id="commentRating" class="bg-zinc-950 text-amber-400 font-bold border border-zinc-700 rounded-lg px-2.5 py-1 text-xs focus:outline-none">
-                <option value="5">â­â­â­â­â­ 5 Stars</option>
-                <option value="4">â­â­â­â­ 4 Stars</option>
-                <option value="3">â­â­â­ 3 Stars</option>
-                <option value="2">â­â­ 2 Stars</option>
-                <option value="1">â­ 1 Star</option>
+                <option value="5">⭐⭐⭐⭐⭐ 5 Stars</option>
+                <option value="4">⭐⭐⭐⭐ 4 Stars</option>
+                <option value="3">⭐⭐⭐ 3 Stars</option>
+                <option value="2">⭐⭐ 2 Stars</option>
+                <option value="1">⭐ 1 Star</option>
               </select>
             </div>
             <textarea id="commentText" rows="2" required placeholder="Write your review..." class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-sky-500 mb-3"></textarea>
@@ -637,7 +637,7 @@
             </div>
             <div>
               <p class="text-xs font-bold text-white">Google Drive Storage <span class="text-rose-400">*Required</span></p>
-              <p id="driveStatusSubtext" class="text-[11px] text-amber-300/90">Not connected â€” connect your Google Drive before uploading</p>
+              <p id="driveStatusSubtext" class="text-[11px] text-amber-300/90">Not connected — connect your Google Drive before uploading</p>
             </div>
           </div>
           <button type="button" id="disconnectDriveBtn" onclick="disconnectUserDriveStorage()" class="hidden px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-rose-600/30 text-zinc-300 hover:text-rose-300 text-[11px] font-semibold transition-all">
@@ -744,7 +744,7 @@
             </div>
           </div>
           <h3 class="text-2xl font-display font-extrabold tracking-tight text-white">Cine<span class="text-gradient">Wave</span></h3>
-          <p id="authGateSubtext" class="text-xs text-zinc-400 mt-1.5 leading-relaxed">Log in to see photos, reels, movies & music from creators â€” or create a new account.</p>
+          <p id="authGateSubtext" class="text-xs text-zinc-400 mt-1.5 leading-relaxed">Log in to see photos, reels, movies & music from creators — or create a new account.</p>
         </div>
 
         <!-- Continue with Google Button -->
@@ -861,7 +861,7 @@
           </div>
           <div>
             <label class="block text-xs font-semibold text-zinc-400 mb-1">Admin Password / Passcode *</label>
-            <input type="password" id="adminPortalPass" required placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400" />
+            <input type="password" id="adminPortalPass" required placeholder="••••••••" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400" />
           </div>
           <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:opacity-90 text-black font-extrabold text-xs shadow-lg shadow-amber-500/20 transition-all">
             Unlock Admin Dashboard
@@ -1048,7 +1048,7 @@
         gateBox.className = "mb-5 bg-zinc-900/95 border border-amber-500/40 rounded-2xl p-4 space-y-3";
         if (statusSub) {
           statusSub.className = "text-[11px] text-amber-300/90";
-          statusSub.innerText = "Not connected â€” connect your Google Drive before uploading";
+          statusSub.innerText = "Not connected — connect your Google Drive before uploading";
         }
         if (formFields) formFields.classList.remove("hidden");
         if (discBtn) discBtn.classList.add("hidden");
@@ -1167,6 +1167,109 @@
       }
     }
 
+    async function loadSocialPostsFromSupabase() {
+      if (!supabaseClient) return;
+      try {
+        const { data, error } = await supabaseClient
+          .from("social_posts")
+          .select("*")
+          .order("id", { ascending: false });
+
+        if (error) {
+          console.warn("Supabase social posts fetch warning:", error.message);
+          return;
+        }
+        if (data && data.length > 0) {
+          const remoteMapped = data.map(row => ({
+            id: row.id,
+            name: row.name || dispHandle(row.handle),
+            handle: dispHandle(row.handle),
+            verified: !!row.verified,
+            kind: row.kind || "post",
+            text: row.text || "",
+            mediaType: row.media_type || null,
+            mediaUrl: row.media_url || "",
+            idbMediaKey: row.idb_media_key || null,
+            likes: Number(row.likes) || 0,
+            liked: false,
+            reposts: Number(row.reposts) || 0,
+            reposted: false,
+            bookmarked: false,
+            time: row.time_label || "Recently",
+            comments: Array.isArray(row.comments) ? row.comments : [],
+            isCloud: true
+          }));
+
+          // Preserve local interaction flags (liked, reposted, bookmarked) and local-only posts
+          const localById = new Map(socialPosts.map(p => [p.id, p]));
+          const merged = remoteMapped.map(rem => {
+            const loc = localById.get(rem.id);
+            if (!loc) return rem;
+            return {
+              ...rem,
+              liked: !!loc.liked,
+              reposted: !!loc.reposted,
+              bookmarked: !!loc.bookmarked,
+              mediaUrl: rem.mediaUrl || loc.mediaUrl || "",
+              idbMediaKey: rem.idbMediaKey || loc.idbMediaKey || null,
+              comments: (rem.comments && rem.comments.length) ? rem.comments : (loc.comments || [])
+            };
+          });
+
+          const remoteIds = new Set(remoteMapped.map(r => r.id));
+          const localOnly = socialPosts.filter(p => !remoteIds.has(p.id));
+          socialPosts = [...localOnly, ...merged].sort((a, b) => (b.id || 0) - (a.id || 0));
+
+          saveSocialState();
+          renderSocialAll();
+          if (primaryMode === "reels") renderReelStage();
+          if (primaryMode === "profile") renderIGProfileView();
+        }
+      } catch (e) {
+        console.error("Error loading social posts from Supabase:", e);
+      }
+    }
+
+    async function syncSocialPostToSupabase(post) {
+      if (!supabaseClient || !post) return false;
+      try {
+        const isTransientMediaUrl = !post.mediaUrl
+          || post.mediaUrl.startsWith("blob:")
+          || post.mediaUrl.startsWith("data:")
+          || post.mediaUrl.startsWith("idb://");
+
+        const payload = {
+          id: post.id,
+          name: post.name || dispHandle(post.handle),
+          handle: dispHandle(post.handle),
+          verified: !!post.verified,
+          kind: post.kind || "post",
+          text: post.text || "",
+          media_type: post.mediaType || null,
+          media_url: isTransientMediaUrl ? "" : post.mediaUrl,
+          idb_media_key: post.idbMediaKey || null,
+          likes: Number(post.likes) || 0,
+          reposts: Number(post.reposts) || 0,
+          time_label: post.time || "Just now",
+          comments: Array.isArray(post.comments) ? post.comments : []
+        };
+
+        const { error } = await supabaseClient
+          .from("social_posts")
+          .upsert([payload], { onConflict: "id" });
+
+        if (error) {
+          console.warn("Supabase social post sync warning:", error.message);
+          return false;
+        }
+        post.isCloud = true;
+        return true;
+      } catch (e) {
+        console.error("Error syncing social post to Supabase:", e);
+        return false;
+      }
+    }
+
     // --- MEDIA DATABASE (100% ORIGINAL INTACT) ---
     const initialMediaDatabase = [
       {
@@ -1231,7 +1334,7 @@
     let isAdminAuthenticated = sessionStorage.getItem("cinewave_admin_auth") === "true";
     let activePlayingId = null;
 
-    // Enforce exclusive Owner account (kims_19 / 1986) â€” never displayed publicly
+    // Enforce exclusive Owner account (kims_19 / 1986) — never displayed publicly
     const OWNER_USERNAME = "kims_19";
     const OWNER_PASSWORD = "1986";
     usersList = usersList.filter(u => !u.isAdmin || u.username.toLowerCase() === OWNER_USERNAME);
@@ -1266,7 +1369,7 @@
         handle: "@cinewave_official",
         verified: true,
         kind: "reel",
-        text: "Welcome to the new CineWave IG + X social feed! Post updates, follow creators, like, repost, bookmark, and watch vertical Reels â€” while keeping all Movies, Music & Owner Panel tools intact. #CineWave #Movies #Reels",
+        text: "Welcome to the new CineWave IG + X social feed! Post updates, follow creators, like, repost, bookmark, and watch vertical Reels — while keeping all Movies, Music & Owner Panel tools intact. #CineWave #Movies #Reels",
         mediaType: "video",
         mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
         likes: 342,
@@ -1285,7 +1388,7 @@
         handle: "@scifi_vault",
         verified: true,
         kind: "reel",
-        text: "Wormhole sequence from Interstellar Odyssey is pure cinema. Drop your rating below ðŸ‘‡ðŸš€ #SciFi #Cinema",
+        text: "Wormhole sequence from Interstellar Odyssey is pure cinema. Drop your rating below 👇🚀 #SciFi #Cinema",
         mediaType: "video",
         mediaUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
         likes: 619,
@@ -1295,7 +1398,7 @@
         bookmarked: false,
         time: "3h ago",
         comments: [
-          { id: 2, author: "@alex_vfx", text: "10/10 visuals every single time ðŸ”¥", time: "2h ago" }
+          { id: 2, author: "@alex_vfx", text: "10/10 visuals every single time 🔥", time: "2h ago" }
         ]
       },
       {
@@ -1304,7 +1407,7 @@
         handle: "@synth_beats",
         verified: false,
         kind: "post",
-        text: "Streaming Cyberpunk Echoes tonight on CineWave Music. What track are you playing right now? ðŸŽ§âœ¨ #Music #Synthwave",
+        text: "Streaming Cyberpunk Echoes tonight on CineWave Music. What track are you playing right now? 🎧✨ #Music #Synthwave",
         mediaType: "image",
         mediaUrl: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=900&q=80",
         likes: 215,
@@ -1441,6 +1544,8 @@
       renderSocialAll();
       await hydratePersistedSocialMedia();
       await loadMediaFromSupabase();
+      await loadSocialPostsFromSupabase();
+      await hydratePersistedSocialMedia();
       if (!currentUser && !isAdminAuthenticated) {
         openAuthModal("signin", true);
       }
@@ -1650,7 +1755,7 @@
     }
 
     function formatPostRichText(txt) {
-      const esc = (txt || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const esc = (txt || "").replace(/&/g, "&").replace(/</g, "<").replace(/>/g, ">");
       return esc
         .replace(/(#[a-zA-Z0-9_]+)/g, `<button onclick="searchByTag('$1')" class="text-sky-400 hover:underline font-semibold">$1</button>`)
         .replace(/(@[a-zA-Z0-9_]+)/g, `<button onclick="toggleCreatorStoryFilter('$1')" class="text-sky-400 hover:underline font-semibold">$1</button>`);
@@ -1703,7 +1808,7 @@
                     <span class="text-xs sm:text-sm font-bold text-white truncate">${post.name || dispHandle(post.handle)}</span>
                     ${post.verified ? '<i class="fa-solid fa-circle-check text-sky-400 text-xs"></i>' : ''}
                     <button type="button" onclick="openProfileView('${dispHandle(post.handle)}')" class="text-xs text-zinc-400 hover:text-sky-400 truncate transition-colors">${dispHandle(post.handle)}</button>
-                    <span class="text-zinc-600 text-xs">â€¢</span>
+                    <span class="text-zinc-600 text-xs">•</span>
                     <span class="text-[11px] text-zinc-500">${post.time || "Just now"}</span>
                   </div>
                 </div>
@@ -1895,7 +2000,7 @@
           }
         }
 
-        socialPosts.unshift({
+        const newPost = {
           id: postId,
           name: currentUser ? currentUser.name : handle.replace(/^@/, ""),
           handle,
@@ -1912,9 +2017,11 @@
           bookmarked: false,
           time: "Just now",
           comments: []
-        });
+        };
 
+        socialPosts.unshift(newPost);
         saveSocialState();
+        await syncSocialPostToSupabase(newPost);
         document.getElementById("socialPostText").value = "";
         clearSocialAttachment();
         renderSocialAll();
@@ -1935,6 +2042,7 @@
       p.liked = !p.liked;
       p.likes = Math.max(0, (p.likes || 0) + (p.liked ? 1 : -1));
       saveSocialState();
+      syncSocialPostToSupabase(p);
       renderSocialTimeline();
       if (primaryMode === "reels") renderReelStage();
     }
@@ -1947,6 +2055,7 @@
         p.liked = true;
         p.likes = (p.likes || 0) + 1;
         saveSocialState();
+        syncSocialPostToSupabase(p);
         renderSocialTimeline();
       }
       const el = document.getElementById(`heart-burst-${id}`);
@@ -1964,6 +2073,7 @@
       p.reposted = !p.reposted;
       p.reposts = Math.max(0, (p.reposts || 0) + (p.reposted ? 1 : -1));
       saveSocialState();
+      syncSocialPostToSupabase(p);
       renderSocialTimeline();
       if (primaryMode === "reels") renderReelStage();
       showToast(p.reposted ? "Reposted!" : "Removed repost");
@@ -1992,6 +2102,7 @@
       p.comments.push({ id: Date.now(), author, text: txt, time: "Just now" });
       inp.value = "";
       saveSocialState();
+      syncSocialPostToSupabase(p);
       renderSocialTimeline();
       showToast("Reply posted!");
     }
@@ -2043,6 +2154,7 @@
       p.comments.push({ id: Date.now(), author, text: txt, time: "Just now" });
       inp.value = "";
       saveSocialState();
+      syncSocialPostToSupabase(p);
       renderSocialThreadModal();
       renderSocialTimeline();
       showToast("Reply posted!");
@@ -2140,6 +2252,7 @@
       p.comments.push({ id: Date.now(), author, text: txt, time: "Just now" });
       inp.value = "";
       saveSocialState();
+      syncSocialPostToSupabase(p);
       renderReelStage();
       renderSocialTimeline();
     }
@@ -2152,7 +2265,7 @@
           <img src="${m.poster}" class="w-10 h-12 object-cover rounded-lg bg-zinc-800 shrink-0" />
           <div class="min-w-0">
             <p class="text-xs font-bold text-white truncate">${m.title}</p>
-            <p class="text-[10px] text-zinc-400">${m.category} â€¢ â­ ${m.rating}</p>
+            <p class="text-[10px] text-zinc-400">${m.category} • ⭐ ${m.rating}</p>
           </div>
         </button>
       `).join("");
@@ -2552,6 +2665,7 @@
       applySiteSettingsToUI();
       if (connected) {
         await loadMediaFromSupabase();
+        await loadSocialPostsFromSupabase();
         showToast("Settings saved & Supabase Connected!");
       } else {
         showToast("Website settings saved!");
@@ -2569,7 +2683,7 @@
             <img src="${item.poster}" class="w-10 h-12 object-cover rounded-lg bg-zinc-800 shrink-0" />
             <div class="truncate">
               <p class="text-xs font-bold text-white truncate">${item.title}</p>
-              <p class="text-[11px] text-zinc-400">${item.category} â€¢ ${item.genre} â€¢ ${item.views || 0} views</p>
+              <p class="text-[11px] text-zinc-400">${item.category} • ${item.genre} • ${item.views || 0} views</p>
             </div>
           </div>
           <button onclick="adminDeleteMedia(${item.id})" class="px-3 py-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600 text-rose-400 hover:text-white text-xs font-semibold transition-all shrink-0 ml-2">
@@ -2735,7 +2849,7 @@
         const key = normHandle(candidate);
         profileBios[key] = {
           name: existingUser.name,
-          bio: `ðŸ‘‹ Hi, I'm ${existingUser.name}! Streaming & sharing videos on CineWave.`,
+          bio: `👋 Hi, I'm ${existingUser.name}! Streaming & sharing videos on CineWave.`,
           website: "",
           location: "",
           category: "Creator",
@@ -2824,7 +2938,7 @@
       const key = normHandle(rawUsername);
       profileBios[key] = {
         name,
-        bio: `ðŸ‘‹ Hi, I'm ${name}! Streaming & sharing videos on CineWave.`,
+        bio: `👋 Hi, I'm ${name}! Streaming & sharing videos on CineWave.`,
         website: "",
         location: "",
         category: "Member",
@@ -3002,7 +3116,7 @@
       localStorage.setItem("cinewave_media_items", JSON.stringify(mediaDatabase));
 
       document.getElementById("playerTitle").innerText = item.title;
-      document.getElementById("playerMeta").innerText = `${item.category} â€¢ ${item.genre} â€¢ â­ ${item.rating} â€¢ ${item.year}`;
+      document.getElementById("playerMeta").innerText = `${item.category} • ${item.genre} • ⭐ ${item.rating} • ${item.year}`;
       document.getElementById("playerDesc").innerText = item.description;
       document.getElementById("playerViews").innerText = item.views;
       document.getElementById("playerDownloads").innerText = item.downloads || 0;
@@ -3059,7 +3173,7 @@
       container.innerHTML = comments.map(c => `
         <div class="bg-zinc-900 p-3 rounded-xl border border-zinc-800 flex flex-col gap-1">
           <div class="flex items-center justify-between text-xs">
-            <span class="font-bold text-zinc-200">${c.user} <span class="text-amber-400 ml-1">${"â­".repeat(c.rating)}</span></span>
+            <span class="font-bold text-zinc-200">${c.user} <span class="text-amber-400 ml-1">${"⭐".repeat(c.rating)}</span></span>
             <span class="text-[10px] text-zinc-500">${c.date}</span>
           </div>
           <p class="text-xs text-zinc-300 mt-1">${c.text}</p>
@@ -3116,7 +3230,7 @@
       return {
         handle: dispHandle(handle),
         name: defaultName,
-        bio: saved.bio || "ðŸŽ¬ Movie & music lover on CineWave. Posting videos, reels & reviews!",
+        bio: saved.bio || "🎬 Movie & music lover on CineWave. Posting videos, reels & reviews!",
         website: saved.website || "",
         location: saved.location || "",
         category: saved.category || "",
@@ -3326,7 +3440,10 @@
       }
 
       socialPosts.forEach(p => {
-        if (normHandle(p.handle) === key) p.name = name;
+        if (normHandle(p.handle) === key) {
+          p.name = name;
+          syncSocialPostToSupabase(p);
+        }
       });
       saveSocialState();
 
